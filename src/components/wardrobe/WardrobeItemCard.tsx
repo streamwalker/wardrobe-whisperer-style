@@ -14,11 +14,20 @@ export default function WardrobeItemCard({ item, onClick }: Props) {
       onClick={onClick}
       className="group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-shadow hover:shadow-md animate-fade-in"
     >
-      {/* Color swatch as placeholder for photo */}
+      {/* Photo or color swatch fallback */}
       <div
-        className="aspect-square w-full"
+        className="aspect-square w-full overflow-hidden"
         style={{ backgroundColor: item.color_hex }}
-      />
+      >
+        {item.photo && (
+          <img
+            src={item.photo}
+            alt={item.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        )}
+      </div>
 
       {/* Info */}
       <div className="flex flex-col gap-1 p-3">
