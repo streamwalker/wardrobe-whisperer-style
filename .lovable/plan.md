@@ -1,30 +1,36 @@
 
 
-# Add "Clear All" Button for Wardrobe Selection
+# Separate Photo Upload from Analysis
 
 ## Problem
-There's no easy way to deselect all selected wardrobe items at once. The only option is the small X button on the floating bar, which only appears when 2+ items are selected.
+Currently, when a user selects a photo on the Add Item page, the app immediately uploads it and calls the analyze-clothing function. The user wants control over when analysis happens.
 
 ## Solution
-Add a visible "Clear All" button that appears whenever any items are selected (1 or more), allowing quick deselection of all items.
+Split `handleFileSelect` into two steps:
+1. **Photo selection** -- only sets the preview image and stores the file
+2. **Analyze Now button** -- uploads the photo and triggers AI analysis on demand
 
 ## Changes
 
-### `src/pages/Wardrobe.tsx`
+### `src/pages/AddItem.tsx`
 
-- Update the floating multi-select bar to appear when **1 or more** items are selected (currently requires 2+)
-- The bar already has a clear button (X icon) -- rename/restyle it to say "Clear All" for better clarity
-- When only 1 item is selected, show the item count and the Clear All button (hide "Match These" since matching needs 2+ items)
+**1. Simplify `handleFileSelect`**
+Remove all upload/analyze logic. It should only do:
+- Store the file in state (`setPhotoFile`)
+- Create and set a preview URL (`setPhotoPreview`)
 
-### Layout
+**2. Create new `handleAnalyze` function**
+Move the upload + analyze logic into a separate async function triggered by a button click.
+
+**3. Add "Analyze Now" button**
+Show a button below the photo preview (only visible when a photo is selected and not yet analyzing):
 
 ```text
-1 item selected:   [ 1 item selected ] [ Clear All ]
-2+ items selected: [ 3 items selected ] [ Match These ] [ Clear All ]
+[Photo Preview]
+[ Analyze Now button ]
 ```
 
-### Technical details
-- Change the condition `selectedItems.length >= 2` to `selectedItems.length >= 1` for showing the bar
-- Replace the icon-only X button with a text "Clear All" button
-- Conditionally show the "Match These" button only when `selectedItems.length >= 2`
+- Uses the existing `Sparkles` or `Camera` icon with "Analyze Now" label
+- Disabled while `analyzing` is true
+- Hidden if no photo is selected
 
