@@ -41,9 +41,9 @@ export default function WardrobeItemCard({ item, selected, onClick }: Props) {
       </div>
 
       {/* Info */}
-      <div className="flex flex-col gap-1 p-3">
+      <div className="flex flex-col gap-0.5 p-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-card-foreground truncate">{item.name}</span>
+          <span className="text-xs sm:text-sm font-medium text-card-foreground truncate">{item.name}</span>
           {item.is_featured && <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />}
         </div>
         <span className="text-xs text-muted-foreground">{item.primary_color}</span>
