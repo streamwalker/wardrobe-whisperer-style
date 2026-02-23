@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Bookmark, Check } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, AlertTriangle } from "lucide-react";
 import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,13 +15,26 @@ interface OutfitSuggestion {
   mood: string;
 }
 
+interface SuggestedReplacement {
+  id: string;
+  reason: string;
+}
+
+interface IncompatibilityResult {
+  compatible: false;
+  reason: string;
+  problem_item_id: string;
+  suggested_replacements: SuggestedReplacement[];
+}
+
 interface Props {
   items: WardrobeItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSwapItem?: (oldItemId: string, newItemId: string) => void;
 }
 
-export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Props) {
+export default function OutfitSuggestionDrawer({ items, open, onOpenChange, onSwapItem }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -29,6 +42,7 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
   const [hasMore, setHasMore] = useState(true);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const { user } = useAuth();
 
   const itemsKey = items.map((i) => i.id).sort().join(",");
@@ -38,6 +52,7 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
       setOutfits([]);
       setHasMore(true);
       setSavedIds(new Set());
+      setIncompatible(null);
       fetchSuggestions(items, []);
     }
   }, [open, itemsKey]);
@@ -46,6 +61,7 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
     const isInitial = excludeOutfits.length === 0;
     if (isInitial) {
       setLoading(true);
+      setIncompatible(null);
     } else {
       setLoadingMore(true);
     }
@@ -68,6 +84,14 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
       const { data, error } = await supabase.functions.invoke("match-outfit", { body });
 
       if (error) throw error;
+
+      // Handle incompatibility response
+      if (data.compatible === false) {
+        setIncompatible(data as IncompatibilityResult);
+        setHasLoaded(itemsKey);
+        return;
+      }
+
       const newOutfits: OutfitSuggestion[] = data.outfits ?? [];
 
       if (newOutfits.length < 3) {
@@ -115,6 +139,11 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
     }
   };
 
+  const handleSwap = (replacementId: string) => {
+    if (!incompatible || !onSwapItem) return;
+    onSwapItem(incompatible.problem_item_id, replacementId);
+  };
+
   const outfitKey = (o: OutfitSuggestion) => `${o.name}::${o.item_ids.join(",")}`;
   const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
 
@@ -129,6 +158,8 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
   const drawerTitle = items.length === 1
     ? `Outfit Ideas for ${items[0]?.name}`
     : `Outfit Ideas for ${items.length} Items`;
+
+  const problemItem = incompatible ? getItemById(incompatible.problem_item_id) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -147,108 +178,169 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Pr
           </div>
         )}
 
-        {!loading && outfits.length === 0 && hasLoaded && (
+        {/* Incompatibility alert */}
+        {!loading && incompatible && (
+          <div className="space-y-4 pb-6">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="font-display text-base font-semibold text-card-foreground">
+                    These items don't pair well
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {incompatible.reason}
+                  </p>
+                </div>
+              </div>
+
+              {problemItem && incompatible.suggested_replacements.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Try swapping {problemItem.name} for:
+                  </p>
+                  <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+                    {incompatible.suggested_replacements.map((rep) => {
+                      const repItem = getItemById(rep.id);
+                      if (!repItem) return null;
+                      return (
+                        <button
+                          key={rep.id}
+                          onClick={() => handleSwap(rep.id)}
+                          className="shrink-0 w-24 rounded-xl border bg-card p-2 text-left transition-colors hover:border-primary hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        >
+                          <div
+                            className="aspect-square w-full rounded-lg overflow-hidden mb-1.5"
+                            style={{ backgroundColor: repItem.color_hex }}
+                          >
+                            {repItem.photo && (
+                              <img
+                                src={repItem.photo}
+                                alt={repItem.name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            )}
+                          </div>
+                          <p className="truncate text-xs font-medium text-card-foreground">
+                            {repItem.name}
+                          </p>
+                          <p className="text-[10px] leading-tight text-muted-foreground mt-0.5 line-clamp-2">
+                            {rep.reason}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!loading && !incompatible && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No suggestions found. Try different items!
           </p>
         )}
 
-        <div className="space-y-5 pb-6">
-          {outfits.map((outfit, idx) => {
-            const isSaved = savedIds.has(outfitKey(outfit));
-            return (
-              <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-display text-base font-semibold text-card-foreground">
-                    {outfit.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={isSaved || savingIdx === idx}
-                      onClick={() => saveOutfit(outfit, idx)}
-                    >
-                      {isSaved ? (
-                        <Check className="h-4 w-4 text-primary" />
-                      ) : savingIdx === idx ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Bookmark className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {outfit.item_ids.map((id) => {
-                    const wi = getItemById(id);
-                    if (!wi) return null;
-                    return (
-                      <div
-                        key={id}
-                        className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary"
+        {!incompatible && (
+          <div className="space-y-5 pb-6">
+            {outfits.map((outfit, idx) => {
+              const isSaved = savedIds.has(outfitKey(outfit));
+              return (
+                <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display text-base font-semibold text-card-foreground">
+                      {outfit.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={isSaved || savingIdx === idx}
+                        onClick={() => saveOutfit(outfit, idx)}
                       >
+                        {isSaved ? (
+                          <Check className="h-4 w-4 text-primary" />
+                        ) : savingIdx === idx ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Bookmark className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {outfit.item_ids.map((id) => {
+                      const wi = getItemById(id);
+                      if (!wi) return null;
+                      return (
                         <div
-                          className="aspect-square w-full overflow-hidden"
-                          style={{ backgroundColor: wi.color_hex }}
+                          key={id}
+                          className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary"
                         >
-                          {wi.photo && (
-                            <img
-                              src={wi.photo}
-                              alt={wi.name}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          )}
+                          <div
+                            className="aspect-square w-full overflow-hidden"
+                            style={{ backgroundColor: wi.color_hex }}
+                          >
+                            {wi.photo && (
+                              <img
+                                src={wi.photo}
+                                alt={wi.name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            )}
+                          </div>
+                          <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
+                            {wi.name}
+                          </p>
                         </div>
-                        <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
-                          {wi.name}
-                        </p>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {outfit.explanation}
+                  </p>
                 </div>
+              );
+            })}
 
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {outfit.explanation}
-                </p>
+            {!loading && outfits.length > 0 && (
+              <div className="flex justify-center pt-2">
+                {hasMore ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMore}
+                    disabled={loadingMore}
+                    className="gap-2"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Show 3 More Ideas
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No more combinations available</p>
+                )}
               </div>
-            );
-          })}
-
-          {/* Show More / No More */}
-          {!loading && outfits.length > 0 && (
-            <div className="flex justify-center pt-2">
-              {hasMore ? (
-                <Button
-                  variant="outline"
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="gap-2"
-                >
-                  {loadingMore ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading…
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      Show 3 More Ideas
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground">No more combinations available</p>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
