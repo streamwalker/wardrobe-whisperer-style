@@ -1,61 +1,40 @@
 
 
-# "Show More" Outfit Suggestions
+# Enforce One Item Per Category in Multi-Select
 
-## Overview
-Add a "Show More Suggestions" button at the bottom of the outfit results so you can keep loading 3 new, unique outfit combinations each time you tap it -- until no more unique combinations are possible.
+## Problem
+Currently you can select multiple items from the same category (e.g., two pairs of shoes), which doesn't make sense since outfits use exactly one item per category.
 
-## How It Works
-1. You tap an item and get the first 3 outfit suggestions (works the same as today)
-2. At the bottom of those results, a button appears: "Show 3 More Ideas"
-3. Tapping it calls the AI again, but this time tells it which outfits were already shown so it generates different ones
-4. The new 3 outfits get appended below the existing ones (you keep scrolling to see all)
-5. If the AI can't produce any new unique combos, the button disappears and a message says "No more combinations available"
+## Solution
+When tapping an item to add it to the selection, check if an item from that category is already selected. If so, **replace** the existing item in that category with the newly tapped one instead of adding a second.
 
-## Changes
+## Change
 
-### 1. Edge Function Update (`supabase/functions/match-outfit/index.ts`)
-- Accept a new optional field `excludeOutfits` in the request body -- an array of item_id sets that were already suggested
-- Add an instruction to the user prompt telling the AI: "Do NOT repeat any of these previously suggested outfits" followed by the excluded combos
-- This ensures each "Show More" call returns fresh combinations
+**File: `src/pages/Wardrobe.tsx`** -- update the `handleCardClick` function (lines 21-33):
 
-### 2. Drawer Component Update (`src/components/wardrobe/OutfitSuggestionDrawer.tsx`)
-- Track all loaded outfits across multiple rounds (accumulate instead of replace)
-- Track whether more suggestions are available (`hasMore` state, defaults to `true`)
-- Add a `loadMore` function that calls the edge function with the previously shown outfit item_id sets
-- If the AI returns 0 outfits or fewer than 3, set `hasMore = false`
-- Add a "Show 3 More Ideas" button at the bottom of the outfit list
-- Show "No more combinations available" text when `hasMore` is false
-- Reset all state when a new item is selected
+- When adding to multi-select (the `else` branch on line 30), check if any already-selected item shares the same `category` as the new item
+- If a duplicate category exists, swap it out (replace the old item with the new one)
+- If no duplicate, add normally
 
-### 3. No Other Files Change
-The wardrobe page, card component, and edge function structure stay the same.
-
-## Technical Details
-
-**New request body shape:**
-```json
-{
-  "selectedItem": { ... },
-  "wardrobeItems": [ ... ],
-  "excludeOutfits": [
-    ["id1", "id2", "id3", "id4"],
-    ["id1", "id5", "id6", "id7"]
-  ]
+Updated logic:
+```text
+else {
+  setSelectedItems((prev) => {
+    const withoutSameCategory = prev.filter(
+      (i) => i.category !== item.category
+    );
+    return [...withoutSameCategory, item];
+  });
 }
 ```
 
-**Edge function prompt addition:**
-```
-Do NOT reuse any of the following outfit combinations (listed by item IDs):
-- Outfit 1: id1, id2, id3, id4
-- Outfit 2: id1, id5, id6, id7
-...
-```
+This also applies to the single-item case (line 25-28): after the first item is selected and the drawer opens, subsequent taps will correctly swap within the same category.
 
-**Drawer state changes:**
-- `outfits` accumulates across rounds (append, not replace)
-- `hasMore` boolean controls button visibility
-- `loadingMore` boolean shows spinner on the "Show More" button (separate from initial load spinner)
-- `hasLoaded` cache is cleared when switching items so fresh suggestions load
+## User Experience
+- Tap Nike shoes -> selected
+- Tap another pair of shoes -> first pair is deselected, new pair is selected (swap)
+- Tap a pair of pants -> both shoes and pants are now selected
+- A brief toast notification will appear: "Swapped [category]" so the user understands why the previous item disappeared
+
+No other files need changes.
 
