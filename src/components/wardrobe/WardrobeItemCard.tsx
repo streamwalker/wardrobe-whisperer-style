@@ -1,19 +1,30 @@
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, Check } from "lucide-react";
 
 interface Props {
   item: WardrobeItem;
+  selected?: boolean;
   onClick?: () => void;
 }
 
-export default function WardrobeItemCard({ item, onClick }: Props) {
+export default function WardrobeItemCard({ item, selected, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-shadow hover:shadow-md animate-fade-in"
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md animate-fade-in",
+        selected && "ring-2 ring-primary border-primary"
+      )}
     >
+      {/* Selection indicator */}
+      {selected && (
+        <div className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow">
+          <Check className="h-3.5 w-3.5 text-primary-foreground" />
+        </div>
+      )}
+
       {/* Photo or color swatch fallback */}
       <div
         className="aspect-square w-full overflow-hidden"
