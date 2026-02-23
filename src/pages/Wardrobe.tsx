@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DEMO_WARDROBE, CATEGORIES, type WardrobeCategory, type WardrobeItem } from "@/lib/wardrobe-data";
+import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { Button } from "@/components/ui/button";
@@ -22,13 +23,19 @@ export default function Wardrobe() {
     if (selectedIds.has(item.id)) {
       // Deselect
       setSelectedItems((prev) => prev.filter((i) => i.id !== item.id));
-    } else if (selectedItems.length === 0) {
-      // No selection yet — open single-item drawer (legacy behavior)
-      setSelectedItems([item]);
-      setDrawerOpen(true);
     } else {
-      // Add to multi-select
-      setSelectedItems((prev) => [...prev, item]);
+      setSelectedItems((prev) => {
+        const existing = prev.find((i) => i.category === item.category);
+        const withoutSameCategory = prev.filter((i) => i.category !== item.category);
+        if (existing) {
+          toast(`Swapped ${item.category}`);
+        }
+        const updated = [...withoutSameCategory, item];
+        if (prev.length === 0) {
+          setDrawerOpen(true);
+        }
+        return updated;
+      });
     }
   };
 
