@@ -74,9 +74,6 @@ export default function Wardrobe() {
           toast(`Swapped ${item.category}`);
         }
         const updated = [...withoutSameCategory, item];
-        if (prev.length === 0) {
-          setDrawerOpen(true);
-        }
         return updated;
       });
     }
@@ -210,12 +207,10 @@ export default function Wardrobe() {
           <span className="text-sm font-medium text-card-foreground">
             {selectedItems.length} {selectedItems.length === 1 ? "item" : "items"} selected
           </span>
-          {selectedItems.length >= 2 && (
-            <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
-              <Sparkles className="h-4 w-4" />
-              Match These
-            </Button>
-          )}
+          <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
+            <Sparkles className="h-4 w-4" />
+            Match This Outfit
+          </Button>
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-full" onClick={clearSelection}>
             <X className="h-4 w-4" />
             Clear All
