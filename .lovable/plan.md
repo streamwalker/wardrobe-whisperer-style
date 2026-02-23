@@ -1,47 +1,30 @@
 
-# Fix: Full-Outfit Selection Returns Duplicate Suggestions
+
+# Add "Clear All" Button for Wardrobe Selection
 
 ## Problem
-When you select one item from each of the 4 categories (shoes, pants, tops, outerwear), the outfit engine has zero remaining categories to vary. It returns 3 "suggestions" that are all the same items with different names -- a hallucination.
+There's no easy way to deselect all selected wardrobe items at once. The only option is the small X button on the floating bar, which only appears when 2+ items are selected.
 
 ## Solution
-Detect when all 4 categories are covered by the selection and switch to an **alternative variation mode**: instead of filling empty categories, the AI suggests outfits that swap out one item at a time to show different styling directions while keeping the core look.
+Add a visible "Clear All" button that appears whenever any items are selected (1 or more), allowing quick deselection of all items.
 
 ## Changes
 
-### `supabase/functions/match-outfit/index.ts`
+### `src/pages/Wardrobe.tsx`
 
-**1. Detect full-outfit selection**
-After building `grouped` (available items by category), check if `grouped` has zero categories to fill (i.e., every category already has an anchor).
+- Update the floating multi-select bar to appear when **1 or more** items are selected (currently requires 2+)
+- The bar already has a clear button (X icon) -- rename/restyle it to say "Clear All" for better clarity
+- When only 1 item is selected, show the item count and the Clear All button (hide "Match These" since matching needs 2+ items)
 
-**2. Use a different prompt for full-outfit mode**
-Instead of "fill remaining categories," the prompt becomes:
-- "The user selected a complete outfit. Suggest 3 variations by swapping exactly ONE item for a better alternative from the same category. Each suggestion should take the outfit in a different styling direction (e.g., bolder shoes, lighter pants, different outerwear). Explain why the swap improves or changes the look."
-
-**3. The tool schema stays the same**
-Each suggestion still returns `name`, `item_ids` (4 items), `explanation`, and `mood` -- so the UI needs no changes.
-
-### No frontend changes needed
-The drawer already renders whatever the backend returns. As long as each suggestion has different `item_ids`, it will display correctly.
-
-## Technical Details
-
-The key code change in the edge function (around line 150-212):
+### Layout
 
 ```text
-// After building grouped categories...
-const missingCategories = ['shoes', 'pants', 'tops', 'outerwear']
-  .filter(cat => !anchorCategories.includes(cat));
-
-if (missingCategories.length === 0) {
-  // Full outfit selected -- use variation prompt
-  // Prompt asks AI to swap exactly 1 item per suggestion
-  // to create 3 distinct variations
-}
+1 item selected:   [ 1 item selected ] [ Clear All ]
+2+ items selected: [ 3 items selected ] [ Match These ] [ Clear All ]
 ```
 
-The variation prompt will instruct the AI to:
-- Keep 3 of the 4 items intact in each suggestion
-- Swap a different item each time (or the same item with different replacements)
-- Explain how the swap changes the outfit's character
-- Never return the original selection unchanged
+### Technical details
+- Change the condition `selectedItems.length >= 2` to `selectedItems.length >= 1` for showing the bar
+- Replace the icon-only X button with a text "Clear All" button
+- Conditionally show the "Match These" button only when `selectedItems.length >= 2`
+
