@@ -18,7 +18,13 @@ serve(async (req) => {
 
     const systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given a selected wardrobe item, suggest 2-3 outfit combinations from the user's available wardrobe items.
+Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
+1. Shoes
+2. Pants
+3. Tops
+4. Outerwear
+
+The anchor item is already assigned to its category. For the remaining 3 categories, pick the single best-matching item from the user's wardrobe.
 
 Color theory principles to apply:
 - Complementary colors (opposite on the color wheel) for bold contrast
@@ -27,15 +33,23 @@ Color theory principles to apply:
 - Tonal dressing (shades of the same hue) for sophisticated monochrome looks
 - The 60-30-10 rule: 60% dominant color, 30% secondary, 10% accent
 
-For each outfit suggestion, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
+Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
 
-    const userPrompt = `Selected item: ${JSON.stringify(selectedItem)}
+    const otherItems = wardrobeItems.filter((i: any) => i.id !== selectedItem.id);
+    const grouped: Record<string, any[]> = {};
+    for (const item of otherItems) {
+      const cat = item.category;
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(item);
+    }
 
-Available wardrobe items (excluding selected): ${JSON.stringify(
-      wardrobeItems.filter((i: any) => i.id !== selectedItem.id)
-    )}
+    const userPrompt = `ANCHOR ITEM (must appear in every outfit):
+${JSON.stringify(selectedItem)}
 
-Suggest 2-3 outfits that include the selected item. Each outfit should combine items from different categories (shoes, pants, tops, outerwear) when possible.`;
+AVAILABLE ITEMS BY CATEGORY:
+${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
+
+Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other 3 categories (shoes, pants, tops, outerwear).`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -57,12 +71,14 @@ Suggest 2-3 outfits that include the selected item. Each outfit should combine i
               function: {
                 name: "suggest_outfits",
                 description:
-                  "Return 2-3 outfit suggestions using the selected item.",
+                  "Return exactly 3 complete outfit suggestions, each with one item from every category.",
                 parameters: {
                   type: "object",
                   properties: {
                     outfits: {
                       type: "array",
+                      minItems: 3,
+                      maxItems: 3,
                       items: {
                         type: "object",
                         properties: {
