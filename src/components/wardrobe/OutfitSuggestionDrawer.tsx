@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Loader2, Bookmark, Check } from "lucide-react";
 import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 interface OutfitSuggestion {
@@ -23,11 +25,15 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const { user } = useAuth();
 
   const fetchSuggestions = async (selectedItem: WardrobeItem) => {
     if (hasLoaded === selectedItem.id) return;
     setLoading(true);
     setOutfits([]);
+    setSavedIds(new Set());
 
     try {
       const stripped = DEMO_WARDROBE.map(({ photo, ...rest }) => rest);
@@ -48,13 +54,38 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
     }
   };
 
-  // Trigger fetch when drawer opens with a new item
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
     if (isOpen && item && hasLoaded !== item.id) {
       fetchSuggestions(item);
     }
   };
+
+  const saveOutfit = async (outfit: OutfitSuggestion, idx: number) => {
+    if (!user) {
+      toast.error("Sign in to save outfits");
+      return;
+    }
+    setSavingIdx(idx);
+    try {
+      const { error } = await supabase.from("saved_outfits").insert({
+        user_id: user.id,
+        name: outfit.name,
+        item_ids: outfit.item_ids,
+        mood: outfit.mood,
+        explanation: outfit.explanation,
+      });
+      if (error) throw error;
+      setSavedIds((prev) => new Set(prev).add(outfitKey(outfit)));
+      toast.success("Outfit saved!");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to save outfit");
+    } finally {
+      setSavingIdx(null);
+    }
+  };
+
+  const outfitKey = (o: OutfitSuggestion) => `${o.name}::${o.item_ids.join(",")}`;
 
   const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
 
@@ -90,54 +121,72 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
         )}
 
         <div className="space-y-5 pb-6">
-          {outfits.map((outfit, idx) => (
-            <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-base font-semibold text-card-foreground">
-                  {outfit.name}
-                </h3>
-                <Badge variant="secondary" className="text-xs">
-                  {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
-                </Badge>
-              </div>
-
-              {/* Item thumbnails */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {outfit.item_ids.map((id) => {
-                  const wi = getItemById(id);
-                  if (!wi) return null;
-                  return (
-                    <div
-                      key={id}
-                      className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary"
+          {outfits.map((outfit, idx) => {
+            const isSaved = savedIds.has(outfitKey(outfit));
+            return (
+              <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-base font-semibold text-card-foreground">
+                    {outfit.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={isSaved || savingIdx === idx}
+                      onClick={() => saveOutfit(outfit, idx)}
                     >
-                      <div
-                        className="aspect-square w-full overflow-hidden"
-                        style={{ backgroundColor: wi.color_hex }}
-                      >
-                        {wi.photo && (
-                          <img
-                            src={wi.photo}
-                            alt={wi.name}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
-                        )}
-                      </div>
-                      <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
-                        {wi.name}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+                      {isSaved ? (
+                        <Check className="h-4 w-4 text-primary" />
+                      ) : savingIdx === idx ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Bookmark className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
 
-              {/* AI explanation */}
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {outfit.explanation}
-              </p>
-            </div>
-          ))}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                  {outfit.item_ids.map((id) => {
+                    const wi = getItemById(id);
+                    if (!wi) return null;
+                    return (
+                      <div
+                        key={id}
+                        className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary"
+                      >
+                        <div
+                          className="aspect-square w-full overflow-hidden"
+                          style={{ backgroundColor: wi.color_hex }}
+                        >
+                          {wi.photo && (
+                            <img
+                              src={wi.photo}
+                              alt={wi.name}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                        <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
+                          {wi.name}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {outfit.explanation}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>
