@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { DEMO_WARDROBE, CATEGORIES, type WardrobeCategory } from "@/lib/wardrobe-data";
+import { DEMO_WARDROBE, CATEGORIES, type WardrobeCategory, type WardrobeItem } from "@/lib/wardrobe-data";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
+import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { cn } from "@/lib/utils";
 
 export default function Wardrobe() {
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
+  const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const filtered =
     activeCategory === "all"
@@ -50,9 +53,22 @@ export default function Wardrobe() {
       {/* Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {filtered.map((item) => (
-          <WardrobeItemCard key={item.id} item={item} />
+          <WardrobeItemCard
+            key={item.id}
+            item={item}
+            onClick={() => {
+              setSelectedItem(item);
+              setDrawerOpen(true);
+            }}
+          />
         ))}
       </div>
+
+      <OutfitSuggestionDrawer
+        item={selectedItem}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }

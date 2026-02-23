@@ -1,1 +1,4 @@
 project_id = "mqwkgtfzkowptlphbgde"
+
+[functions.match-outfit]
+verify_jwt = false
