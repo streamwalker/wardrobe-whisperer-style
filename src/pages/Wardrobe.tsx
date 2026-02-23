@@ -205,17 +205,20 @@ export default function Wardrobe() {
       )}
 
       {/* Floating multi-select bar */}
-      {selectedItems.length >= 2 && !drawerOpen && (
+      {selectedItems.length >= 1 && !drawerOpen && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border bg-card px-4 py-2 shadow-lg">
           <span className="text-sm font-medium text-card-foreground">
-            {selectedItems.length} items selected
+            {selectedItems.length} {selectedItems.length === 1 ? "item" : "items"} selected
           </span>
-          <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
-            <Sparkles className="h-4 w-4" />
-            Match These
-          </Button>
-          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={clearSelection}>
+          {selectedItems.length >= 2 && (
+            <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
+              <Sparkles className="h-4 w-4" />
+              Match These
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-full" onClick={clearSelection}>
             <X className="h-4 w-4" />
+            Clear All
           </Button>
         </div>
       )}
