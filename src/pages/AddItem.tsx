@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,8 @@ const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] 
 export default function AddItem() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -157,28 +158,47 @@ export default function AddItem() {
       </div>
 
       {/* Photo upload */}
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-input bg-muted/40 p-8 transition-colors hover:bg-muted/60"
-      >
-        {photoPreview ? (
+      {photoPreview ? (
+        <div className="flex flex-col items-center gap-3">
           <img
             src={photoPreview}
             alt="Preview"
             className="h-48 w-48 rounded-lg object-cover"
           />
-        ) : (
-          <>
-            <Camera className="h-10 w-10 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Tap to upload a photo</span>
-          </>
-        )}
-      </button>
+          <Button variant="outline" size="sm" onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}>
+            Remove photo
+          </Button>
+        </div>
+      ) : (
+        <div className="flex w-full gap-3">
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-6 transition-colors hover:bg-muted/60"
+          >
+            <Camera className="h-8 w-8 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Take Photo</span>
+          </button>
+          <button
+            onClick={() => galleryInputRef.current?.click()}
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-6 transition-colors hover:bg-muted/60"
+          >
+            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Choose Photo</span>
+          </button>
+        </div>
+      )}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
         className="hidden"
         onChange={handleFileSelect}
       />
