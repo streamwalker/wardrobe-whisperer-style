@@ -1,36 +1,33 @@
 
 
-# Separate Photo Upload from Analysis
+# Remove Auto-Open Drawer on Item Selection
 
 ## Problem
-Currently, when a user selects a photo on the Add Item page, the app immediately uploads it and calls the analyze-clothing function. The user wants control over when analysis happens.
+When a user taps a wardrobe item, the outfit suggestion drawer automatically opens (on first selection). The user wants item taps to only select/deselect -- matching should only start when they explicitly press a button.
 
 ## Solution
-Split `handleFileSelect` into two steps:
-1. **Photo selection** -- only sets the preview image and stores the file
-2. **Analyze Now button** -- uploads the photo and triggers AI analysis on demand
+Remove the auto-open logic from `handleCardClick` and rely solely on the existing "Match These" button in the floating bar.
 
 ## Changes
 
-### `src/pages/AddItem.tsx`
+### `src/pages/Wardrobe.tsx`
 
-**1. Simplify `handleFileSelect`**
-Remove all upload/analyze logic. It should only do:
-- Store the file in state (`setPhotoFile`)
-- Create and set a preview URL (`setPhotoPreview`)
+**1. Remove auto-open in `handleCardClick`**
+Delete the lines that call `setDrawerOpen(true)` when the first item is selected (around line 68-70):
 
-**2. Create new `handleAnalyze` function**
-Move the upload + analyze logic into a separate async function triggered by a button click.
-
-**3. Add "Analyze Now" button**
-Show a button below the photo preview (only visible when a photo is selected and not yet analyzing):
-
-```text
-[Photo Preview]
-[ Analyze Now button ]
+```typescript
+// REMOVE these lines inside handleCardClick:
+if (prev.length === 0) {
+  setDrawerOpen(true);
+}
 ```
 
-- Uses the existing `Sparkles` or `Camera` icon with "Analyze Now" label
-- Disabled while `analyzing` is true
-- Hidden if no photo is selected
+**2. Rename button label**
+Change "Match These" to "Match This Outfit" for clarity. Show it when 1 or more items are selected (not just 2+), so users always have a clear action available.
+
+### Flow after fix
+
+1. User taps items -- they highlight with a checkmark, nothing else happens
+2. Floating bar appears showing selected count + "Match This Outfit" + "Clear All"
+3. User taps "Match This Outfit" -- drawer opens and analysis begins
 
