@@ -26,7 +26,7 @@ export default function AppLayout() {
           </h1>
           <button
             onClick={() => navigate("/wardrobe/add")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg leading-none"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg leading-none"
           >
             +
           </button>
@@ -39,7 +39,7 @@ export default function AppLayout() {
       </main>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/90 backdrop-blur-md">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/90 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
         <div className="container flex h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);

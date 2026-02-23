@@ -163,7 +163,7 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange, onSw
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center gap-2 font-display text-lg">
             <Sparkles className="h-5 w-5 text-accent" />
