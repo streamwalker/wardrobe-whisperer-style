@@ -7,6 +7,7 @@ import blackFieldJacket from '@/assets/wardrobe/black-field-jacket.jpeg';
 import mustardHoodie from '@/assets/wardrobe/mustard-hoodie.jpeg';
 import whiteHoodie from '@/assets/wardrobe/white-hoodie.jpeg';
 import ashPearl from '@/assets/wardrobe/ash-pearl.jpeg';
+import oatmealHoodie from '@/assets/wardrobe/oatmeal-hoodie.jpeg';
 import pantsHazeBlue from '@/assets/wardrobe/pants-haze-blue.jpeg';
 import pantsLightCoffee from '@/assets/wardrobe/pants-light-coffee.jpeg';
 import pantsDarkGreen from '@/assets/wardrobe/pants-dark-green.jpeg';
@@ -74,7 +75,7 @@ export const DEMO_WARDROBE: WardrobeItem[] = [
   { id: 't4', name: 'Olive Shirt', category: 'tops', primary_color: 'Olive', color_hex: '#6B7B4A', style_tags: ['bold', 'casual'], is_new: false, is_featured: false },
 
   // Outerwear
-  { id: 'o1', name: 'Oatmeal Hoodie', category: 'outerwear', primary_color: 'Oatmeal', color_hex: '#D4C9B0', style_tags: ['casual', 'neutral'], is_new: false, is_featured: true },
+  { id: 'o1', name: 'Oatmeal Hoodie', category: 'outerwear', primary_color: 'Oatmeal', color_hex: '#D4C9B0', style_tags: ['casual', 'neutral'], is_new: false, is_featured: true, photo: oatmealHoodie },
   { id: 'o2', name: 'Mustard Hoodie', category: 'outerwear', primary_color: 'Mustard', color_hex: '#C49B2A', style_tags: ['bold', 'casual'], is_new: false, is_featured: false, photo: mustardHoodie },
   { id: 'o3', name: 'Gray Hoodie', category: 'outerwear', primary_color: 'Gray', color_hex: '#8A8A8A', style_tags: ['neutral', 'casual'], is_new: false, is_featured: false },
   { id: 'o4', name: 'White Hoodie', category: 'outerwear', primary_color: 'White', color_hex: '#F0F0F0', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: false, photo: whiteHoodie },
