@@ -4,18 +4,61 @@ import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { Button } from "@/components/ui/button";
-import { Sparkles, X } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Sparkles, X, ImagePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Wardrobe() {
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
   const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [generatedPhotos, setGeneratedPhotos] = useState<Record<string, string>>({});
+  const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState({ current: 0, total: 0 });
+
+  // Apply generated photos to wardrobe items
+  const wardrobeWithPhotos = DEMO_WARDROBE.map((item) =>
+    generatedPhotos[item.id] ? { ...item, photo: generatedPhotos[item.id] } : item
+  );
+
+  const itemsMissingPhotos = wardrobeWithPhotos.filter((i) => !i.photo);
+
+  const handleGenerateImages = async () => {
+    if (generating) return;
+    const missing = itemsMissingPhotos;
+    if (missing.length === 0) {
+      toast("All items already have photos!");
+      return;
+    }
+    setGenerating(true);
+    setGenProgress({ current: 0, total: missing.length });
+
+    for (let i = 0; i < missing.length; i++) {
+      const item = missing[i];
+      setGenProgress({ current: i + 1, total: missing.length });
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-clothing-image", {
+          body: { name: item.name, category: item.category, primary_color: item.primary_color },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          setGeneratedPhotos((prev) => ({ ...prev, [item.id]: data.url }));
+          toast.success(`Generated image for ${item.name}`);
+        }
+      } catch (err: any) {
+        console.error(`Failed to generate image for ${item.name}:`, err);
+        toast.error(`Failed: ${item.name}`);
+      }
+    }
+    setGenerating(false);
+  };
 
   const filtered =
     activeCategory === "all"
-      ? DEMO_WARDROBE
-      : DEMO_WARDROBE.filter((i) => i.category === activeCategory);
+      ? wardrobeWithPhotos
+      : wardrobeWithPhotos.filter((i) => i.category === activeCategory);
+      
 
   const selectedIds = new Set(selectedItems.map((i) => i.id));
 
@@ -62,10 +105,36 @@ export default function Wardrobe() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div>
-        <h2 className="font-display text-2xl font-semibold text-foreground">My Wardrobe</h2>
-        <p className="text-sm text-muted-foreground mt-1">{DEMO_WARDROBE.length} items</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-foreground">My Wardrobe</h2>
+          <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
+        </div>
+        {itemsMissingPhotos.length > 0 && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 shrink-0"
+            onClick={handleGenerateImages}
+            disabled={generating}
+          >
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {genProgress.current}/{genProgress.total}
+              </>
+            ) : (
+              <>
+                <ImagePlus className="h-4 w-4" />
+                Generate Images ({itemsMissingPhotos.length})
+              </>
+            )}
+          </Button>
+        )}
       </div>
+      {generating && (
+        <Progress value={(genProgress.current / genProgress.total) * 100} className="h-1.5" />
+      )}
 
       {/* Category tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -100,7 +169,7 @@ export default function Wardrobe() {
       {activeCategory === "all" ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {CATEGORIES.map((cat) => {
-            const items = DEMO_WARDROBE.filter((i) => i.category === cat.value);
+            const items = wardrobeWithPhotos.filter((i) => i.category === cat.value);
             return (
               <div key={cat.value} className="flex flex-col gap-2">
                 <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
