@@ -7,6 +7,16 @@ import blackFieldJacket from '@/assets/wardrobe/black-field-jacket.jpeg';
 import mustardHoodie from '@/assets/wardrobe/mustard-hoodie.jpeg';
 import whiteHoodie from '@/assets/wardrobe/white-hoodie.jpeg';
 import ashPearl from '@/assets/wardrobe/ash-pearl.jpeg';
+import pantsHazeBlue from '@/assets/wardrobe/pants-haze-blue.jpeg';
+import pantsLightCoffee from '@/assets/wardrobe/pants-light-coffee.jpeg';
+import pantsDarkGreen from '@/assets/wardrobe/pants-dark-green.jpeg';
+import pantsBlack from '@/assets/wardrobe/pants-black.jpeg';
+import pantsDarkGray from '@/assets/wardrobe/pants-dark-gray.jpeg';
+import pantsNavy from '@/assets/wardrobe/pants-navy.jpeg';
+import pantsSapphireBlue from '@/assets/wardrobe/pants-sapphire-blue.jpeg';
+import pantsArmyGreen from '@/assets/wardrobe/pants-army-green.jpeg';
+import pantsPurple from '@/assets/wardrobe/pants-purple.jpeg';
+import pantsKhaki from '@/assets/wardrobe/pants-khaki.jpeg';
 
 export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
@@ -32,12 +42,16 @@ export const DEMO_WARDROBE: WardrobeItem[] = [
   { id: 's5', name: 'FOG Athletics II', category: 'shoes', primary_color: 'Ash Pearl', color_hex: '#C8B8A8', style_tags: ['luxury', 'neutral'], is_new: true, is_featured: true, photo: ashPearl },
 
   // Pants
-  { id: 'p1', name: 'Haze Blue', category: 'pants', primary_color: 'Blue', color_hex: '#7A8FA0', style_tags: ['casual', 'neutral'], is_new: false, is_featured: false },
-  { id: 'p2', name: 'Light Coffee', category: 'pants', primary_color: 'Brown', color_hex: '#A68B6B', style_tags: ['neutral', 'luxury'], is_new: false, is_featured: true },
-  { id: 'p3', name: 'Dark Green', category: 'pants', primary_color: 'Green', color_hex: '#3D5A3D', style_tags: ['bold', 'casual'], is_new: false, is_featured: false },
-  { id: 'p4', name: 'Black Pants', category: 'pants', primary_color: 'Black', color_hex: '#1A1A1A', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: false },
-  { id: 'p5', name: 'Dark Gray', category: 'pants', primary_color: 'Gray', color_hex: '#4A4A4A', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: false },
-  { id: 'p6', name: 'Navy', category: 'pants', primary_color: 'Navy', color_hex: '#2C3E50', style_tags: ['neutral', 'luxury'], is_new: false, is_featured: false },
+  { id: 'p1', name: 'Haze Blue', category: 'pants', primary_color: 'Blue', color_hex: '#7A8FA0', style_tags: ['casual', 'neutral'], is_new: false, is_featured: false, photo: pantsHazeBlue },
+  { id: 'p2', name: 'Light Coffee', category: 'pants', primary_color: 'Brown', color_hex: '#A68B6B', style_tags: ['neutral', 'luxury'], is_new: false, is_featured: true, photo: pantsLightCoffee },
+  { id: 'p3', name: 'Dark Green', category: 'pants', primary_color: 'Green', color_hex: '#3D5A3D', style_tags: ['bold', 'casual'], is_new: false, is_featured: false, photo: pantsDarkGreen },
+  { id: 'p4', name: 'Black Pants', category: 'pants', primary_color: 'Black', color_hex: '#1A1A1A', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: false, photo: pantsBlack },
+  { id: 'p5', name: 'Dark Gray', category: 'pants', primary_color: 'Gray', color_hex: '#4A4A4A', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: false, photo: pantsDarkGray },
+  { id: 'p6', name: 'Navy', category: 'pants', primary_color: 'Navy', color_hex: '#2C3E50', style_tags: ['neutral', 'luxury'], is_new: false, is_featured: false, photo: pantsNavy },
+  { id: 'p7', name: 'Sapphire Blue', category: 'pants', primary_color: 'Blue', color_hex: '#1E40AF', style_tags: ['bold', 'sporty'], is_new: true, is_featured: false, photo: pantsSapphireBlue },
+  { id: 'p8', name: 'Army Green', category: 'pants', primary_color: 'Green', color_hex: '#4B5320', style_tags: ['bold', 'casual'], is_new: true, is_featured: false, photo: pantsArmyGreen },
+  { id: 'p9', name: 'Purple', category: 'pants', primary_color: 'Purple', color_hex: '#5B3A8C', style_tags: ['bold', 'luxury'], is_new: true, is_featured: false, photo: pantsPurple },
+  { id: 'p10', name: 'Khaki', category: 'pants', primary_color: 'Khaki', color_hex: '#B0A478', style_tags: ['neutral', 'casual'], is_new: true, is_featured: false, photo: pantsKhaki },
 
   // Tops
   { id: 't1', name: 'Cream Shirt', category: 'tops', primary_color: 'Cream', color_hex: '#F5F0E1', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: true },
