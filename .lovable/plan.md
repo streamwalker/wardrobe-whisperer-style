@@ -1,95 +1,102 @@
 
 
-# Compatibility Check for Multi-Select Items
+# Add Item Page with AI Auto-Detect
 
 ## Problem
-When a user selects two or more items that fundamentally clash (e.g., clashing colors or mismatched styles), the AI might force awkward outfit suggestions rather than being honest. The platform should catch these mismatches upfront and guide the user toward better pairings.
+The "+" button in the header navigates to `/wardrobe/add`, but no route or page exists for it, resulting in a 404.
 
 ## Solution
-Add an AI-powered compatibility check that runs when outfit suggestions are requested. If the selected items don't work together, the system shows a clear message explaining why and suggests alternative items from the wardrobe that would pair better.
+Create an "Add Item" page where the user uploads a photo, the AI automatically detects the category, color, and style tags, and the user can review/edit before saving.
 
-## How It Works
-1. User selects 2+ items and taps "Match These" (or the drawer opens)
-2. Before generating outfits, the AI evaluates whether the selected items are compatible
-3. **If compatible**: proceed as normal, show outfit suggestions
-4. **If incompatible**: show an alert explaining the clash, along with thumbnail cards of suggested replacement items the user can tap to swap in
+## Flow
+1. User taps "+" in the header, navigates to `/wardrobe/add`
+2. User uploads or takes a photo of a clothing item
+3. Photo is uploaded to the `wardrobe-photos` storage bucket
+4. A new edge function (`analyze-clothing`) sends the image URL to the AI (Gemini with vision) and returns detected category, primary color, color hex, style tags, and a suggested name
+5. The form pre-fills with AI results; user can edit any field
+6. On save, a row is inserted into `wardrobe_items` with the user's ID
+7. User is redirected back to `/wardrobe`
 
 ## Changes
 
-### 1. Edge Function (`supabase/functions/match-outfit/index.ts`)
-- Add a preliminary compatibility evaluation step when multiple items are selected
-- Make a first AI call using a lightweight prompt: "Are these items compatible? If not, which item is the weakest link, why, and what 2-3 alternatives from the wardrobe would work better?"
-- Use structured tool output with a schema like:
-  ```text
-  {
-    compatible: boolean,
-    reason: string (if incompatible),
-    problem_item_id: string (the item causing the clash),
-    suggested_replacements: [{ id, reason }] (2-3 better alternatives)
-  }
-  ```
-- If compatible, proceed to the existing outfit generation logic
-- If incompatible, return the validation result immediately (no outfit generation)
-- Skip this check for single-item selections (they're always valid)
+### 1. New Route in `src/App.tsx`
+- Add a `/wardrobe/add` route inside the `AppLayout` layout, before the `/wardrobe` route
+- Import and render a new `AddItem` page component
 
-### 2. Drawer Component (`src/components/wardrobe/OutfitSuggestionDrawer.tsx`)
-- Handle the new `compatible: false` response from the edge function
-- When incompatible, show an alert card instead of outfit results:
-  - A warning icon and message explaining the clash (e.g., "The Purple Pants clash with the Mustard Hoodie -- the warm mustard and cool purple create a jarring contrast")
-  - A "Try these instead" section showing 2-3 alternative item thumbnails with short explanations
-  - Each alternative is tappable -- tapping one swaps it into the selection and re-triggers suggestions
-- Add a new `onSwapItem` callback prop so the drawer can tell the Wardrobe page to swap an item in the selection
+### 2. New Page: `src/pages/AddItem.tsx`
+- Photo upload area (tap to select or take photo)
+- Upload the image to `wardrobe-photos` bucket via the storage SDK
+- Call the `analyze-clothing` edge function with the public image URL
+- Show a loading spinner while AI analyzes
+- Display pre-filled form fields: name, category (dropdown), primary color, color hex (color swatch), style tags (multi-select chips)
+- "Save to Wardrobe" button inserts into `wardrobe_items` table
+- Back button in the header to return to wardrobe
+- Requires authentication -- redirect to `/auth` if not logged in
 
-### 3. Wardrobe Page (`src/pages/Wardrobe.tsx`)
-- Pass a `onSwapItem(oldItemId, newItemId)` handler to the drawer
-- When called, update `selectedItems` by replacing the old item with the new one
-- The drawer will then automatically re-fetch suggestions with the updated selection
+### 3. New Edge Function: `supabase/functions/analyze-clothing/index.ts`
+- Receives `{ imageUrl: string }`
+- Uses `google/gemini-3-flash-preview` (multimodal) via the Lovable AI gateway
+- Sends the image as a URL in the message content (using the vision format: `{ type: "image_url", image_url: { url } }`)
+- Uses structured tool output to return:
+  - `name` (string) -- suggested item name
+  - `category` (shoes | pants | tops | outerwear)
+  - `primary_color` (string, e.g., "Navy")
+  - `color_hex` (string, e.g., "#2C3E50")
+  - `style_tags` (array of casual/neutral/bold/luxury/minimal/sporty)
+- Standard CORS and error handling (429, 402)
 
-### 4. No New Dependencies
-Uses the same AI gateway and edge function infrastructure already in place.
+### 4. No Database Changes Needed
+- The `wardrobe_items` table already has all the right columns (name, category, primary_color, color_hex, style_tags, photo_url, user_id, is_new, is_featured)
+- The `wardrobe-photos` storage bucket already exists and is public
+- RLS policies on `wardrobe_items` already allow authenticated users to insert their own items
+
+### 5. Storage RLS
+- Need to add storage RLS policies so authenticated users can upload to the `wardrobe-photos` bucket (INSERT policy on `storage.objects`)
 
 ## Technical Details
 
-**Compatibility check prompt (system):**
+**Edge function AI prompt (system):**
 ```text
-You are StyleMatch, a fashion AI. Evaluate whether the given wardrobe items can form a cohesive outfit together. Consider color harmony, style consistency, and overall aesthetic. If any item creates a clash, identify it and suggest 2-3 alternatives from the user's wardrobe that would work better with the remaining items.
+You are a fashion item analyzer. Given a photo of a clothing item, identify:
+- A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
+- The category: shoes, pants, tops, or outerwear
+- The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
+- The hex code of that color
+- 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty
 ```
 
-**New response shape from edge function:**
+**Image message format for Gemini vision:**
 ```text
-// Incompatible response:
-{
-  compatible: false,
-  reason: "The purple pants and mustard hoodie create a jarring warm-cool clash...",
-  problem_item_id: "p9",
-  suggested_replacements: [
-    { id: "p4", reason: "Black pants neutralize the bold mustard" },
-    { id: "p10", reason: "Khaki creates an earthy, analogous palette" }
-  ]
-}
-
-// Compatible response (existing shape):
-{
-  compatible: true,
-  outfits: [...]
-}
+messages: [
+  { role: "system", content: systemPrompt },
+  { role: "user", content: [
+    { type: "image_url", image_url: { url: imageUrl } },
+    { type: "text", text: "Analyze this clothing item." }
+  ]}
+]
 ```
 
-**Drawer incompatibility UI layout:**
+**Form UI layout:**
 ```text
 +------------------------------------------+
-|  (!) These items don't pair well          |
-|                                           |
-|  "The purple pants clash with the         |
-|   mustard hoodie -- jarring contrast"     |
-|                                           |
-|  Try swapping [Purple Pants] for:         |
-|  +--------+  +--------+  +--------+      |
-|  | Black  |  | Khaki  |  | Navy   |      |
-|  | Pants  |  |        |  |        |      |
-|  +--------+  +--------+  +--------+      |
-|  "Neutral   "Earthy     "Classic          |
-|   anchor"    harmony"    pairing"         |
+|  < Back           Add Item               |
++------------------------------------------+
+|                                          |
+|  +------------------------------------+  |
+|  |                                    |  |
+|  |     [Photo preview / Upload area]  |  |
+|  |     Tap to upload a photo          |  |
+|  |                                    |  |
+|  +------------------------------------+  |
+|                                          |
+|  Analyzing... (spinner, shown during AI) |
+|                                          |
+|  Name:     [  Navy Chinos            ]   |
+|  Category: [ Pants          v        ]   |
+|  Color:    [  Navy  ] [##2C3E50]         |
+|  Style:    [casual] [neutral] [minimal]  |
+|                                          |
+|  [ Save to Wardrobe ]                    |
 +------------------------------------------+
 ```
 
