@@ -8,14 +8,34 @@ import { Progress } from "@/components/ui/progress";
 import { Sparkles, X, ImagePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Wardrobe() {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
   const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [generatedPhotos, setGeneratedPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState({ current: 0, total: 0 });
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const wardrobeTitle = profile?.display_name
+    ? `${profile.display_name}${profile.display_name.endsWith('s') ? "'" : "'s"} Wardrobe`
+    : "My Wardrobe";
 
   // Apply generated photos to wardrobe items
   const wardrobeWithPhotos = DEMO_WARDROBE.map((item) =>
@@ -104,7 +124,7 @@ export default function Wardrobe() {
     <div className="space-y-5 pb-24">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">My Wardrobe</h2>
+          <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
           <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
         </div>
         {itemsMissingPhotos.length > 0 && (
