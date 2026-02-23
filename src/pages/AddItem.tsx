@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,22 +40,23 @@ export default function AddItem() {
     return null;
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+  };
 
-    // Upload and analyze
+  const handleAnalyze = async () => {
+    if (!photoFile) return;
     setAnalyzing(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = photoFile.name.split(".").pop() || "jpg";
       const filePath = `${user!.id}/${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("wardrobe-photos")
-        .upload(filePath, file);
+        .upload(filePath, photoFile);
 
       if (uploadError) throw uploadError;
 
@@ -182,12 +183,12 @@ export default function AddItem() {
         onChange={handleFileSelect}
       />
 
-      {/* Analyzing spinner */}
-      {analyzing && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Analyzing your item…</span>
-        </div>
+      {/* Analyze button */}
+      {photoPreview && (
+        <Button onClick={handleAnalyze} disabled={analyzing} variant="secondary" className="w-full">
+          {analyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+          {analyzing ? "Analyzing…" : "Analyze Now"}
+        </Button>
       )}
 
       {/* Form fields */}
