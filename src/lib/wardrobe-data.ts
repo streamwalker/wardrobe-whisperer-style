@@ -6,6 +6,7 @@ import sesame from '@/assets/wardrobe/sesame.jpeg';
 import blackFieldJacket from '@/assets/wardrobe/black-field-jacket.jpeg';
 import mustardHoodie from '@/assets/wardrobe/mustard-hoodie.jpeg';
 import whiteHoodie from '@/assets/wardrobe/white-hoodie.jpeg';
+import ashPearl from '@/assets/wardrobe/ash-pearl.jpeg';
 
 export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
@@ -28,6 +29,7 @@ export const DEMO_WARDROBE: WardrobeItem[] = [
   { id: 's2', name: 'Wonder Oxide', category: 'shoes', primary_color: 'Pink', color_hex: '#C48B7A', style_tags: ['bold', 'luxury'], is_new: false, is_featured: false, photo: wonderOxide },
   { id: 's3', name: 'Putty Beige', category: 'shoes', primary_color: 'Beige', color_hex: '#C8B99A', style_tags: ['neutral', 'minimal'], is_new: false, is_featured: true, photo: puttyBeige },
   { id: 's4', name: 'Sesame', category: 'shoes', primary_color: 'Tan', color_hex: '#B5A48A', style_tags: ['neutral', 'casual'], is_new: false, is_featured: false, photo: sesame },
+  { id: 's5', name: 'FOG Athletics II', category: 'shoes', primary_color: 'Ash Pearl', color_hex: '#C8B8A8', style_tags: ['luxury', 'neutral'], is_new: true, is_featured: true, photo: ashPearl },
 
   // Pants
   { id: 'p1', name: 'Haze Blue', category: 'pants', primary_color: 'Blue', color_hex: '#7A8FA0', style_tags: ['casual', 'neutral'], is_new: false, is_featured: false },
