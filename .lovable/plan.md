@@ -1,102 +1,81 @@
 
+# Mobile UI Optimization
 
-# Add Item Page with AI Auto-Detect
-
-## Problem
-The "+" button in the header navigates to `/wardrobe/add`, but no route or page exists for it, resulting in a 404.
-
-## Solution
-Create an "Add Item" page where the user uploads a photo, the AI automatically detects the category, color, and style tags, and the user can review/edit before saving.
-
-## Flow
-1. User taps "+" in the header, navigates to `/wardrobe/add`
-2. User uploads or takes a photo of a clothing item
-3. Photo is uploaded to the `wardrobe-photos` storage bucket
-4. A new edge function (`analyze-clothing`) sends the image URL to the AI (Gemini with vision) and returns detected category, primary color, color hex, style tags, and a suggested name
-5. The form pre-fills with AI results; user can edit any field
-6. On save, a row is inserted into `wardrobe_items` with the user's ID
-7. User is redirected back to `/wardrobe`
+## Issues Found (from mobile screenshot at 390x844)
+1. **Image alt text bleeding onto cards** -- The shoe images show alt text ("Fear of God Athletics II ball Low") overlapping on top of the card, likely due to slow image loading or broken aspect-ratio containment
+2. **Category tabs scrollbar visible** -- A visible green/teal scrollbar appears under the category filter pills
+3. **Card info padding too generous** -- The name/color/tags section has `p-3` which wastes vertical space on mobile
+4. **Bottom safe area missing** -- No `env(safe-area-inset-bottom)` for devices with home indicators (iPhone X+)
+5. **Touch targets could be larger** -- The "+" button (36px) and bottom nav icons are slightly small for comfortable thumb tapping
+6. **Floating selection bar positioning** -- The "Match These" bar at `bottom-6` may collide with the bottom nav on smaller screens
 
 ## Changes
 
-### 1. New Route in `src/App.tsx`
-- Add a `/wardrobe/add` route inside the `AppLayout` layout, before the `/wardrobe` route
-- Import and render a new `AddItem` page component
+### 1. WardrobeItemCard (`src/components/wardrobe/WardrobeItemCard.tsx`)
+- Tighten card info padding from `p-3` to `p-2` on mobile
+- Ensure image container clips overflow properly with `object-cover` and explicit sizing
+- Reduce font sizes slightly for tighter mobile cards
 
-### 2. New Page: `src/pages/AddItem.tsx`
-- Photo upload area (tap to select or take photo)
-- Upload the image to `wardrobe-photos` bucket via the storage SDK
-- Call the `analyze-clothing` edge function with the public image URL
-- Show a loading spinner while AI analyzes
-- Display pre-filled form fields: name, category (dropdown), primary color, color hex (color swatch), style tags (multi-select chips)
-- "Save to Wardrobe" button inserts into `wardrobe_items` table
-- Back button in the header to return to wardrobe
-- Requires authentication -- redirect to `/auth` if not logged in
+### 2. Wardrobe Page (`src/pages/Wardrobe.tsx`)
+- Hide the visible scrollbar on category tabs by adding `scrollbar-none` (already present, but ensure CSS utility exists)
+- Increase bottom padding to account for bottom nav + safe area
+- Move floating selection bar higher so it sits above the bottom nav (`bottom-20` instead of `bottom-6`)
 
-### 3. New Edge Function: `supabase/functions/analyze-clothing/index.ts`
-- Receives `{ imageUrl: string }`
-- Uses `google/gemini-3-flash-preview` (multimodal) via the Lovable AI gateway
-- Sends the image as a URL in the message content (using the vision format: `{ type: "image_url", image_url: { url } }`)
-- Uses structured tool output to return:
-  - `name` (string) -- suggested item name
-  - `category` (shoes | pants | tops | outerwear)
-  - `primary_color` (string, e.g., "Navy")
-  - `color_hex` (string, e.g., "#2C3E50")
-  - `style_tags` (array of casual/neutral/bold/luxury/minimal/sporty)
-- Standard CORS and error handling (429, 402)
+### 3. AppLayout (`src/components/layout/AppLayout.tsx`)
+- Add safe area padding to the bottom nav using `pb-[env(safe-area-inset-bottom)]`
+- Increase main content bottom padding to prevent content from hiding behind the nav
+- Make the "+" button slightly larger (40px instead of 36px) for better touch targets
+- Add `viewport-fit=cover` meta tag support in the layout
 
-### 4. No Database Changes Needed
-- The `wardrobe_items` table already has all the right columns (name, category, primary_color, color_hex, style_tags, photo_url, user_id, is_new, is_featured)
-- The `wardrobe-photos` storage bucket already exists and is public
-- RLS policies on `wardrobe_items` already allow authenticated users to insert their own items
+### 4. Global CSS (`src/index.css`)
+- Add a `.scrollbar-none` utility if not already available (hides scrollbar on WebKit and Firefox)
+- Add safe area CSS custom properties for consistent spacing
 
-### 5. Storage RLS
-- Need to add storage RLS policies so authenticated users can upload to the `wardrobe-photos` bucket (INSERT policy on `storage.objects`)
+### 5. Index HTML (`index.html`)
+- Add `viewport-fit=cover` to the viewport meta tag for proper safe area support on iOS
+
+### 6. OutfitSuggestionDrawer (`src/components/wardrobe/OutfitSuggestionDrawer.tsx`)
+- Ensure the bottom sheet respects safe area insets at the bottom
+- Tighten padding in outfit cards for mobile
+
+### 7. AddItem Page (`src/pages/AddItem.tsx`)
+- Add safe area bottom padding
+- Ensure form inputs have proper touch sizing (min 44px height)
 
 ## Technical Details
 
-**Edge function AI prompt (system):**
+**Safe area approach:**
 ```text
-You are a fashion item analyzer. Given a photo of a clothing item, identify:
-- A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
-- The category: shoes, pants, tops, or outerwear
-- The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
-- The hex code of that color
-- 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty
+/* Bottom nav */
+padding-bottom: env(safe-area-inset-bottom, 0px);
+
+/* Viewport meta */
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 ```
 
-**Image message format for Gemini vision:**
+**Scrollbar hiding (CSS utility):**
 ```text
-messages: [
-  { role: "system", content: systemPrompt },
-  { role: "user", content: [
-    { type: "image_url", image_url: { url: imageUrl } },
-    { type: "text", text: "Analyze this clothing item." }
-  ]}
-]
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
 ```
 
-**Form UI layout:**
-```text
-+------------------------------------------+
-|  < Back           Add Item               |
-+------------------------------------------+
-|                                          |
-|  +------------------------------------+  |
-|  |                                    |  |
-|  |     [Photo preview / Upload area]  |  |
-|  |     Tap to upload a photo          |  |
-|  |                                    |  |
-|  +------------------------------------+  |
-|                                          |
-|  Analyzing... (spinner, shown during AI) |
-|                                          |
-|  Name:     [  Navy Chinos            ]   |
-|  Category: [ Pants          v        ]   |
-|  Color:    [  Navy  ] [##2C3E50]         |
-|  Style:    [casual] [neutral] [minimal]  |
-|                                          |
-|  [ Save to Wardrobe ]                    |
-+------------------------------------------+
-```
+**Key sizing changes:**
+- Card info: `p-3` to `p-2`, gap from `gap-1` to `gap-0.5`
+- "+" button: `h-9 w-9` to `h-10 w-10`
+- Bottom nav: `h-16` stays, add safe area inset below
+- Floating bar: `bottom-6` to `bottom-20` to clear bottom nav
+- Touch targets: ensure all interactive elements are at least 44px
 
+**Files to modify:**
+- `index.html`
+- `src/index.css`
+- `src/components/layout/AppLayout.tsx`
+- `src/components/wardrobe/WardrobeItemCard.tsx`
+- `src/pages/Wardrobe.tsx`
+- `src/components/wardrobe/OutfitSuggestionDrawer.tsx`
+- `src/pages/AddItem.tsx`
