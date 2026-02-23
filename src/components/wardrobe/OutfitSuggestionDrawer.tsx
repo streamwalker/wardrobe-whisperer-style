@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,12 @@ interface OutfitSuggestion {
 }
 
 interface Props {
-  item: WardrobeItem | null;
+  items: WardrobeItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Props) {
+export default function OutfitSuggestionDrawer({ items, open, onOpenChange }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -31,17 +31,18 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const { user } = useAuth();
 
+  const itemsKey = items.map((i) => i.id).sort().join(",");
+
   useEffect(() => {
-    if (open && item && hasLoaded !== item.id) {
-      // Reset state for new item
+    if (open && items.length > 0 && hasLoaded !== itemsKey) {
       setOutfits([]);
       setHasMore(true);
       setSavedIds(new Set());
-      fetchSuggestions(item, []);
+      fetchSuggestions(items, []);
     }
-  }, [open, item]);
+  }, [open, itemsKey]);
 
-  const fetchSuggestions = async (selectedItem: WardrobeItem, excludeOutfits: string[][]) => {
+  const fetchSuggestions = async (selectedItems: WardrobeItem[], excludeOutfits: string[][]) => {
     const isInitial = excludeOutfits.length === 0;
     if (isInitial) {
       setLoading(true);
@@ -51,11 +52,20 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
 
     try {
       const stripped = DEMO_WARDROBE.map(({ photo, ...rest }) => rest);
-      const { photo, ...selectedStripped } = selectedItem;
+      const strippedSelected = selectedItems.map(({ photo, ...rest }) => rest);
 
-      const { data, error } = await supabase.functions.invoke("match-outfit", {
-        body: { selectedItem: selectedStripped, wardrobeItems: stripped, excludeOutfits },
-      });
+      const body: any = {
+        wardrobeItems: stripped,
+        excludeOutfits,
+      };
+
+      if (strippedSelected.length === 1) {
+        body.selectedItem = strippedSelected[0];
+      } else {
+        body.selectedItems = strippedSelected;
+      }
+
+      const { data, error } = await supabase.functions.invoke("match-outfit", { body });
 
       if (error) throw error;
       const newOutfits: OutfitSuggestion[] = data.outfits ?? [];
@@ -65,7 +75,7 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
       }
 
       setOutfits((prev) => [...prev, ...newOutfits]);
-      setHasLoaded(selectedItem.id);
+      setHasLoaded(itemsKey);
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Failed to get outfit suggestions");
@@ -76,13 +86,9 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
   };
 
   const handleLoadMore = () => {
-    if (!item) return;
+    if (items.length === 0) return;
     const excludeOutfits = outfits.map((o) => o.item_ids);
-    fetchSuggestions(item, excludeOutfits);
-  };
-
-  const handleOpenChange = (isOpen: boolean) => {
-    onOpenChange(isOpen);
+    fetchSuggestions(items, excludeOutfits);
   };
 
   const saveOutfit = async (outfit: OutfitSuggestion, idx: number) => {
@@ -110,7 +116,6 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
   };
 
   const outfitKey = (o: OutfitSuggestion) => `${o.name}::${o.item_ids.join(",")}`;
-
   const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
 
   const moodEmoji: Record<string, string> = {
@@ -121,13 +126,17 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
     sporty: "⚡",
   };
 
+  const drawerTitle = items.length === 1
+    ? `Outfit Ideas for ${items[0]?.name}`
+    : `Outfit Ideas for ${items.length} Items`;
+
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center gap-2 font-display text-lg">
             <Sparkles className="h-5 w-5 text-accent" />
-            Outfit Ideas for {item?.name}
+            {drawerTitle}
           </SheetTitle>
         </SheetHeader>
 
@@ -140,7 +149,7 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
 
         {!loading && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No suggestions found. Try a different item!
+            No suggestions found. Try different items!
           </p>
         )}
 

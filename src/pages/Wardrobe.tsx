@@ -2,11 +2,13 @@ import { useState } from "react";
 import { DEMO_WARDROBE, CATEGORIES, type WardrobeCategory, type WardrobeItem } from "@/lib/wardrobe-data";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+import { Button } from "@/components/ui/button";
+import { Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Wardrobe() {
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
-  const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const filtered =
@@ -14,8 +16,39 @@ export default function Wardrobe() {
       ? DEMO_WARDROBE
       : DEMO_WARDROBE.filter((i) => i.category === activeCategory);
 
+  const selectedIds = new Set(selectedItems.map((i) => i.id));
+
+  const handleCardClick = (item: WardrobeItem) => {
+    if (selectedIds.has(item.id)) {
+      // Deselect
+      setSelectedItems((prev) => prev.filter((i) => i.id !== item.id));
+    } else if (selectedItems.length === 0) {
+      // No selection yet — open single-item drawer (legacy behavior)
+      setSelectedItems([item]);
+      setDrawerOpen(true);
+    } else {
+      // Add to multi-select
+      setSelectedItems((prev) => [...prev, item]);
+    }
+  };
+
+  const handleMatchThese = () => {
+    setDrawerOpen(true);
+  };
+
+  const clearSelection = () => {
+    setSelectedItems([]);
+  };
+
+  const handleDrawerChange = (open: boolean) => {
+    setDrawerOpen(open);
+    if (!open) {
+      // Keep selection visible so user can adjust and re-match
+    }
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-24">
       <div>
         <h2 className="font-display text-2xl font-semibold text-foreground">My Wardrobe</h2>
         <p className="text-sm text-muted-foreground mt-1">{DEMO_WARDROBE.length} items</p>
@@ -56,18 +89,32 @@ export default function Wardrobe() {
           <WardrobeItemCard
             key={item.id}
             item={item}
-            onClick={() => {
-              setSelectedItem(item);
-              setDrawerOpen(true);
-            }}
+            selected={selectedIds.has(item.id)}
+            onClick={() => handleCardClick(item)}
           />
         ))}
       </div>
 
+      {/* Floating multi-select bar */}
+      {selectedItems.length >= 2 && !drawerOpen && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border bg-card px-4 py-2 shadow-lg">
+          <span className="text-sm font-medium text-card-foreground">
+            {selectedItems.length} items selected
+          </span>
+          <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
+            <Sparkles className="h-4 w-4" />
+            Match These
+          </Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={clearSelection}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       <OutfitSuggestionDrawer
-        item={selectedItem}
+        items={selectedItems}
         open={drawerOpen}
-        onOpenChange={setDrawerOpen}
+        onOpenChange={handleDrawerChange}
       />
     </div>
   );
