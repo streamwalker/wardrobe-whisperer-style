@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { Heart, Trash2, Loader2, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import { DEMO_WARDROBE } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+
+const MOOD_FILTERS = [
+  { value: "all", label: "All", emoji: "🎯" },
+  { value: "casual", label: "Casual", emoji: "☕" },
+  { value: "elevated", label: "Elevated", emoji: "✨" },
+  { value: "bold", label: "Bold", emoji: "🔥" },
+  { value: "minimal", label: "Minimal", emoji: "◻️" },
+  { value: "sporty", label: "Sporty", emoji: "⚡" },
+];
 
 interface SavedOutfit {
   id: string;
@@ -31,6 +41,7 @@ const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
 export default function Outfits() {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const [activeMood, setActiveMood] = useState("all");
 
   const { data: outfits = [], isLoading } = useQuery({
     queryKey: ["saved_outfits", user?.id],
@@ -66,6 +77,11 @@ export default function Outfits() {
       toast.success("Outfit removed");
     },
   });
+
+  const filteredOutfits = useMemo(
+    () => activeMood === "all" ? outfits : outfits.filter((o) => o.mood === activeMood),
+    [outfits, activeMood]
+  );
 
   if (authLoading) {
     return (
@@ -120,11 +136,88 @@ export default function Outfits() {
       </div>
     );
   }
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
+          <LogIn className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-foreground">Saved Outfits</h2>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Sign in to save and view your favorite outfit combinations.
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/auth">Sign In</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (outfits.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
+          <Heart className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Tap any wardrobe item to get AI outfit suggestions, then save your favorites here.
+          </p>
+        </div>
+        <Button variant="secondary" asChild>
+          <Link to="/wardrobe">Browse Wardrobe</Link>
+        </Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-4 pb-6">
       <h2 className="font-display text-xl font-semibold text-foreground">Saved Outfits</h2>
-      {outfits.map((outfit) => (
+
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {MOOD_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setActiveMood(f.value)}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              activeMood === f.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            }`}
+          >
+            {f.emoji} {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filteredOutfits.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          No outfits match this mood filter.
+        </p>
+      ) : null}
+
+      {filteredOutfits.map((outfit) => (
         <div key={outfit.id} className="rounded-xl border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-semibold text-card-foreground">
