@@ -54,6 +54,12 @@ export default function Wardrobe() {
     }
   };
 
+  const handleSwapItem = (oldItemId: string, newItemId: string) => {
+    const newItem = DEMO_WARDROBE.find((i) => i.id === newItemId);
+    if (!newItem) return;
+    setSelectedItems((prev) => prev.map((i) => (i.id === oldItemId ? newItem : i)));
+  };
+
   return (
     <div className="space-y-5 pb-24">
       <div>
@@ -122,6 +128,7 @@ export default function Wardrobe() {
         items={selectedItems}
         open={drawerOpen}
         onOpenChange={handleDrawerChange}
+        onSwapItem={handleSwapItem}
       />
     </div>
   );
