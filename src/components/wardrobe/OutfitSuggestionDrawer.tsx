@@ -24,40 +24,61 @@ interface Props {
 export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [hasLoaded, setHasLoaded] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
     if (open && item && hasLoaded !== item.id) {
-      fetchSuggestions(item);
+      // Reset state for new item
+      setOutfits([]);
+      setHasMore(true);
+      setSavedIds(new Set());
+      fetchSuggestions(item, []);
     }
   }, [open, item]);
 
-  const fetchSuggestions = async (selectedItem: WardrobeItem) => {
-    if (hasLoaded === selectedItem.id) return;
-    setLoading(true);
-    setOutfits([]);
-    setSavedIds(new Set());
+  const fetchSuggestions = async (selectedItem: WardrobeItem, excludeOutfits: string[][]) => {
+    const isInitial = excludeOutfits.length === 0;
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
       const stripped = DEMO_WARDROBE.map(({ photo, ...rest }) => rest);
       const { photo, ...selectedStripped } = selectedItem;
 
       const { data, error } = await supabase.functions.invoke("match-outfit", {
-        body: { selectedItem: selectedStripped, wardrobeItems: stripped },
+        body: { selectedItem: selectedStripped, wardrobeItems: stripped, excludeOutfits },
       });
 
       if (error) throw error;
-      setOutfits(data.outfits ?? []);
+      const newOutfits: OutfitSuggestion[] = data.outfits ?? [];
+
+      if (newOutfits.length < 3) {
+        setHasMore(false);
+      }
+
+      setOutfits((prev) => [...prev, ...newOutfits]);
       setHasLoaded(selectedItem.id);
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Failed to get outfit suggestions");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    if (!item) return;
+    const excludeOutfits = outfits.map((o) => o.item_ids);
+    fetchSuggestions(item, excludeOutfits);
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -190,6 +211,34 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
               </div>
             );
           })}
+
+          {/* Show More / No More */}
+          {!loading && outfits.length > 0 && (
+            <div className="flex justify-center pt-2">
+              {hasMore ? (
+                <Button
+                  variant="outline"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Show 3 More Ideas
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">No more combinations available</p>
+              )}
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>

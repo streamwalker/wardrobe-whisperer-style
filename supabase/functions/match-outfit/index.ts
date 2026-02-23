@@ -11,7 +11,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    const { selectedItem, wardrobeItems } = await req.json();
+    const { selectedItem, wardrobeItems, excludeOutfits } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -43,13 +43,18 @@ Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel dist
       grouped[cat].push(item);
     }
 
+    let excludeBlock = "";
+    if (excludeOutfits && excludeOutfits.length > 0) {
+      excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${excludeOutfits.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
+    }
+
     const userPrompt = `ANCHOR ITEM (must appear in every outfit):
 ${JSON.stringify(selectedItem)}
 
 AVAILABLE ITEMS BY CATEGORY:
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other 3 categories (shoes, pants, tops, outerwear).`;
+Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other 3 categories (shoes, pants, tops, outerwear).${excludeBlock}`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -77,7 +82,7 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
                   properties: {
                     outfits: {
                       type: "array",
-                      minItems: 3,
+                      minItems: 0,
                       maxItems: 3,
                       items: {
                         type: "object",
