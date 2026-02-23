@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,12 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const { user } = useAuth();
 
+  useEffect(() => {
+    if (open && item && hasLoaded !== item.id) {
+      fetchSuggestions(item);
+    }
+  }, [open, item]);
+
   const fetchSuggestions = async (selectedItem: WardrobeItem) => {
     if (hasLoaded === selectedItem.id) return;
     setLoading(true);
@@ -56,9 +62,6 @@ export default function OutfitSuggestionDrawer({ item, open, onOpenChange }: Pro
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
-    if (isOpen && item && hasLoaded !== item.id) {
-      fetchSuggestions(item);
-    }
   };
 
   const saveOutfit = async (outfit: OutfitSuggestion, idx: number) => {
