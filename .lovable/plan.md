@@ -1,33 +1,25 @@
 
-
-# Remove Auto-Open Drawer on Item Selection
+# Personalize Wardrobe Title with User's Name
 
 ## Problem
-When a user taps a wardrobe item, the outfit suggestion drawer automatically opens (on first selection). The user wants item taps to only select/deselect -- matching should only start when they explicitly press a button.
+The wardrobe page always shows "My Wardrobe" regardless of who is logged in. The user wants it to display the logged-in user's name, e.g. "Phil's Wardrobe".
 
 ## Solution
-Remove the auto-open logic from `handleCardClick` and rely solely on the existing "Match These" button in the floating bar.
+Fetch the current user's profile from the `profiles` table and use their `display_name` to personalize the heading.
 
 ## Changes
 
 ### `src/pages/Wardrobe.tsx`
 
-**1. Remove auto-open in `handleCardClick`**
-Delete the lines that call `setDrawerOpen(true)` when the first item is selected (around line 68-70):
+1. Import `useAuth` hook and add a query to fetch the user's profile from the `profiles` table
+2. Replace the static `"My Wardrobe"` heading with dynamic text:
+   - If a `display_name` exists: show **"Phil's Wardrobe"**
+   - Fallback to **"My Wardrobe"** if no name is set or user is not logged in
 
-```typescript
-// REMOVE these lines inside handleCardClick:
-if (prev.length === 0) {
-  setDrawerOpen(true);
-}
-```
+### Technical details
 
-**2. Rename button label**
-Change "Match These" to "Match This Outfit" for clarity. Show it when 1 or more items are selected (not just 2+), so users always have a clear action available.
-
-### Flow after fix
-
-1. User taps items -- they highlight with a checkmark, nothing else happens
-2. Floating bar appears showing selected count + "Match This Outfit" + "Clear All"
-3. User taps "Match This Outfit" -- drawer opens and analysis begins
-
+- Use `useAuth()` to get the current `user.id`
+- Query `profiles` table: `supabase.from('profiles').select('display_name').eq('user_id', user.id).single()`
+- Use `@tanstack/react-query` (`useQuery`) for the fetch, following existing patterns
+- Handle the possessive correctly (e.g. "James's Wardrobe" vs "Phil's Wardrobe")
+- Show a skeleton or "My Wardrobe" while loading to avoid layout shift
