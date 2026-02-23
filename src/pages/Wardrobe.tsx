@@ -167,17 +167,17 @@ export default function Wardrobe() {
 
       {/* Items */}
       {activeCategory === "all" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-260px)]">
           {CATEGORIES.map((cat) => {
             const items = wardrobeWithPhotos.filter((i) => i.category === cat.value);
             return (
-              <div key={cat.value} className="flex flex-col gap-2">
+              <div key={cat.value} className="flex flex-col h-full overflow-y-auto scrollbar-none">
                 <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
                   <span className="text-sm">{cat.icon}</span>
                   <span className="text-xs font-semibold text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 pt-1">
                   {items.map((item) => (
                     <WardrobeItemCard
                       key={item.id}
