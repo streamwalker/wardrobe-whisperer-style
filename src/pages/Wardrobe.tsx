@@ -96,17 +96,44 @@ export default function Wardrobe() {
         ))}
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {filtered.map((item) => (
-          <WardrobeItemCard
-            key={item.id}
-            item={item}
-            selected={selectedIds.has(item.id)}
-            onClick={() => handleCardClick(item)}
-          />
-        ))}
-      </div>
+      {/* Items */}
+      {activeCategory === "all" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {CATEGORIES.map((cat) => {
+            const items = DEMO_WARDROBE.filter((i) => i.category === cat.value);
+            return (
+              <div key={cat.value} className="flex flex-col gap-2">
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
+                  <span className="text-sm">{cat.icon}</span>
+                  <span className="text-xs font-semibold text-foreground">{cat.label}</span>
+                  <span className="text-xs text-muted-foreground">({items.length})</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {items.map((item) => (
+                    <WardrobeItemCard
+                      key={item.id}
+                      item={item}
+                      selected={selectedIds.has(item.id)}
+                      onClick={() => handleCardClick(item)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {filtered.map((item) => (
+            <WardrobeItemCard
+              key={item.id}
+              item={item}
+              selected={selectedIds.has(item.id)}
+              onClick={() => handleCardClick(item)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Floating multi-select bar */}
       {selectedItems.length >= 2 && !drawerOpen && (
