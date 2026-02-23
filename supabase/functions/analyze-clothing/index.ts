@@ -1,0 +1,121 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS")
+    return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { imageUrl } = await req.json();
+    if (!imageUrl) throw new Error("imageUrl is required");
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    const systemPrompt = `You are a fashion item analyzer. Given a photo of a clothing item, identify:
+- A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
+- The category: shoes, pants, tops, or outerwear
+- The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
+- The hex code of that color
+- 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "image_url", image_url: { url: imageUrl } },
+              { type: "text", text: "Analyze this clothing item." },
+            ],
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "analyze_item",
+              description: "Return the analysis of a clothing item from its photo.",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "Short 2-3 word name" },
+                  category: {
+                    type: "string",
+                    enum: ["shoes", "pants", "tops", "outerwear"],
+                  },
+                  primary_color: { type: "string", description: "Color name" },
+                  color_hex: { type: "string", description: "Hex code e.g. #2C3E50" },
+                  style_tags: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                      enum: ["casual", "neutral", "bold", "luxury", "minimal", "sporty"],
+                    },
+                  },
+                },
+                required: ["name", "category", "primary_color", "color_hex", "style_tags"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "analyze_item" } },
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited — please try again shortly." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Top up in Settings → Workspace → Usage." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI service error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) {
+      return new Response(JSON.stringify({ error: "No analysis returned from AI" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const result = JSON.parse(toolCall.function.arguments);
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("analyze-clothing error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
