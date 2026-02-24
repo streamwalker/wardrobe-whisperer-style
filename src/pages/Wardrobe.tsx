@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Wardrobe() {
   const { user } = useAuth();
@@ -33,12 +34,41 @@ export default function Wardrobe() {
     enabled: !!user?.id,
   });
 
+  // Fetch user-added items from the database
+  const { data: dbItems, isLoading: dbLoading } = useQuery({
+    queryKey: ['wardrobe-items', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wardrobe_items')
+        .select('*')
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Map DB items to WardrobeItem shape and merge with demo data
+  const userItems: WardrobeItem[] = (dbItems || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category as WardrobeCategory,
+    primary_color: row.primary_color,
+    color_hex: row.color_hex || '#888888',
+    style_tags: (row.style_tags || []) as WardrobeItem['style_tags'],
+    is_new: row.is_new ?? false,
+    is_featured: row.is_featured ?? false,
+    photo: row.photo_url || undefined,
+  }));
+
+  const allItems = [...DEMO_WARDROBE, ...userItems];
+
   const wardrobeTitle = profile?.display_name
     ? `${profile.display_name}${profile.display_name.endsWith('s') ? "'" : "'s"} Wardrobe`
     : "My Wardrobe";
 
   // Apply generated photos to wardrobe items
-  const wardrobeWithPhotos = DEMO_WARDROBE.map((item) =>
+  const wardrobeWithPhotos = allItems.map((item) =>
     generatedPhotos[item.id] ? { ...item, photo: generatedPhotos[item.id] } : item
   );
 
@@ -115,7 +145,7 @@ export default function Wardrobe() {
   };
 
   const handleSwapItem = (oldItemId: string, newItemId: string) => {
-    const newItem = DEMO_WARDROBE.find((i) => i.id === newItemId);
+    const newItem = allItems.find((i) => i.id === newItemId);
     if (!newItem) return;
     setSelectedItems((prev) => prev.map((i) => (i.id === oldItemId ? newItem : i)));
   };

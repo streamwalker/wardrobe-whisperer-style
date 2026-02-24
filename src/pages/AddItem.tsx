@@ -14,12 +14,14 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
 export default function AddItem() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +140,7 @@ export default function AddItem() {
       if (insertError) throw insertError;
 
       toast({ title: "Item added!", description: `${name} saved to your wardrobe.` });
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
       navigate("/wardrobe");
     } catch (err: any) {
       console.error("Save error:", err);
