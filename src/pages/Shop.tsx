@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, Loader2, Sparkles, X, ImageIcon } from "lucide-react";
+import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 
@@ -34,6 +35,7 @@ export default function Shop() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -41,6 +43,9 @@ export default function Shop() {
   const [matching, setMatching] = useState(false);
   const [analyzedItem, setAnalyzedItem] = useState<AnalyzedItem | null>(null);
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,6 +61,8 @@ export default function Shop() {
     setPhotoPreview(null);
     setAnalyzedItem(null);
     setOutfits([]);
+    setUploadedPhotoUrl(null);
+    setSaved(false);
   };
 
   const handleAnalyzeAndMatch = async () => {
@@ -80,6 +87,8 @@ export default function Shop() {
       const { data: urlData } = supabase.storage
         .from("wardrobe-photos")
         .getPublicUrl(filePath);
+
+      setUploadedPhotoUrl(urlData.publicUrl);
 
       const { data, error } = await supabase.functions.invoke("analyze-clothing", {
         body: { imageUrl: urlData.publicUrl },
@@ -141,6 +150,32 @@ export default function Shop() {
     }
   };
 
+  const handleSaveToWardrobe = async () => {
+    if (!analyzedItem || !user || !uploadedPhotoUrl) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("wardrobe_items").insert({
+        user_id: user.id,
+        name: analyzedItem.name,
+        category: analyzedItem.category,
+        primary_color: analyzedItem.primary_color,
+        color_hex: analyzedItem.color_hex,
+        style_tags: analyzedItem.style_tags,
+        photo_url: uploadedPhotoUrl,
+        is_new: true,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
+      toast.success("Item saved to your wardrobe!");
+      setSaved(true);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error(err.message || "Failed to save item");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
 
   const isProcessing = analyzing || matching;
@@ -182,6 +217,28 @@ export default function Shop() {
                 <span className="text-sm text-muted-foreground">{analyzedItem.primary_color}</span>
               </div>
               <span className="text-sm font-medium text-foreground">{analyzedItem.name}</span>
+          </div>
+          )}
+
+          {/* Save to Wardrobe button */}
+          {analyzedItem && (
+            <div className="mt-3">
+              <Button
+                size="sm"
+                variant={saved ? "secondary" : "outline"}
+                disabled={saving || saved}
+                onClick={handleSaveToWardrobe}
+                className="gap-1.5"
+              >
+                {saving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : saved ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Plus className="h-3.5 w-3.5" />
+                )}
+                {saved ? "Saved to Wardrobe" : "Save to Wardrobe"}
+              </Button>
             </div>
           )}
         </div>
