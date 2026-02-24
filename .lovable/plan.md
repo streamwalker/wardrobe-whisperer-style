@@ -1,25 +1,47 @@
 
-# Personalize Wardrobe Title with User's Name
 
 ## Problem
-The wardrobe page always shows "My Wardrobe" regardless of who is logged in. The user wants it to display the logged-in user's name, e.g. "Phil's Wardrobe".
+
+Items added through the "Add Item" page are successfully saved to the database (`wardrobe_items` table), but they never appear on the Wardrobe page. This is because the Wardrobe page exclusively renders hardcoded `DEMO_WARDROBE` data and never queries the database.
+
+## Root Cause
+
+`src/pages/Wardrobe.tsx` imports and displays only `DEMO_WARDROBE` from `src/lib/wardrobe-data.ts`. There is no database fetch for user-added items.
 
 ## Solution
-Fetch the current user's profile from the `profiles` table and use their `display_name` to personalize the heading.
 
-## Changes
+Merge database items with the demo wardrobe so that user-added items appear alongside the pre-loaded catalog.
 
-### `src/pages/Wardrobe.tsx`
+### Changes
 
-1. Import `useAuth` hook and add a query to fetch the user's profile from the `profiles` table
-2. Replace the static `"My Wardrobe"` heading with dynamic text:
-   - If a `display_name` exists: show **"Phil's Wardrobe"**
-   - Fallback to **"My Wardrobe"** if no name is set or user is not logged in
+**1. `src/pages/Wardrobe.tsx`** -- Fetch and merge DB items
 
-### Technical details
+- Add a `useQuery` call to fetch all rows from `wardrobe_items` where `user_id` matches the logged-in user.
+- Map each DB row into the same `WardrobeItem` shape used by the demo data (mapping `photo_url` to `photo`, casting types).
+- Combine `DEMO_WARDROBE` + fetched DB items into a single array (`allItems`) used throughout the page.
+- Replace all references to `DEMO_WARDROBE` / `wardrobeWithPhotos` with `allItems`.
+- Show a subtle loading state while fetching.
 
-- Use `useAuth()` to get the current `user.id`
-- Query `profiles` table: `supabase.from('profiles').select('display_name').eq('user_id', user.id).single()`
-- Use `@tanstack/react-query` (`useQuery`) for the fetch, following existing patterns
-- Handle the possessive correctly (e.g. "James's Wardrobe" vs "Phil's Wardrobe")
-- Show a skeleton or "My Wardrobe" while loading to avoid layout shift
+**2. `src/pages/AddItem.tsx`** -- Invalidate wardrobe query on save
+
+- After a successful insert, call `queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] })` so the Wardrobe page automatically refreshes when navigating back.
+- Import `useQueryClient` from `@tanstack/react-query`.
+
+### Technical Details
+
+```text
+Wardrobe.tsx data flow (after fix):
+
+  DEMO_WARDROBE (static)
+        |
+        +---> merge ---> allItems ---> filtered ---> render
+        |
+  useQuery("wardrobe-items")
+    SELECT * FROM wardrobe_items
+    WHERE user_id = auth.uid()
+```
+
+The DB items will use `photo_url` for their image. Demo items keep using local asset imports. The `WardrobeItem` type already has an optional `photo` field, so no type changes are needed.
+
+No database or RLS changes are required -- the existing policies correctly allow authenticated users to read their own items.
+
