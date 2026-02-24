@@ -1,47 +1,24 @@
 
+## Save Shopping Item to Wardrobe
 
-## Problem
+Add a "Save to Wardrobe" button on the Shop page results so users can add an analyzed item directly to their wardrobe without leaving the page.
 
-Items added through the "Add Item" page are successfully saved to the database (`wardrobe_items` table), but they never appear on the Wardrobe page. This is because the Wardrobe page exclusively renders hardcoded `DEMO_WARDROBE` data and never queries the database.
+### What changes
 
-## Root Cause
+**`src/pages/Shop.tsx`**
 
-`src/pages/Wardrobe.tsx` imports and displays only `DEMO_WARDROBE` from `src/lib/wardrobe-data.ts`. There is no database fetch for user-added items.
+1. Import `useQueryClient` from `@tanstack/react-query` and add `Plus` icon from lucide-react.
+2. Add state: `saving` (boolean) and `saved` (boolean) to track the save flow.
+3. Add a `handleSaveToWardrobe` function that:
+   - Inserts a row into `wardrobe_items` using the already-analyzed metadata (`analyzedItem`) and the already-uploaded photo URL.
+   - Since the photo was already uploaded to `wardrobe-photos` storage during analysis, we need to store that URL. A small refactor will save the uploaded `publicUrl` into component state (e.g., `uploadedPhotoUrl`) so it can be reused at save time.
+   - Invalidates the `wardrobe-items` query cache so the Wardrobe page picks up the new item.
+   - Shows a success toast and sets `saved = true`.
+4. Render a "Save to Wardrobe" button in the results section (between the analyzed item badge area and the outfit cards). When `saved` is true, the button changes to a disabled "Saved" state with a checkmark.
+5. Reset `saved` state in the `reset()` function.
 
-## Solution
+### Technical details
 
-Merge database items with the demo wardrobe so that user-added items appear alongside the pre-loaded catalog.
-
-### Changes
-
-**1. `src/pages/Wardrobe.tsx`** -- Fetch and merge DB items
-
-- Add a `useQuery` call to fetch all rows from `wardrobe_items` where `user_id` matches the logged-in user.
-- Map each DB row into the same `WardrobeItem` shape used by the demo data (mapping `photo_url` to `photo`, casting types).
-- Combine `DEMO_WARDROBE` + fetched DB items into a single array (`allItems`) used throughout the page.
-- Replace all references to `DEMO_WARDROBE` / `wardrobeWithPhotos` with `allItems`.
-- Show a subtle loading state while fetching.
-
-**2. `src/pages/AddItem.tsx`** -- Invalidate wardrobe query on save
-
-- After a successful insert, call `queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] })` so the Wardrobe page automatically refreshes when navigating back.
-- Import `useQueryClient` from `@tanstack/react-query`.
-
-### Technical Details
-
-```text
-Wardrobe.tsx data flow (after fix):
-
-  DEMO_WARDROBE (static)
-        |
-        +---> merge ---> allItems ---> filtered ---> render
-        |
-  useQuery("wardrobe-items")
-    SELECT * FROM wardrobe_items
-    WHERE user_id = auth.uid()
-```
-
-The DB items will use `photo_url` for their image. Demo items keep using local asset imports. The `WardrobeItem` type already has an optional `photo` field, so no type changes are needed.
-
-No database or RLS changes are required -- the existing policies correctly allow authenticated users to read their own items.
-
+- The photo is already uploaded during `handleAnalyzeAndMatch` (line 72-76), so we just need to capture the public URL in state rather than re-uploading.
+- The insert mirrors the pattern from `AddItem.tsx` (lines 129-138): `supabase.from("wardrobe_items").insert({ user_id, name, category, primary_color, color_hex, style_tags, photo_url, is_new: true })`.
+- No database or RLS changes needed -- existing policies allow authenticated users to insert their own items.
