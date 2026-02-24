@@ -9,11 +9,12 @@ import { Sparkles, X, ImagePlus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Wardrobe() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
   const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,8 +61,21 @@ export default function Wardrobe() {
     is_featured: row.is_featured ?? false,
     photo: row.photo_url || undefined,
   }));
+  const userItemIds = new Set(userItems.map((i) => i.id));
 
   const allItems = [...DEMO_WARDROBE, ...userItems];
+
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      const { error } = await supabase.from("wardrobe_items").delete().eq("id", itemId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
+      setSelectedItems((prev) => prev.filter((i) => i.id !== itemId));
+      toast.success("Item removed from wardrobe");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete item");
+    }
+  };
 
   const wardrobeTitle = profile?.display_name
     ? `${profile.display_name}${profile.display_name.endsWith('s') ? "'" : "'s"} Wardrobe`
@@ -231,6 +245,7 @@ export default function Wardrobe() {
                       item={item}
                       selected={selectedIds.has(item.id)}
                       onClick={() => handleCardClick(item)}
+                      onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
                     />
                   ))}
                 </div>
@@ -246,6 +261,7 @@ export default function Wardrobe() {
               item={item}
               selected={selectedIds.has(item.id)}
               onClick={() => handleCardClick(item)}
+              onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
             />
           ))}
         </div>
