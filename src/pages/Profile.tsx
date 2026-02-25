@@ -120,7 +120,7 @@ export default function Profile() {
     });
   };
 
-  const displayName = profile?.display_name || "Demo User";
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const initial = displayName.charAt(0).toUpperCase();
 
   const SectionHeader = ({ label, section, fields }: { label: string; section: string; fields: string[] }) => (
