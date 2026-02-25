@@ -20,33 +20,57 @@ export type Database = {
           color_preferences: string[] | null
           created_at: string
           display_name: string | null
+          height: string | null
           id: string
+          inseam: string | null
+          shoe_size: string | null
+          shoulder: string | null
           skin_tone: string | null
           style_mood: string | null
+          suit_size: string | null
+          thigh: string | null
           updated_at: string
           user_id: string
+          waist: string | null
+          weight: string | null
         }
         Insert: {
           body_type?: string | null
           color_preferences?: string[] | null
           created_at?: string
           display_name?: string | null
+          height?: string | null
           id?: string
+          inseam?: string | null
+          shoe_size?: string | null
+          shoulder?: string | null
           skin_tone?: string | null
           style_mood?: string | null
+          suit_size?: string | null
+          thigh?: string | null
           updated_at?: string
           user_id: string
+          waist?: string | null
+          weight?: string | null
         }
         Update: {
           body_type?: string | null
           color_preferences?: string[] | null
           created_at?: string
           display_name?: string | null
+          height?: string | null
           id?: string
+          inseam?: string | null
+          shoe_size?: string | null
+          shoulder?: string | null
           skin_tone?: string | null
           style_mood?: string | null
+          suit_size?: string | null
+          thigh?: string | null
           updated_at?: string
           user_id?: string
+          waist?: string | null
+          weight?: string | null
         }
         Relationships: []
       }
