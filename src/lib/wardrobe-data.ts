@@ -89,3 +89,30 @@ export const CATEGORIES: { value: WardrobeCategory; label: string; icon: string 
   { value: 'tops', label: 'Tops', icon: '👕' },
   { value: 'outerwear', label: 'Outerwear', icon: '🧥' },
 ];
+
+export type ColorTone = 'dark' | 'light' | 'neutral';
+
+export function getColorTone(hex: string): ColorTone {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  if (luminance < 0.4) return 'dark';
+  if (luminance > 0.7) return 'light';
+  return 'neutral';
+}
+
+export const TONE_FILTERS: { value: ColorTone; label: string }[] = [
+  { value: 'dark', label: '🌑 Dark' },
+  { value: 'light', label: '☀️ Light' },
+  { value: 'neutral', label: '🔘 Neutral' },
+];
+
+export const STYLE_FILTERS: { value: StyleTag; label: string }[] = [
+  { value: 'casual', label: 'Casual' },
+  { value: 'sporty', label: 'Sporty' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'bold', label: 'Bold' },
+  { value: 'luxury', label: 'Luxury' },
+  { value: 'neutral', label: 'Neutral' },
+];
