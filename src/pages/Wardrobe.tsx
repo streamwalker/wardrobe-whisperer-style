@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DEMO_WARDROBE, CATEGORIES, type WardrobeCategory, type WardrobeItem } from "@/lib/wardrobe-data";
+import { DEMO_WARDROBE, CATEGORIES, TONE_FILTERS, STYLE_FILTERS, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
@@ -21,6 +21,8 @@ export default function Wardrobe() {
   const [generatedPhotos, setGeneratedPhotos] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState({ current: 0, total: 0 });
+  const [activeTones, setActiveTones] = useState<Set<ColorTone>>(new Set());
+  const [activeStyles, setActiveStyles] = useState<Set<StyleTag>>(new Set());
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -118,11 +120,44 @@ export default function Wardrobe() {
     setGenerating(false);
   };
 
+  const hasFilters = activeTones.size > 0 || activeStyles.size > 0;
+
+  const applyFilters = (items: WardrobeItem[]) => {
+    let result = items;
+    if (activeTones.size > 0) {
+      result = result.filter((i) => activeTones.has(getColorTone(i.color_hex)));
+    }
+    if (activeStyles.size > 0) {
+      result = result.filter((i) => i.style_tags.some((t) => activeStyles.has(t)));
+    }
+    return result;
+  };
+
+  const toggleTone = (tone: ColorTone) => {
+    setActiveTones((prev) => {
+      const next = new Set(prev);
+      next.has(tone) ? next.delete(tone) : next.add(tone);
+      return next;
+    });
+  };
+
+  const toggleStyle = (style: StyleTag) => {
+    setActiveStyles((prev) => {
+      const next = new Set(prev);
+      next.has(style) ? next.delete(style) : next.add(style);
+      return next;
+    });
+  };
+
+  const clearFilters = () => {
+    setActiveTones(new Set());
+    setActiveStyles(new Set());
+  };
+
   const filtered =
     activeCategory === "all"
-      ? wardrobeWithPhotos
-      : wardrobeWithPhotos.filter((i) => i.category === activeCategory);
-      
+      ? applyFilters(wardrobeWithPhotos)
+      : applyFilters(wardrobeWithPhotos.filter((i) => i.category === activeCategory));
 
   const selectedIds = new Set(selectedItems.map((i) => i.id));
 
@@ -226,11 +261,50 @@ export default function Wardrobe() {
         ))}
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold text-muted-foreground mr-1">Tone</span>
+        {TONE_FILTERS.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => toggleTone(t.value)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              activeTones.has(t.value)
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Style</span>
+        {STYLE_FILTERS.map((s) => (
+          <button
+            key={s.value}
+            onClick={() => toggleStyle(s.value)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              activeStyles.has(s.value)
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground"
+            )}
+          >
+            {s.label}
+          </button>
+        ))}
+        {hasFilters && (
+          <button onClick={clearFilters} className="text-xs text-muted-foreground underline ml-1">
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {/* Items */}
-      {activeCategory === "all" ? (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-260px)]">
+      {activeCategory === "all" && !hasFilters ? (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-310px)]">
           {CATEGORIES.map((cat) => {
-            const items = wardrobeWithPhotos.filter((i) => i.category === cat.value);
+            const items = applyFilters(wardrobeWithPhotos.filter((i) => i.category === cat.value));
             return (
               <div key={cat.value} className="flex flex-col h-full overflow-y-auto scrollbar-none">
                 <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
