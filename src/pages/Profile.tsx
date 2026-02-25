@@ -3,19 +3,50 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, LogOut } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const STYLE_MOODS = ["neutral", "bold", "luxury", "streetwear", "classic", "minimalist"];
+const SKIN_TONES = ["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Dark"];
+const BODY_TYPES = ["Slim", "Athletic", "Average", "Muscular", "Stocky", "Husky", "Big & Tall"];
+const COLOR_OPTIONS = ["Neutrals", "Earth Tones", "Cool Tones", "Warm Tones", "Bold Colors", "Pastels", "Monochrome", "Jewel Tones"];
+
+type ProfileData = {
+  display_name: string;
+  style_mood: string;
+  skin_tone: string;
+  body_type: string;
+  color_preferences: string[];
+  height: string;
+  weight: string;
+  shoulder: string;
+  waist: string;
+  thigh: string;
+  inseam: string;
+  suit_size: string;
+  shoe_size: string;
+};
 
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Partial<ProfileData>>({});
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -36,32 +67,93 @@ export default function Profile() {
     enabled: !!user?.id,
   });
 
-  const updateName = useMutation({
-    mutationFn: async (displayName: string) => {
+  const updateProfile = useMutation({
+    mutationFn: async (updates: Record<string, unknown>) => {
       const { error } = await supabase
         .from("profiles")
-        .update({ display_name: displayName.trim() })
+        .update(updates)
         .eq("user_id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
-      toast.success("Display name updated");
-      setEditing(false);
+      toast.success("Profile updated");
+      setEditingSection(null);
+      setEditingName(false);
     },
-    onError: () => toast.error("Failed to update name"),
+    onError: () => toast.error("Failed to update profile"),
   });
 
-  const startEditing = () => {
-    setNameInput(profile?.display_name ?? "");
-    setEditing(true);
+  const startEditingSection = (section: string) => {
+    setFormData({
+      style_mood: profile?.style_mood ?? "",
+      skin_tone: profile?.skin_tone ?? "",
+      body_type: profile?.body_type ?? "",
+      color_preferences: profile?.color_preferences ?? [],
+      height: (profile as any)?.height ?? "",
+      weight: (profile as any)?.weight ?? "",
+      shoulder: (profile as any)?.shoulder ?? "",
+      waist: (profile as any)?.waist ?? "",
+      thigh: (profile as any)?.thigh ?? "",
+      inseam: (profile as any)?.inseam ?? "",
+      suit_size: (profile as any)?.suit_size ?? "",
+      shoe_size: (profile as any)?.shoe_size ?? "",
+    });
+    setEditingSection(section);
+  };
+
+  const saveSection = (fields: string[]) => {
+    const updates: Record<string, unknown> = {};
+    fields.forEach((f) => {
+      updates[f] = (formData as any)[f] ?? null;
+    });
+    updateProfile.mutate(updates);
+  };
+
+  const toggleColorPref = (color: string) => {
+    const current = formData.color_preferences ?? [];
+    setFormData({
+      ...formData,
+      color_preferences: current.includes(color)
+        ? current.filter((c) => c !== color)
+        : [...current, color],
+    });
   };
 
   const displayName = profile?.display_name || "Demo User";
   const initial = displayName.charAt(0).toUpperCase();
 
+  const SectionHeader = ({ label, section, fields }: { label: string; section: string; fields: string[] }) => (
+    <div className="flex items-center justify-between">
+      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{label}</p>
+      {editingSection === section ? (
+        <div className="flex gap-1">
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => saveSection(fields)} disabled={updateProfile.isPending}>
+            {updateProfile.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+          </Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingSection(null)}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ) : (
+        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEditingSection(section)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 w-full rounded-lg" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-6">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-2xl font-semibold text-foreground">Style Profile</h2>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
@@ -70,15 +162,14 @@ export default function Profile() {
         </Button>
       </div>
 
-      <div className="space-y-4 rounded-lg border bg-card p-5">
+      {/* Name & Mood */}
+      <div className="rounded-lg border bg-card p-5 space-y-3">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-semibold">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-semibold shrink-0">
             {initial}
           </div>
           <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <Skeleton className="h-5 w-32" />
-            ) : editing ? (
+            {editingName ? (
               <div className="flex items-center gap-2">
                 <Input
                   value={nameInput}
@@ -87,53 +178,103 @@ export default function Profile() {
                   placeholder="Your name"
                   autoFocus
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") updateName.mutate(nameInput);
-                    if (e.key === "Escape") setEditing(false);
+                    if (e.key === "Enter") updateProfile.mutate({ display_name: nameInput.trim() });
+                    if (e.key === "Escape") setEditingName(false);
                   }}
                 />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => updateName.mutate(nameInput)}
-                  disabled={updateName.isPending}
-                >
-                  {updateName.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => updateProfile.mutate({ display_name: nameInput.trim() })} disabled={updateProfile.isPending}>
+                  {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => setEditing(false)}
-                >
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setEditingName(false)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <p className="font-medium text-card-foreground">{displayName}</p>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEditing}>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setNameInput(profile?.display_name ?? ""); setEditingName(true); }}>
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
-            <p className="text-sm text-muted-foreground">{profile?.style_mood ?? "Neutral & Bold"}</p>
+            <p className="text-sm text-muted-foreground capitalize">{profile?.style_mood ?? "neutral"}</p>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Skin Tone</p>
-            <p className="text-sm font-medium text-card-foreground mt-1">{profile?.skin_tone ?? "—"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Body Type</p>
-            <p className="text-sm font-medium text-card-foreground mt-1">{profile?.body_type ?? "—"}</p>
-          </div>
-        </div>
+      {/* Style & Appearance */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <SectionHeader label="Style & Appearance" section="style" fields={["style_mood", "skin_tone", "body_type"]} />
 
-        <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Color Preferences</p>
+        {editingSection === "style" ? (
+          <div className="grid gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Style Mood</Label>
+              <Select value={formData.style_mood ?? ""} onValueChange={(v) => setFormData({ ...formData, style_mood: v })}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Select mood" /></SelectTrigger>
+                <SelectContent>
+                  {STYLE_MOODS.map((m) => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Skin Tone</Label>
+              <Select value={formData.skin_tone ?? ""} onValueChange={(v) => setFormData({ ...formData, skin_tone: v })}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Select skin tone" /></SelectTrigger>
+                <SelectContent>
+                  {SKIN_TONES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Body Type</Label>
+              <Select value={formData.body_type ?? ""} onValueChange={(v) => setFormData({ ...formData, body_type: v })}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Select body type" /></SelectTrigger>
+                <SelectContent>
+                  {BODY_TYPES.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase">Mood</p>
+              <p className="text-sm font-medium text-card-foreground mt-0.5 capitalize">{profile?.style_mood ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase">Skin Tone</p>
+              <p className="text-sm font-medium text-card-foreground mt-0.5">{profile?.skin_tone ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase">Body Type</p>
+              <p className="text-sm font-medium text-card-foreground mt-0.5">{profile?.body_type ?? "—"}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Color Preferences */}
+      <div className="rounded-lg border bg-card p-5 space-y-3">
+        <SectionHeader label="Color Preferences" section="colors" fields={["color_preferences"]} />
+
+        {editingSection === "colors" ? (
+          <div className="flex flex-wrap gap-2">
+            {COLOR_OPTIONS.map((color) => (
+              <button
+                key={color}
+                onClick={() => toggleColorPref(color)}
+                className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                  (formData.color_preferences ?? []).includes(color)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary/50"
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        ) : (
           <div className="flex flex-wrap gap-2">
             {(profile?.color_preferences ?? []).length > 0
               ? profile!.color_preferences!.map((pref) => (
@@ -142,7 +283,90 @@ export default function Profile() {
               : <p className="text-sm text-muted-foreground">No preferences set</p>
             }
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Body Measurements */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <SectionHeader label="Body Measurements" section="measurements" fields={["height", "weight", "shoulder", "waist", "thigh", "inseam"]} />
+
+        {editingSection === "measurements" ? (
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              ["height", "Height (e.g. 5'11\")"],
+              ["weight", "Weight (e.g. 185 lbs)"],
+              ["shoulder", "Shoulder (inches)"],
+              ["waist", "Waist (inches)"],
+              ["thigh", "Thigh (inches)"],
+              ["inseam", "Inseam (inches)"],
+            ] as const).map(([field, placeholder]) => (
+              <div key={field} className="space-y-1">
+                <Label className="text-xs capitalize">{field}</Label>
+                <Input
+                  className="h-9 text-sm"
+                  placeholder={placeholder}
+                  value={(formData as any)[field] ?? ""}
+                  onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-x-4 gap-y-3">
+            {([
+              ["Height", (profile as any)?.height],
+              ["Weight", (profile as any)?.weight],
+              ["Shoulder", (profile as any)?.shoulder],
+              ["Waist", (profile as any)?.waist],
+              ["Thigh", (profile as any)?.thigh],
+              ["Inseam", (profile as any)?.inseam],
+            ] as const).map(([label, value]) => (
+              <div key={label}>
+                <p className="text-[11px] text-muted-foreground uppercase">{label}</p>
+                <p className="text-sm font-medium text-card-foreground mt-0.5">{value || "—"}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sizing */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <SectionHeader label="Suit & Shoe Sizing" section="sizing" fields={["suit_size", "shoe_size"]} />
+
+        {editingSection === "sizing" ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Suit Jacket Size</Label>
+              <Input
+                className="h-9 text-sm"
+                placeholder="e.g. 42 Long"
+                value={formData.suit_size ?? ""}
+                onChange={(e) => setFormData({ ...formData, suit_size: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Shoe Size</Label>
+              <Input
+                className="h-9 text-sm"
+                placeholder="e.g. 10.5"
+                value={formData.shoe_size ?? ""}
+                onChange={(e) => setFormData({ ...formData, shoe_size: e.target.value })}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase">Suit Jacket</p>
+              <p className="text-sm font-medium text-card-foreground mt-0.5">{(profile as any)?.suit_size || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase">Shoe Size</p>
+              <p className="text-sm font-medium text-card-foreground mt-0.5">{(profile as any)?.shoe_size || "—"}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
