@@ -29,7 +29,8 @@ export default function Auth() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Account created! Check your email to confirm.");
+        toast.success("Account created! Signing you in…");
+        navigate("/wardrobe");
       }
     } catch (err: any) {
       toast.error(err.message);
