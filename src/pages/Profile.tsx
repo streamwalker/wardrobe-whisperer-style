@@ -1,19 +1,27 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2 } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState("");
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    queryClient.clear();
+    navigate("/auth");
+  };
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -54,7 +62,13 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-display text-2xl font-semibold text-foreground">Style Profile</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl font-semibold text-foreground">Style Profile</h2>
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
+          <LogOut className="h-4 w-4 mr-1.5" />
+          Log out
+        </Button>
+      </div>
 
       <div className="space-y-4 rounded-lg border bg-card p-5">
         <div className="flex items-center gap-4">
