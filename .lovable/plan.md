@@ -1,24 +1,35 @@
 
-## Save Shopping Item to Wardrobe
 
-Add a "Save to Wardrobe" button on the Shop page results so users can add an analyzed item directly to their wardrobe without leaving the page.
+## Add Wardrobe Filters (Color Tone + Style)
 
-### What changes
+### Overview
+Add a filter bar below the existing category tabs that lets you filter items by **color tone** (Dark, Light, Neutral) and **style** (Casual, Sporty, Minimal, Bold, Luxury, Neutral). Filters work alongside the existing category tabs.
 
-**`src/pages/Shop.tsx`**
+### How It Works
+- A row of toggle chips appears below the category tabs
+- Two filter groups: **Tone** (Dark / Light / Neutral) and **Style** (Casual / Sporty / Minimal / Bold / Luxury)
+- Multiple filters can be active at once (e.g., "Dark" + "Casual")
+- Items must match ALL active filters (AND logic)
+- A small "Clear filters" button appears when any filter is active
 
-1. Import `useQueryClient` from `@tanstack/react-query` and add `Plus` icon from lucide-react.
-2. Add state: `saving` (boolean) and `saved` (boolean) to track the save flow.
-3. Add a `handleSaveToWardrobe` function that:
-   - Inserts a row into `wardrobe_items` using the already-analyzed metadata (`analyzedItem`) and the already-uploaded photo URL.
-   - Since the photo was already uploaded to `wardrobe-photos` storage during analysis, we need to store that URL. A small refactor will save the uploaded `publicUrl` into component state (e.g., `uploadedPhotoUrl`) so it can be reused at save time.
-   - Invalidates the `wardrobe-items` query cache so the Wardrobe page picks up the new item.
-   - Shows a success toast and sets `saved = true`.
-4. Render a "Save to Wardrobe" button in the results section (between the analyzed item badge area and the outfit cards). When `saved` is true, the button changes to a disabled "Saved" state with a checkmark.
-5. Reset `saved` state in the `reset()` function.
+### Color Tone Classification
+Items will be classified by their `color_hex` brightness (luminance):
+- **Dark**: luminance below 40% (blacks, navys, dark greens)
+- **Light**: luminance above 70% (whites, creams, light grays)  
+- **Neutral**: luminance between 40-70% (tans, mid-grays, olives)
 
-### Technical details
+### Technical Details
 
-- The photo is already uploaded during `handleAnalyzeAndMatch` (line 72-76), so we just need to capture the public URL in state rather than re-uploading.
-- The insert mirrors the pattern from `AddItem.tsx` (lines 129-138): `supabase.from("wardrobe_items").insert({ user_id, name, category, primary_color, color_hex, style_tags, photo_url, is_new: true })`.
-- No database or RLS changes needed -- existing policies allow authenticated users to insert their own items.
+**File: `src/lib/wardrobe-data.ts`**
+- Add a `getColorTone(hex: string)` utility function that computes relative luminance and returns `"dark" | "light" | "neutral"`
+- Export `STYLE_FILTERS` and `TONE_FILTERS` arrays for the UI
+
+**File: `src/pages/Wardrobe.tsx`**
+- Add state: `activeTones` (Set of tone values) and `activeStyles` (Set of style tag values)
+- Add a filter bar section between the category tabs and the item grid
+- Filter chips rendered as toggle buttons with active/inactive styling (same pill style as category tabs)
+- Update the `filtered` logic to apply tone + style filters on top of category filtering
+- Add a "Clear filters" text button when filters are active
+
+The filter bar will use the same rounded-pill chip styling as the existing category tabs for visual consistency. No new dependencies or database changes needed -- this is purely a client-side filter on existing data.
+
