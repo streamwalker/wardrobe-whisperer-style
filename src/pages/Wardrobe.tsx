@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DEMO_WARDROBE, CATEGORIES, TONE_FILTERS, STYLE_FILTERS, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
+import EditItemDialog from "@/components/wardrobe/EditItemDialog";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -34,6 +35,7 @@ export default function Wardrobe() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+  const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -88,6 +90,22 @@ export default function Wardrobe() {
     } catch (err: any) {
       toast.error(err.message || "Failed to delete item");
     }
+  };
+
+  const handleEditItem = async (itemId: string, updates: {
+    name: string;
+    category: string;
+    primary_color: string;
+    color_hex: string;
+    style_tags: string[];
+  }) => {
+    const { error } = await supabase
+      .from("wardrobe_items")
+      .update(updates)
+      .eq("id", itemId);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
+    toast.success("Item updated");
   };
 
   const wardrobeTitle = profile?.display_name
@@ -375,6 +393,7 @@ export default function Wardrobe() {
                       selected={selectedIds.has(item.id)}
                       onClick={() => handleCardClick(item)}
                       onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
+                      onEdit={userItemIds.has(item.id) ? () => setEditingItem(item) : undefined}
                     />
                   ))}
                 </div>
@@ -391,6 +410,7 @@ export default function Wardrobe() {
               selected={selectedIds.has(item.id)}
               onClick={() => handleCardClick(item)}
               onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
+              onEdit={userItemIds.has(item.id) ? () => setEditingItem(item) : undefined}
             />
           ))}
         </div>
@@ -439,6 +459,16 @@ export default function Wardrobe() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit item dialog */}
+      {editingItem && (
+        <EditItemDialog
+          item={editingItem}
+          open={!!editingItem}
+          onOpenChange={(open) => { if (!open) setEditingItem(null); }}
+          onSave={(updates) => handleEditItem(editingItem.id, updates)}
+        />
+      )}
     </div>
   );
 }
