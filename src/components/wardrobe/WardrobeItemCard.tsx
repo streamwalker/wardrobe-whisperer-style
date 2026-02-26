@@ -1,16 +1,17 @@
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, Trash2 } from "lucide-react";
+import { Star, Check, Trash2, Pencil } from "lucide-react";
 
 interface Props {
   item: WardrobeItem;
   selected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
-export default function WardrobeItemCard({ item, selected, onClick, onDelete }: Props) {
+export default function WardrobeItemCard({ item, selected, onClick, onDelete, onEdit }: Props) {
   return (
     <button
       onClick={onClick}
@@ -26,18 +27,35 @@ export default function WardrobeItemCard({ item, selected, onClick, onDelete }: 
         </div>
       )}
 
-      {/* Delete button for user-added items */}
-      {onDelete && !selected && (
-        <div
-          className="absolute top-2 left-2 z-10 h-6 w-6 rounded-full bg-destructive/90 flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          role="button"
-          aria-label={`Delete ${item.name}`}
-        >
-          <Trash2 className="h-3 w-3 text-destructive-foreground" />
+      {/* Action buttons for user-added items */}
+      {(onDelete || onEdit) && !selected && (
+        <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onEdit && (
+            <div
+              className="h-6 w-6 rounded-full bg-card/90 border flex items-center justify-center shadow cursor-pointer hover:bg-accent transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              role="button"
+              aria-label={`Edit ${item.name}`}
+            >
+              <Pencil className="h-3 w-3 text-foreground" />
+            </div>
+          )}
+          {onDelete && (
+            <div
+              className="h-6 w-6 rounded-full bg-destructive/90 flex items-center justify-center shadow cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              role="button"
+              aria-label={`Delete ${item.name}`}
+            >
+              <Trash2 className="h-3 w-3 text-destructive-foreground" />
+            </div>
+          )}
         </div>
       )}
 
