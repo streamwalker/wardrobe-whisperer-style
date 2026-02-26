@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Wardrobe from "@/pages/Wardrobe";
 import AddItem from "@/pages/AddItem";
+import BatchAddItems from "@/pages/BatchAddItems";
 import Shop from "@/pages/Shop";
 import Outfits from "@/pages/Outfits";
 import Profile from "@/pages/Profile";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/" element={<Navigate to="/wardrobe" replace />} />
           <Route element={<AppLayout />}>
             <Route path="/wardrobe/add" element={<AddItem />} />
+            <Route path="/wardrobe/batch" element={<BatchAddItems />} />
             <Route path="/wardrobe" element={<Wardrobe />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/outfits" element={<Outfits />} />

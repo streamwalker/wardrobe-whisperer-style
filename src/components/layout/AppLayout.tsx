@@ -1,6 +1,12 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Shirt, ShoppingBag, Heart, User, Grid3X3 } from "lucide-react";
+import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const NAV_ITEMS = [
   { path: "/wardrobe", label: "Wardrobe", icon: Grid3X3 },
@@ -24,12 +30,23 @@ export default function AppLayout() {
           >
             StyleMatch
           </h1>
-          <button
-            onClick={() => navigate("/wardrobe/add")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg leading-none"
-          >
-            +
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg leading-none">
+                <Plus className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => navigate("/wardrobe/add")} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Single Item
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/wardrobe/batch")} className="gap-2">
+                <Layers className="h-4 w-4" />
+                Batch Upload
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
