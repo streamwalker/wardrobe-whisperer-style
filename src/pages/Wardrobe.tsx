@@ -415,6 +415,7 @@ export default function Wardrobe() {
 
       <OutfitSuggestionDrawer
         items={selectedItems}
+        allWardrobeItems={wardrobeWithPhotos}
         open={drawerOpen}
         onOpenChange={handleDrawerChange}
         onSwapItem={handleSwapItem}

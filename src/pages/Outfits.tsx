@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DEMO_WARDROBE } from "@/lib/wardrobe-data";
+import { DEMO_WARDROBE, type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -36,12 +36,39 @@ const moodEmoji: Record<string, string> = {
   sporty: "⚡",
 };
 
-const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
-
 export default function Outfits() {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [activeMood, setActiveMood] = useState("all");
+
+  // Fetch user-added wardrobe items so saved outfits can resolve them
+  const { data: dbItems } = useQuery({
+    queryKey: ["wardrobe-items", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wardrobe_items")
+        .select("*")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const userItems: WardrobeItem[] = (dbItems || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category as WardrobeCategory,
+    primary_color: row.primary_color,
+    color_hex: row.color_hex || "#888888",
+    style_tags: (row.style_tags || []) as WardrobeItem["style_tags"],
+    is_new: row.is_new ?? false,
+    is_featured: row.is_featured ?? false,
+    photo: row.photo_url || undefined,
+  }));
+
+  const allItems = useMemo(() => [...DEMO_WARDROBE, ...userItems], [userItems]);
+  const getItemById = (id: string) => allItems.find((i) => i.id === id);
 
   const { data: outfits = [], isLoading } = useQuery({
     queryKey: ["saved_outfits", user?.id],
@@ -83,59 +110,6 @@ export default function Outfits() {
     [outfits, activeMood]
   );
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-          <LogIn className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">Saved Outfits</h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Sign in to save and view your favorite outfit combinations.
-          </p>
-        </div>
-        <Button asChild>
-          <Link to="/auth">Sign In</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (outfits.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-          <Heart className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Tap any wardrobe item to get AI outfit suggestions, then save your favorites here.
-          </p>
-        </div>
-        <Button variant="secondary" asChild>
-          <Link to="/wardrobe">Browse Wardrobe</Link>
-        </Button>
-      </div>
-    );
-  }
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-16">
