@@ -14,7 +14,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, LogOut, Save } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -368,6 +368,133 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Wardrobe Sharing */}
+      <ShareSection userId={user?.id} />
+    </div>
+  );
+}
+
+/* ── Share Management Section ─────────────────── */
+
+function ShareSection({ userId }: { userId?: string }) {
+  const queryClient = useQueryClient();
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const { data: activeShare, isLoading } = useQuery({
+    queryKey: ["wardrobe-share", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("wardrobe_shares")
+        .select("*")
+        .eq("user_id", userId!)
+        .eq("is_active", true)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeShare) return;
+      const { error } = await supabase
+        .from("wardrobe_shares")
+        .update({ is_active: false })
+        .eq("id", activeShare.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-share"] });
+      toast.success("Share link revoked");
+    },
+    onError: () => toast.error("Failed to revoke link"),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("wardrobe_shares")
+        .insert({ user_id: userId! });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-share"] });
+      toast.success("Share link created");
+    },
+    onError: () => toast.error("Failed to create link"),
+  });
+
+  const shareUrl = activeShare
+    ? `${window.location.origin}/shared/${activeShare.share_token}`
+    : "";
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    setLinkCopied(true);
+    toast.success("Link copied!");
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  if (isLoading) return <Skeleton className="h-24 w-full rounded-lg" />;
+
+  return (
+    <div className="rounded-lg border bg-card p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Wardrobe Sharing</p>
+        {activeShare ? (
+          <Badge variant="secondary" className="text-[10px] gap-1">
+            <Link2 className="h-3 w-3" /> Active
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-[10px] text-muted-foreground">Inactive</Badge>
+        )}
+      </div>
+
+      {activeShare ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Anyone with the link below can view your wardrobe.
+          </p>
+          <div className="flex items-center gap-2">
+            <Input value={shareUrl} readOnly className="text-xs font-mono h-9" />
+            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5 h-9" onClick={copyLink}>
+              {linkCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </Button>
+            <Button size="sm" variant="secondary" className="shrink-0 h-9" asChild>
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1.5"
+            onClick={() => revokeMutation.mutate()}
+            disabled={revokeMutation.isPending}
+          >
+            {revokeMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2Off className="h-3.5 w-3.5" />}
+            Revoke Link
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Your wardrobe is private. Create a share link to let others view it.
+          </p>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-1.5"
+            onClick={() => createMutation.mutate()}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
+            Create Share Link
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
