@@ -5,12 +5,20 @@ import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, X, ImagePlus, Loader2 } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function Wardrobe() {
   const { user } = useAuth();
@@ -23,6 +31,9 @@ export default function Wardrobe() {
   const [genProgress, setGenProgress] = useState({ current: 0, total: 0 });
   const [activeTones, setActiveTones] = useState<Set<ColorTone>>(new Set());
   const [activeStyles, setActiveStyles] = useState<Set<StyleTag>>(new Set());
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -199,6 +210,44 @@ export default function Wardrobe() {
     setSelectedItems((prev) => prev.map((i) => (i.id === oldItemId ? newItem : i)));
   };
 
+  const handleShare = async () => {
+    if (!user) return;
+    try {
+      // Check for existing active share
+      const { data: existing } = await supabase
+        .from("wardrobe_shares")
+        .select("share_token")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      let token = existing?.share_token;
+      if (!token) {
+        const { data: newShare, error } = await supabase
+          .from("wardrobe_shares")
+          .insert({ user_id: user.id })
+          .select("share_token")
+          .single();
+        if (error) throw error;
+        token = newShare.share_token;
+      }
+
+      const url = `${window.location.origin}/shared/${token}`;
+      setShareLink(url);
+      setLinkCopied(false);
+      setShareDialogOpen(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create share link");
+    }
+  };
+
+  const copyShareLink = async () => {
+    await navigator.clipboard.writeText(shareLink);
+    setLinkCopied(true);
+    toast.success("Link copied!");
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
   return (
     <div className="space-y-5 pb-24">
       <div className="flex items-start justify-between">
@@ -206,6 +255,7 @@ export default function Wardrobe() {
           <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
           <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
         </div>
+        <div className="flex gap-2 shrink-0">
         {itemsMissingPhotos.length > 0 && (
           <Button
             size="sm"
@@ -227,6 +277,11 @@ export default function Wardrobe() {
             )}
           </Button>
         )}
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShare}>
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+        </div>
       </div>
       {generating && (
         <Progress value={(genProgress.current / genProgress.total) * 100} className="h-1.5" />
@@ -364,6 +419,25 @@ export default function Wardrobe() {
         onOpenChange={handleDrawerChange}
         onSwapItem={handleSwapItem}
       />
+
+      {/* Share dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Your Wardrobe</DialogTitle>
+            <DialogDescription>
+              Anyone with this link can view your wardrobe items.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Input value={shareLink} readOnly className="text-sm" />
+            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={copyShareLink}>
+              {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {linkCopied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

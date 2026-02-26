@@ -12,6 +12,7 @@ import Outfits from "@/pages/Outfits";
 import Profile from "@/pages/Profile";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
+import SharedWardrobe from "@/pages/SharedWardrobe";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/shared/:token" element={<SharedWardrobe />} />
           <Route path="/" element={<Navigate to="/wardrobe" replace />} />
           <Route element={<AppLayout />}>
             <Route path="/wardrobe/add" element={<AddItem />} />

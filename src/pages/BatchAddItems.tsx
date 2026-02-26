@@ -43,10 +43,12 @@ export default function BatchAddItems() {
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const [items, setItems] = useState<BatchItem[]>([]);
   const [savingAll, setSavingAll] = useState(false);
   const [analyzingAll, setAnalyzingAll] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   if (!authLoading && !user) {
     navigate("/auth", { replace: true });
@@ -75,6 +77,48 @@ export default function BatchAddItems() {
     setItems((prev) => [...prev, ...newItems]);
     // Reset so the same files can be re-selected
     e.target.value = "";
+  };
+
+  const addFiles = (files: File[]) => {
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+    const newItems: BatchItem[] = imageFiles.map((file) => ({
+      id: `batch-${++itemCounter}`,
+      file,
+      preview: URL.createObjectURL(file),
+      name: "",
+      category: "",
+      primaryColor: "",
+      colorHex: "#888888",
+      styleTags: [],
+      analyzing: false,
+      analyzed: false,
+      saving: false,
+      saved: false,
+    }));
+    setItems((prev) => [...prev, ...newItems]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dropZoneRef.current && !dropZoneRef.current.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
   };
 
   const updateItem = (id: string, updates: Partial<BatchItem>) => {
@@ -227,7 +271,13 @@ export default function BatchAddItems() {
   const unanalyzedCount = items.filter((i) => !i.analyzed && !i.analyzing).length;
 
   return (
-    <div className="space-y-5 pb-28">
+    <div
+      ref={dropZoneRef}
+      className="space-y-5 pb-28"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground">
@@ -235,9 +285,19 @@ export default function BatchAddItems() {
         </button>
         <div>
           <h2 className="font-display text-xl font-semibold">Batch Add Items</h2>
-          <p className="text-xs text-muted-foreground">Select multiple photos to add at once</p>
+          <p className="text-xs text-muted-foreground">Select, take, or drag & drop photos</p>
         </div>
       </div>
+
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-none">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary p-12">
+            <ImageIcon className="h-12 w-12 text-primary" />
+            <p className="text-lg font-medium text-primary">Drop photos here</p>
+          </div>
+        </div>
+      )}
 
       {/* Photo selection */}
       <div className="flex gap-3">
