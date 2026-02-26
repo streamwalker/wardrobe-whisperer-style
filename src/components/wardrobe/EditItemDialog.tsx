@@ -46,6 +46,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTag = (tag: string) => {
     setStyleTags((prev) =>
@@ -108,9 +109,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
           {/* Photo preview with replace button */}
           <div className="flex flex-col items-center gap-2">
             <div
-              className="relative w-28 h-28 rounded-lg overflow-hidden border cursor-pointer group"
+              className="relative w-28 h-28 rounded-lg overflow-hidden border group"
               style={{ backgroundColor: colorHex }}
-              onClick={() => fileInputRef.current?.click()}
             >
               {displayPhoto ? (
                 <img src={displayPhoto} alt={name} className="h-full w-full object-cover" />
@@ -119,22 +119,37 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                   <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                 </div>
               )}
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="h-5 w-5 text-foreground" />
-              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-primary hover:underline"
-            >
-              {displayPhoto ? "Replace photo" : "Add photo"}
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                {displayPhoto ? "Replace" : "Add photo"}
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Camera
+              </button>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
               className="hidden"
               onChange={handlePhotoSelect}
             />
