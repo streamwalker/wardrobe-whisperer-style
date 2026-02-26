@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, Bookmark, Check, AlertTriangle } from "lucide-react";
-import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
+import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -29,12 +29,13 @@ interface IncompatibilityResult {
 
 interface Props {
   items: WardrobeItem[];
+  allWardrobeItems: WardrobeItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSwapItem?: (oldItemId: string, newItemId: string) => void;
 }
 
-export default function OutfitSuggestionDrawer({ items, open, onOpenChange, onSwapItem }: Props) {
+export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -67,8 +68,8 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange, onSw
     }
 
     try {
-      const stripped = DEMO_WARDROBE.map(({ photo, ...rest }) => rest);
-      const strippedSelected = selectedItems.map(({ photo, ...rest }) => rest);
+      const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
+      const strippedSelected = items.map(({ photo, ...rest }) => rest);
 
       const body: any = {
         wardrobeItems: stripped,
@@ -145,7 +146,7 @@ export default function OutfitSuggestionDrawer({ items, open, onOpenChange, onSw
   };
 
   const outfitKey = (o: OutfitSuggestion) => `${o.name}::${o.item_ids.join(",")}`;
-  const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
+  const getItemById = (id: string) => allWardrobeItems.find((i) => i.id === id);
 
   const moodEmoji: Record<string, string> = {
     casual: "☕",
