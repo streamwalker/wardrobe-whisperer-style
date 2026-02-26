@@ -98,10 +98,28 @@ export default function Wardrobe() {
     primary_color: string;
     color_hex: string;
     style_tags: string[];
+    newPhotoFile?: File;
   }) => {
+    const { newPhotoFile, ...dbUpdates } = updates;
+    let photoUrl: string | undefined;
+
+    // Upload new photo if provided
+    if (newPhotoFile && user) {
+      const ext = newPhotoFile.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/${Date.now()}-edit-${itemId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("wardrobe-photos")
+        .upload(filePath, newPhotoFile);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from("wardrobe-photos")
+        .getPublicUrl(filePath);
+      photoUrl = urlData.publicUrl;
+    }
+
     const { error } = await supabase
       .from("wardrobe_items")
-      .update(updates)
+      .update({ ...dbUpdates, ...(photoUrl ? { photo_url: photoUrl } : {}) })
       .eq("id", itemId);
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });

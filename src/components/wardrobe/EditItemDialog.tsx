@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 
@@ -32,6 +32,7 @@ interface Props {
     primary_color: string;
     color_hex: string;
     style_tags: string[];
+    newPhotoFile?: File;
   }) => Promise<void>;
 }
 
@@ -42,11 +43,24 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const [colorHex, setColorHex] = useState(item.color_hex);
   const [styleTags, setStyleTags] = useState<string[]>([...item.style_tags]);
   const [saving, setSaving] = useState(false);
+  const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTag = (tag: string) => {
     setStyleTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewPhotoFile(file);
+    // Revoke previous preview to avoid memory leak
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
   };
 
   const handleSave = async () => {
@@ -59,6 +73,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         primary_color: primaryColor.trim(),
         color_hex: colorHex,
         style_tags: styleTags,
+        newPhotoFile: newPhotoFile ?? undefined,
       });
       onOpenChange(false);
     } finally {
@@ -66,17 +81,21 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
     }
   };
 
-  // Reset form when dialog opens with new item
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
       setName(item.name);
       setCategory(item.category);
       setPrimaryColor(item.primary_color);
       setColorHex(item.color_hex);
       setStyleTags([...item.style_tags]);
+      setNewPhotoFile(null);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(null);
     }
-    onOpenChange(open);
+    onOpenChange(nextOpen);
   };
+
+  const displayPhoto = photoPreview || item.photo;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -86,12 +105,40 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Preview */}
-          {item.photo && (
-            <div className="mx-auto w-24 h-24 rounded-lg overflow-hidden border" style={{ backgroundColor: colorHex }}>
-              <img src={item.photo} alt={name} className="h-full w-full object-cover" />
+          {/* Photo preview with replace button */}
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="relative w-28 h-28 rounded-lg overflow-hidden border cursor-pointer group"
+              style={{ backgroundColor: colorHex }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {displayPhoto ? (
+                <img src={displayPhoto} alt={name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+              )}
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="h-5 w-5 text-foreground" />
+              </div>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs text-primary hover:underline"
+            >
+              {displayPhoto ? "Replace photo" : "Add photo"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+          </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs">Name</Label>
