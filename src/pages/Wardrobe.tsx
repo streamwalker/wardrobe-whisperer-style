@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import EditItemDialog from "@/components/wardrobe/EditItemDialog";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+import OccasionOutfitDrawer from "@/components/wardrobe/OccasionOutfitDrawer";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +37,7 @@ export default function Wardrobe() {
   const [shareLink, setShareLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
+  const [occasionDrawerOpen, setOccasionDrawerOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -313,6 +315,10 @@ export default function Wardrobe() {
             )}
           </Button>
         )}
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOccasionDrawerOpen(true)}>
+            <CalendarDays className="h-4 w-4" />
+            Occasion
+          </Button>
           <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShare}>
             <Share2 className="h-4 w-4" />
             Share
@@ -459,7 +465,13 @@ export default function Wardrobe() {
         onSwapItem={handleSwapItem}
       />
 
-      {/* Share dialog */}
+      <OccasionOutfitDrawer
+        allWardrobeItems={wardrobeWithPhotos}
+        open={occasionDrawerOpen}
+        onOpenChange={setOccasionDrawerOpen}
+      />
+
+
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
