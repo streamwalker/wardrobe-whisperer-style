@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-clothing-image]
 verify_jwt = false
+
+[functions.suggest-occasion-outfit]
+verify_jwt = false
