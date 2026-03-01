@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DEMO_WARDROBE, type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
+import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -67,7 +67,7 @@ export default function Outfits() {
     photo: row.photo_url || undefined,
   }));
 
-  const allItems = useMemo(() => [...DEMO_WARDROBE, ...userItems], [userItems]);
+  const allItems = useMemo(() => userItems, [userItems]);
   const getItemById = (id: string) => allItems.find((i) => i.id === id);
 
   const { data: outfits = [], isLoading } = useQuery({
