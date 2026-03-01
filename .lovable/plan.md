@@ -1,77 +1,67 @@
 
 
-# Transfer and Redeem Wardrobe Feature
+# Export/Import Wardrobe as JSON
 
 ## Overview
-Add two new buttons to the Wardrobe page -- **Transfer** (generate a one-time code) and **Redeem** (paste a code to copy items) -- allowing users to share their entire wardrobe with another user as a copy.
+Add **Export** and **Import** buttons to the Wardrobe page that let you download all your wardrobe items (both demo and user-added) as a JSON file, and re-import that file into any other project instance to recreate those items in the database.
 
-## Database Changes
+## How It Works
 
-### New table: `wardrobe_transfers`
-| Column | Type | Details |
-|--------|------|---------|
-| id | uuid | PK, default `gen_random_uuid()` |
-| sender_id | uuid | NOT NULL, the user who created the code |
-| transfer_code | text | NOT NULL, unique, 8-char hex code |
-| redeemed_by | uuid | NULL until someone redeems it |
-| redeemed_at | timestamptz | NULL until redeemed |
-| created_at | timestamptz | default `now()` |
+### Export
+- Clicking "Export" serializes all wardrobe items (name, category, primary_color, color_hex, style_tags, photo_url, is_new, is_featured) into a JSON file
+- Downloads as `wardrobe-export-YYYY-MM-DD.json`
+- Photo URLs are included as-is (public URLs will still work across projects)
 
-### RLS Policies
-- **SELECT own transfers**: `auth.uid() = sender_id` (so senders can see their codes)
-- **INSERT own transfers**: `auth.uid() = sender_id`
-- No public read -- redemption will go through a secure database function
+### Import
+- Clicking "Import" opens a file picker for `.json` files
+- Parses the file and validates the structure
+- Inserts all items into `wardrobe_items` with the current user's ID
+- Shows a toast with the count of items imported
+- Refreshes the wardrobe list
 
-### Database function: `redeem_wardrobe_transfer(p_code text)`
-A `SECURITY DEFINER` function that:
-1. Looks up the transfer by code
-2. Checks it hasn't already been redeemed (returns error if so)
-3. Marks it as redeemed (`redeemed_by = auth.uid()`, `redeemed_at = now()`)
-4. Copies all `wardrobe_items` from the sender into the redeemer's account (new UUIDs, same name/category/color/style/photo data, `user_id = auth.uid()`)
-5. Returns the count of items copied
-
-Using an RPC function ensures the entire operation is atomic and secure -- no one can redeem the same code twice.
-
-## Frontend Changes
+## UI Changes
 
 ### Wardrobe.tsx
-- Add two new state variables: `transferDialogOpen` and `redeemDialogOpen`
-- Add two new buttons in the header button row (next to Occasion and Share):
-  - **Transfer** button (with `ArrowRightLeft` icon)
-  - **Redeem** button (with `Gift` icon)
+- Add two new buttons in the header row (next to existing Transfer/Redeem):
+  - **Export** button with `Download` icon
+  - **Import** button with `Upload` icon
+- Export triggers a JSON download directly (no dialog needed)
+- Import uses a hidden file input element
 
-### Transfer Dialog
-- On click, insert a row into `wardrobe_transfers` with the user's ID
-- Display the generated `transfer_code` in a dialog with a copy button (same pattern as existing Share dialog)
+## JSON Format
 
-### Redeem Dialog
-- Text input for pasting a transfer code
-- "Redeem" button that calls `supabase.rpc('redeem_wardrobe_transfer', { p_code: code })`
-- On success, show a toast with the number of items copied and refresh the wardrobe list
-- On error (already redeemed / invalid code), show an error toast
+```text
+{
+  "version": 1,
+  "exportedAt": "2026-03-01T...",
+  "items": [
+    {
+      "name": "Court Green",
+      "category": "shoes",
+      "primary_color": "Green",
+      "color_hex": "#6B8E6B",
+      "style_tags": ["casual", "bold"],
+      "is_new": false,
+      "is_featured": true,
+      "photo_url": "https://..."
+    }
+  ]
+}
+```
 
 ## Technical Details
 
-```text
-+------------------+       +-------------------------+
-|  Transfer Button | ----> | INSERT wardrobe_transfers|
-|  (generates code)|       | (returns transfer_code)  |
-+------------------+       +-------------------------+
+### New component: `ExportImportButtons.tsx`
+- Handles export logic: queries all user's `wardrobe_items` from DB, merges with demo items, builds JSON, triggers download via `Blob` + `URL.createObjectURL`
+- Handles import logic: hidden `<input type="file">`, parses JSON, validates schema, batch-inserts into `wardrobe_items` via Supabase client
+- No new database changes needed -- uses existing `wardrobe_items` table and RLS policies
 
-+------------------+       +-----------------------------+
-|  Redeem Button   | ----> | RPC redeem_wardrobe_transfer |
-|  (pastes code)   |       | - validates code             |
-+------------------+       | - checks not redeemed        |
-                           | - copies all sender items    |
-                           | - marks code as used         |
-                           +-----------------------------+
-```
+### Validation on import
+- Checks for `version` and `items` array
+- Validates each item has required fields (name, category, primary_color)
+- Skips invalid items with a warning toast
+- Inserts in batches to avoid hitting request size limits
 
-### Migration SQL summary
-- Create `wardrobe_transfers` table with RLS enabled
-- Add RLS policies for owner access
-- Create `redeem_wardrobe_transfer` RPC function as `SECURITY DEFINER`
-
-### Items copied per transfer
-All columns from `wardrobe_items` are duplicated except `id` (new UUID) and `user_id` (set to redeemer). The `created_at`/`updated_at` timestamps reset to `now()`.
+### No migration needed
+All operations use existing tables and RLS policies. The current user's auth token ensures items are inserted with their `user_id`.
 
