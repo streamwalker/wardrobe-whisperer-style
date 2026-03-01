@@ -28,7 +28,7 @@ export default function AppLayout() {
             className="cursor-pointer font-display text-xl font-semibold tracking-tight text-foreground"
             onClick={() => navigate("/wardrobe")}
           >
-            StyleMatch
+            Drip Slayer
           </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

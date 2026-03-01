@@ -1,11 +1,11 @@
 {
-  "name": "StyleMatch by Streamwalkers",
-  "short_name": "StyleMatch",
-  "description": "A tool for making sure you're wearing the right colors with the right clothing at all times.",
+  "name": "Drip Slayer",
+  "short_name": "Drip Slayer",
+  "description": "Your refined wardrobe companion — match colors, build outfits, slay every day.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf8f5",
-  "theme_color": "#8b6f4e",
+  "background_color": "#f7f5fa",
+  "theme_color": "#6b4f8a",
   "orientation": "any",
   "icons": [
     {
