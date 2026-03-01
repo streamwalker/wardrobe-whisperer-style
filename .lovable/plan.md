@@ -1,67 +1,38 @@
 
 
-# Export/Import Wardrobe as JSON
+# Eliminate Duplicate Wardrobe Items
 
-## Overview
-Add **Export** and **Import** buttons to the Wardrobe page that let you download all your wardrobe items (both demo and user-added) as a JSON file, and re-import that file into any other project instance to recreate those items in the database.
+## Problem
+The wardrobe page merges two data sources:
+1. **Hardcoded demo items** (32 items in `DEMO_WARDROBE` array in `wardrobe-data.ts`)
+2. **Database items** (fetched from `wardrobe_items` table)
 
-## How It Works
+Nearly all 32 demo items also exist as rows in the database (likely from a previous import), causing each to appear twice. There are no duplicates *within* the database itself.
 
-### Export
-- Clicking "Export" serializes all wardrobe items (name, category, primary_color, color_hex, style_tags, photo_url, is_new, is_featured) into a JSON file
-- Downloads as `wardrobe-export-YYYY-MM-DD.json`
-- Photo URLs are included as-is (public URLs will still work across projects)
+## Solution
+Deduplicate in `Wardrobe.tsx` by filtering out database items whose names match a demo item (case-insensitive). This way:
+- Demo items (with their local photos) are always shown
+- Only truly unique user-added items from the DB are appended
+- No data is deleted -- the DB rows remain but aren't shown twice
 
-### Import
-- Clicking "Import" opens a file picker for `.json` files
-- Parses the file and validates the structure
-- Inserts all items into `wardrobe_items` with the current user's ID
-- Shows a toast with the count of items imported
-- Refreshes the wardrobe list
+## Changes
 
-## UI Changes
+### `src/pages/Wardrobe.tsx`
+Update the merge logic (around line 75-77) where `allItems` is constructed:
 
-### Wardrobe.tsx
-- Add two new buttons in the header row (next to existing Transfer/Redeem):
-  - **Export** button with `Download` icon
-  - **Import** button with `Upload` icon
-- Export triggers a JSON download directly (no dialog needed)
-- Import uses a hidden file input element
-
-## JSON Format
-
-```text
-{
-  "version": 1,
-  "exportedAt": "2026-03-01T...",
-  "items": [
-    {
-      "name": "Court Green",
-      "category": "shoes",
-      "primary_color": "Green",
-      "color_hex": "#6B8E6B",
-      "style_tags": ["casual", "bold"],
-      "is_new": false,
-      "is_featured": true,
-      "photo_url": "https://..."
-    }
-  ]
-}
+**Before:**
+```typescript
+const allItems = [...DEMO_WARDROBE, ...userItems];
 ```
 
-## Technical Details
+**After:**
+```typescript
+const demoNames = new Set(DEMO_WARDROBE.map((d) => d.name.toLowerCase()));
+const uniqueUserItems = userItems.filter((i) => !demoNames.has(i.name.toLowerCase()));
+const allItems = [...DEMO_WARDROBE, ...uniqueUserItems];
+```
 
-### New component: `ExportImportButtons.tsx`
-- Handles export logic: queries all user's `wardrobe_items` from DB, merges with demo items, builds JSON, triggers download via `Blob` + `URL.createObjectURL`
-- Handles import logic: hidden `<input type="file">`, parses JSON, validates schema, batch-inserts into `wardrobe_items` via Supabase client
-- No new database changes needed -- uses existing `wardrobe_items` table and RLS policies
+This is a 2-line addition that prevents any demo-matching DB items from appearing twice, while keeping all unique user-added items visible.
 
-### Validation on import
-- Checks for `version` and `items` array
-- Validates each item has required fields (name, category, primary_color)
-- Skips invalid items with a warning toast
-- Inserts in batches to avoid hitting request size limits
-
-### No migration needed
-All operations use existing tables and RLS policies. The current user's auth token ensures items are inserted with their `user_id`.
-
+## Why Not Delete from DB?
+Keeping the DB rows intact is safer -- if demo items are ever removed from the code in the future, the user's data persists. The dedup is purely a display-level filter.
