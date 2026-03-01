@@ -1,13 +1,1 @@
-project_id = "mqwkgtfzkowptlphbgde"
-
-[functions.match-outfit]
-verify_jwt = false
-
-[functions.analyze-clothing]
-verify_jwt = false
-
-[functions.generate-clothing-image]
-verify_jwt = false
-
-[functions.suggest-occasion-outfit]
-verify_jwt = false
+project_id = "zpctyufmvrvavnidovtp"
