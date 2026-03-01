@@ -67,14 +67,20 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
     setImporting(true);
     try {
       const text = await file.text();
-      const data = JSON.parse(text) as ExportPayload;
+      const parsed = JSON.parse(text);
 
-      if (!data.version || !Array.isArray(data.items)) {
+      // Support both formats: { version, items: [...] } wrapper or plain array
+      let rawItems: any[];
+      if (Array.isArray(parsed)) {
+        rawItems = parsed;
+      } else if (parsed && Array.isArray(parsed.items)) {
+        rawItems = parsed.items;
+      } else {
         throw new Error("Invalid wardrobe JSON format");
       }
 
-      const valid = data.items.filter((item) => item.name && item.category && item.primary_color);
-      const skipped = data.items.length - valid.length;
+      const valid = rawItems.filter((item: any) => item.name && item.category && item.primary_color);
+      const skipped = rawItems.length - valid.length;
 
       if (valid.length === 0) {
         toast.error("No valid items found in file");
