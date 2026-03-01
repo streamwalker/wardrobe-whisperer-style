@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Loader2, AlertTriangle } from "lucide-react";
+import { Download, Upload, Loader2, AlertTriangle, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +41,8 @@ interface ExportPayload {
 interface ParsedImport {
   valid: any[];
   skipped: number;
+  duplicates: any[];
+  newItems: any[];
 }
 
 export default function ExportImportButtons({ userId, allItems }: ExportImportButtonsProps) {
@@ -101,7 +105,12 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
         return;
       }
 
-      setPendingImport({ valid, skipped });
+      // Detect duplicates by name (case-insensitive)
+      const existingNames = new Set(allItems.map((i) => i.name.toLowerCase()));
+      const duplicates = valid.filter((item: any) => existingNames.has(item.name.toLowerCase()));
+      const newItems = valid.filter((item: any) => !existingNames.has(item.name.toLowerCase()));
+
+      setPendingImport({ valid, skipped, duplicates, newItems });
       setConfirmOpen(true);
     } catch (err: any) {
       toast.error(err.message || "Failed to read file");
@@ -178,24 +187,42 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <AlertTriangle className="h-5 w-5 text-destructive" />
               Import {pendingImport?.valid.length} Items?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span className="block">
-                This will add <strong>{pendingImport?.valid.length}</strong> items to your wardrobe.
-                {(pendingImport?.skipped ?? 0) > 0 && (
-                  <> ({pendingImport?.skipped} invalid items will be skipped.)</>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  <strong className="text-foreground">{pendingImport?.newItems.length}</strong> new items will be added to your wardrobe.
+                  {(pendingImport?.skipped ?? 0) > 0 && (
+                    <> ({pendingImport?.skipped} invalid items will be skipped.)</>
+                  )}
+                </p>
+                {(pendingImport?.duplicates.length ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-1.5">
+                      <Copy className="h-3.5 w-3.5 text-destructive" />
+                      <strong className="text-foreground">{pendingImport?.duplicates.length}</strong> items already exist and will be added as duplicates:
+                    </p>
+                    <ScrollArea className="max-h-32 rounded-md border bg-muted/50 p-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {pendingImport?.duplicates.map((item: any, i: number) => (
+                          <Badge key={i} variant="secondary" className="text-xs font-normal">
+                            {item.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 )}
-              </span>
-              <span className="block text-amber-600 dark:text-amber-400">
-                Items with the same name as existing ones will be added as duplicates.
-              </span>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={executeImport}>Import Items</AlertDialogAction>
+            <AlertDialogAction onClick={executeImport}>
+              Import {pendingImport?.valid.length} Items
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
