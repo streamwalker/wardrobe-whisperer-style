@@ -1,10 +1,20 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Loader2 } from "lucide-react";
+import { Download, Upload, Loader2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ExportImportButtonsProps {
   userId: string;
@@ -26,10 +36,17 @@ interface ExportPayload {
   }[];
 }
 
+interface ParsedImport {
+  valid: any[];
+  skipped: number;
+}
+
 export default function ExportImportButtons({ userId, allItems }: ExportImportButtonsProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingImport, setPendingImport] = useState<ParsedImport | null>(null);
 
   const handleExport = () => {
     const payload: ExportPayload = {
@@ -58,18 +75,15 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
     toast.success(`Exported ${payload.items.length} items`);
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset so same file can be re-selected
     e.target.value = "";
 
-    setImporting(true);
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
 
-      // Support both formats: { version, items: [...] } wrapper or plain array
       let rawItems: any[];
       if (Array.isArray(parsed)) {
         rawItems = parsed;
@@ -87,7 +101,20 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
         return;
       }
 
-      // Batch insert in chunks of 50
+      setPendingImport({ valid, skipped });
+      setConfirmOpen(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to read file");
+    }
+  };
+
+  const executeImport = async () => {
+    if (!pendingImport) return;
+    const { valid, skipped } = pendingImport;
+
+    setConfirmOpen(false);
+    setImporting(true);
+    try {
       const BATCH = 50;
       let inserted = 0;
       for (let i = 0; i < valid.length; i += BATCH) {
@@ -114,7 +141,13 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
       toast.error(err.message || "Failed to import");
     } finally {
       setImporting(false);
+      setPendingImport(null);
     }
+  };
+
+  const cancelImport = () => {
+    setConfirmOpen(false);
+    setPendingImport(null);
   };
 
   return (
@@ -138,8 +171,34 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
         type="file"
         accept=".json"
         className="hidden"
-        onChange={handleImport}
+        onChange={handleFileSelected}
       />
+
+      <AlertDialog open={confirmOpen} onOpenChange={(open) => { if (!open) cancelImport(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Import {pendingImport?.valid.length} Items?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                This will add <strong>{pendingImport?.valid.length}</strong> items to your wardrobe.
+                {(pendingImport?.skipped ?? 0) > 0 && (
+                  <> ({pendingImport?.skipped} invalid items will be skipped.)</>
+                )}
+              </span>
+              <span className="block text-amber-600 dark:text-amber-400">
+                Items with the same name as existing ones will be added as duplicates.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeImport}>Import Items</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
