@@ -179,12 +179,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wardrobe_transfers: {
+        Row: {
+          created_at: string
+          id: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          sender_id: string
+          transfer_code: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_id: string
+          transfer_code?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_id?: string
+          transfer_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      redeem_wardrobe_transfer: { Args: { p_code: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
