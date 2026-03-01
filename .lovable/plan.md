@@ -1,38 +1,37 @@
 
 
-# Eliminate Duplicate Wardrobe Items
+# Remove Hardcoded Demo Data -- Database Only
 
-## Problem
-The wardrobe page merges two data sources:
-1. **Hardcoded demo items** (32 items in `DEMO_WARDROBE` array in `wardrobe-data.ts`)
-2. **Database items** (fetched from `wardrobe_items` table)
+## Overview
+Remove the `DEMO_WARDROBE` array and all 26 static image imports from `wardrobe-data.ts`, making the app rely entirely on database items. The types, constants (CATEGORIES, filters), and utility functions remain.
 
-Nearly all 32 demo items also exist as rows in the database (likely from a previous import), causing each to appear twice. There are no duplicates *within* the database itself.
+## Files to Change
 
-## Solution
-Deduplicate in `Wardrobe.tsx` by filtering out database items whose names match a demo item (case-insensitive). This way:
-- Demo items (with their local photos) are always shown
-- Only truly unique user-added items from the DB are appended
-- No data is deleted -- the DB rows remain but aren't shown twice
+### 1. `src/lib/wardrobe-data.ts`
+- Delete all 26 image imports at the top
+- Delete the entire `DEMO_WARDROBE` array (32 items)
+- Keep: `WardrobeItem` interface, `WardrobeCategory`, `StyleTag`, `ColorTone` types, `CATEGORIES`, `TONE_FILTERS`, `STYLE_FILTERS`, `getColorTone()`
 
-## Changes
+### 2. `src/pages/Wardrobe.tsx`
+- Remove `DEMO_WARDROBE` from import
+- Remove dedup logic (`demoNames`, `uniqueUserItems`)
+- Set `allItems = userItems` directly
+- All items are now DB items, so remove the `userItemIds` gate on delete/edit -- every item is editable/deletable
 
-### `src/pages/Wardrobe.tsx`
-Update the merge logic (around line 75-77) where `allItems` is constructed:
+### 3. `src/pages/Outfits.tsx`
+- Remove `DEMO_WARDROBE` from import
+- Change `allItems` from `[...DEMO_WARDROBE, ...userItems]` to just `userItems`
 
-**Before:**
-```typescript
-const allItems = [...DEMO_WARDROBE, ...userItems];
-```
+### 4. `src/pages/Shop.tsx`
+- Remove `DEMO_WARDROBE` from import
+- Fetch user's DB wardrobe items (same query pattern as Wardrobe.tsx) and use those for outfit matching instead of the hardcoded list
+- Update `getItemById` to use the fetched items
 
-**After:**
-```typescript
-const demoNames = new Set(DEMO_WARDROBE.map((d) => d.name.toLowerCase()));
-const uniqueUserItems = userItems.filter((i) => !demoNames.has(i.name.toLowerCase()));
-const allItems = [...DEMO_WARDROBE, ...uniqueUserItems];
-```
+## What Stays Unchanged
+- `wardrobe-data.ts` still exports all types, interfaces, category/filter constants, and utility functions
+- Components that only import types (`WardrobeItemCard`, `EditItemDialog`, `ExportImportButtons`, `OutfitSuggestionDrawer`, `OccasionOutfitDrawer`, `SharedWardrobe`) need no changes
+- Database rows are untouched
 
-This is a 2-line addition that prevents any demo-matching DB items from appearing twice, while keeping all unique user-added items visible.
+## Risk
+Users who haven't imported the demo data into their DB will see an empty wardrobe. Since the DB already contains copies of all demo items for the current user, this should be seamless.
 
-## Why Not Delete from DB?
-Keeping the DB rows intact is safer -- if demo items are ever removed from the code in the future, the user's data persists. The dedup is purely a display-level filter.
