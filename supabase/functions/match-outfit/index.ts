@@ -1,10 +1,27 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function authenticateUser(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new Error("Unauthorized");
+  }
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) throw new Error("Unauthorized");
+  return data.claims.sub as string;
+}
 
 async function callAI(LOVABLE_API_KEY: string, messages: any[], tools: any[], tool_choice: any) {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -113,7 +130,25 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    const { selectedItem, selectedItems, wardrobeItems, excludeOutfits } = await req.json();
+    // Auth check
+    await authenticateUser(req);
+
+    const body = await req.json();
+    const { selectedItem, selectedItems, wardrobeItems, excludeOutfits } = body;
+
+    // Input validation
+    if (!wardrobeItems || !Array.isArray(wardrobeItems) || wardrobeItems.length > 500) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or too many wardrobe items (max 500)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!selectedItem && (!selectedItems || !Array.isArray(selectedItems) || selectedItems.length === 0)) {
+      return new Response(
+        JSON.stringify({ error: "At least one selected item is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -163,8 +198,9 @@ serve(async (req) => {
     const isFullOutfit = missingCategories.length === 0;
 
     let excludeBlock = "";
-    if (excludeOutfits && excludeOutfits.length > 0) {
-      excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${excludeOutfits.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
+    if (excludeOutfits && Array.isArray(excludeOutfits) && excludeOutfits.length > 0) {
+      const limited = excludeOutfits.slice(0, 20);
+      excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${limited.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
     }
 
     let systemPrompt: string;
@@ -305,9 +341,14 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    if (e instanceof Error && e.message === "Unauthorized") {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     console.error("match-outfit error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -13,46 +13,30 @@ export default function SharedWardrobe() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
 
-  const { data: share, isLoading: shareLoading, error: shareError } = useQuery({
-    queryKey: ["shared-wardrobe", token],
+  const { data: ownerProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ["shared-profile", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("wardrobe_shares")
-        .select("*")
-        .eq("share_token", token!)
-        .eq("is_active", true)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("get_shared_profile", { p_token: token! });
       if (error) throw error;
-      if (!data) throw new Error("Share not found or expired");
-      return data;
+      const rows = data as unknown as { display_name: string }[];
+      if (!rows || rows.length === 0) throw new Error("Share not found or expired");
+      return rows[0];
     },
     enabled: !!token,
   });
 
-  const { data: ownerProfile } = useQuery({
-    queryKey: ["shared-profile", share?.user_id],
+  const { data: items, isLoading: itemsLoading, error: itemsError } = useQuery({
+    queryKey: ["shared-items", token],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", share!.user_id)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!share?.user_id,
-  });
-
-  const { data: items, isLoading: itemsLoading } = useQuery({
-    queryKey: ["shared-items", share?.user_id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("wardrobe_items")
-        .select("*")
-        .eq("user_id", share!.user_id);
+      const { data, error } = await (supabase as any).rpc("get_shared_wardrobe", { p_token: token! });
       if (error) throw error;
-      return data;
+      return data as unknown as Array<{
+        id: string; name: string; category: string; primary_color: string;
+        color_hex: string | null; style_tags: string[] | null;
+        is_new: boolean | null; is_featured: boolean | null; photo_url: string | null;
+      }>;
     },
-    enabled: !!share?.user_id,
+    enabled: !!token,
   });
 
   const wardrobeItems: WardrobeItem[] = (items || []).map((row) => ({
@@ -74,7 +58,7 @@ export default function SharedWardrobe() {
 
   const ownerName = ownerProfile?.display_name || "Someone";
 
-  if (shareLoading || itemsLoading) {
+  if (profileLoading || itemsLoading) {
     return (
       <div className="min-h-screen bg-background p-6 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -83,7 +67,7 @@ export default function SharedWardrobe() {
     );
   }
 
-  if (shareError || !share) {
+  if (itemsError || !items) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
         <p className="text-lg font-medium text-foreground">This wardrobe link is invalid or expired.</p>
