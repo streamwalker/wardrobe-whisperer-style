@@ -131,7 +131,7 @@ export default function TransferRedeemDialogs({
               onChange={(e) => setRedeemCode(e.target.value)}
               placeholder="Paste code here"
               className="font-mono tracking-widest"
-              maxLength={8}
+              
             />
             <Button
               size="sm"
