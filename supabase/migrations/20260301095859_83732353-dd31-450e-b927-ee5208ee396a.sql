@@ -1,0 +1,1 @@
+ALTER TABLE public.wardrobe_transfers ALTER COLUMN transfer_code SET DEFAULT encode(extensions.gen_random_bytes(16), 'hex');
