@@ -84,7 +84,9 @@ export default function Wardrobe() {
   }));
   const userItemIds = new Set(userItems.map((i) => i.id));
 
-  const allItems = [...DEMO_WARDROBE, ...userItems];
+  const demoNames = new Set(DEMO_WARDROBE.map((d) => d.name.toLowerCase()));
+  const uniqueUserItems = userItems.filter((i) => !demoNames.has(i.name.toLowerCase()));
+  const allItems = [...DEMO_WARDROBE, ...uniqueUserItems];
 
   const handleDeleteItem = async (itemId: string) => {
     try {
