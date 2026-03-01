@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check, CalendarDays, ArrowRightLeft, Gift } from "lucide-react";
 import TransferRedeemDialogs from "@/components/wardrobe/TransferRedeemDialogs";
+import ExportImportButtons from "@/components/wardrobe/ExportImportButtons";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -334,6 +335,7 @@ export default function Wardrobe() {
             <Gift className="h-4 w-4" />
             Redeem
           </Button>
+          {user && <ExportImportButtons userId={user.id} allItems={wardrobeWithPhotos} />}
         </div>
       </div>
       {generating && (
