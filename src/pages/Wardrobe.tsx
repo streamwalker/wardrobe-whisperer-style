@@ -7,7 +7,8 @@ import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer
 import OccasionOutfitDrawer from "@/components/wardrobe/OccasionOutfitDrawer";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check, CalendarDays } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Share2, Copy, Check, CalendarDays, ArrowRightLeft, Gift } from "lucide-react";
+import TransferRedeemDialogs from "@/components/wardrobe/TransferRedeemDialogs";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +39,8 @@ export default function Wardrobe() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
   const [occasionDrawerOpen, setOccasionDrawerOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -323,6 +326,14 @@ export default function Wardrobe() {
             <Share2 className="h-4 w-4" />
             Share
           </Button>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setTransferDialogOpen(true)}>
+            <ArrowRightLeft className="h-4 w-4" />
+            Transfer
+          </Button>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setRedeemDialogOpen(true)}>
+            <Gift className="h-4 w-4" />
+            Redeem
+          </Button>
         </div>
       </div>
       {generating && (
@@ -497,6 +508,15 @@ export default function Wardrobe() {
           open={!!editingItem}
           onOpenChange={(open) => { if (!open) setEditingItem(null); }}
           onSave={(updates) => handleEditItem(editingItem.id, updates)}
+        />
+      )}
+      {user && (
+        <TransferRedeemDialogs
+          userId={user.id}
+          transferOpen={transferDialogOpen}
+          redeemOpen={redeemDialogOpen}
+          onTransferChange={setTransferDialogOpen}
+          onRedeemChange={setRedeemDialogOpen}
         />
       )}
     </div>
