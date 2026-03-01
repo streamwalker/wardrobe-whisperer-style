@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
-import { DEMO_WARDROBE, type WardrobeItem } from "@/lib/wardrobe-data";
+import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface AnalyzedItem {
@@ -36,6 +37,32 @@ export default function Shop() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Fetch user's wardrobe items from DB
+  const { data: dbItems } = useQuery({
+    queryKey: ["wardrobe-items", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wardrobe_items")
+        .select("*")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const wardrobeItems: WardrobeItem[] = (dbItems || []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category as WardrobeCategory,
+    primary_color: row.primary_color,
+    color_hex: row.color_hex || "#888888",
+    style_tags: (row.style_tags || []) as WardrobeItem["style_tags"],
+    is_new: row.is_new ?? false,
+    is_featured: row.is_featured ?? false,
+    photo: row.photo_url || undefined,
+  }));
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -131,7 +158,7 @@ export default function Shop() {
         is_featured: false,
       };
 
-      const stripped = DEMO_WARDROBE.map(({ photo, ...rest }) => rest);
+      const stripped = wardrobeItems.map(({ photo, ...rest }) => rest);
       const { data, error } = await supabase.functions.invoke("match-outfit", {
         body: {
           selectedItem: fakeWardrobeItem,
@@ -176,7 +203,7 @@ export default function Shop() {
     }
   };
 
-  const getItemById = (id: string) => DEMO_WARDROBE.find((i) => i.id === id);
+  const getItemById = (id: string) => wardrobeItems.find((i) => i.id === id);
 
   const isProcessing = analyzing || matching;
 

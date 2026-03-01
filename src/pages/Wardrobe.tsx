@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DEMO_WARDROBE, CATEGORIES, TONE_FILTERS, STYLE_FILTERS, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
+import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import EditItemDialog from "@/components/wardrobe/EditItemDialog";
@@ -82,11 +82,7 @@ export default function Wardrobe() {
     is_featured: row.is_featured ?? false,
     photo: row.photo_url || undefined,
   }));
-  const userItemIds = new Set(userItems.map((i) => i.id));
-
-  const demoNames = new Set(DEMO_WARDROBE.map((d) => d.name.toLowerCase()));
-  const uniqueUserItems = userItems.filter((i) => !demoNames.has(i.name.toLowerCase()));
-  const allItems = [...DEMO_WARDROBE, ...uniqueUserItems];
+  const allItems = userItems;
 
   const handleDeleteItem = async (itemId: string) => {
     try {
@@ -431,8 +427,8 @@ export default function Wardrobe() {
                       item={item}
                       selected={selectedIds.has(item.id)}
                       onClick={() => handleCardClick(item)}
-                      onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
-                      onEdit={userItemIds.has(item.id) ? () => setEditingItem(item) : undefined}
+                      onDelete={() => handleDeleteItem(item.id)}
+                      onEdit={() => setEditingItem(item)}
                     />
                   ))}
                 </div>
@@ -448,8 +444,8 @@ export default function Wardrobe() {
               item={item}
               selected={selectedIds.has(item.id)}
               onClick={() => handleCardClick(item)}
-              onDelete={userItemIds.has(item.id) ? () => handleDeleteItem(item.id) : undefined}
-              onEdit={userItemIds.has(item.id) ? () => setEditingItem(item) : undefined}
+              onDelete={() => handleDeleteItem(item.id)}
+              onEdit={() => setEditingItem(item)}
             />
           ))}
         </div>
