@@ -1,10 +1,12 @@
 export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear';
+export type ShoeSubcategory = 'hi-tops' | 'boots';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
 
 export interface WardrobeItem {
   id: string;
   name: string;
   category: WardrobeCategory;
+  subcategory?: string;
   primary_color: string;
   color_hex: string;
   style_tags: StyleTag[];
@@ -12,6 +14,11 @@ export interface WardrobeItem {
   is_featured: boolean;
   photo?: string;
 }
+
+export const SHOE_SUBCATEGORIES: { value: ShoeSubcategory; label: string }[] = [
+  { value: 'hi-tops', label: '👟 Hi-Tops' },
+  { value: 'boots', label: '🥾 Boots' },
+];
 
 export const CATEGORIES: { value: WardrobeCategory; label: string; icon: string }[] = [
   { value: 'shoes', label: 'Shoes', icon: '👟' },
