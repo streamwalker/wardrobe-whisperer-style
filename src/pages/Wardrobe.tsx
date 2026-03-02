@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
+import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, SHOE_SUBCATEGORIES, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import EditItemDialog from "@/components/wardrobe/EditItemDialog";
@@ -75,6 +75,7 @@ export default function Wardrobe() {
     id: row.id,
     name: row.name,
     category: row.category as WardrobeCategory,
+    subcategory: (row as any).subcategory || undefined,
     primary_color: row.primary_color,
     color_hex: row.color_hex || '#888888',
     style_tags: (row.style_tags || []) as WardrobeItem['style_tags'],
@@ -421,16 +422,69 @@ export default function Wardrobe() {
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
                 <div className="flex flex-col gap-2 pt-1">
-                  {items.map((item) => (
-                    <WardrobeItemCard
-                      key={item.id}
-                      item={item}
-                      selected={selectedIds.has(item.id)}
-                      onClick={() => handleCardClick(item)}
-                      onDelete={() => handleDeleteItem(item.id)}
-                      onEdit={() => setEditingItem(item)}
-                    />
-                  ))}
+                  {cat.value === 'shoes' ? (
+                    <>
+                      {/* Subcategorized shoes */}
+                      {SHOE_SUBCATEGORIES.map((sub) => {
+                        const subItems = items.filter((i) => i.subcategory === sub.value);
+                        if (subItems.length === 0) return null;
+                        return (
+                          <div key={sub.value}>
+                            <div className="py-1 px-1 flex items-center gap-1">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{sub.label}</span>
+                              <span className="text-[10px] text-muted-foreground">({subItems.length})</span>
+                            </div>
+                            {subItems.map((item) => (
+                              <div key={item.id} className="mb-2">
+                                <WardrobeItemCard
+                                  item={item}
+                                  selected={selectedIds.has(item.id)}
+                                  onClick={() => handleCardClick(item)}
+                                  onDelete={() => handleDeleteItem(item.id)}
+                                  onEdit={() => setEditingItem(item)}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                      {/* Uncategorized shoes */}
+                      {(() => {
+                        const uncategorized = items.filter((i) => !i.subcategory);
+                        if (uncategorized.length === 0) return null;
+                        return (
+                          <div>
+                            <div className="py-1 px-1">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Other</span>
+                              <span className="text-[10px] text-muted-foreground ml-1">({uncategorized.length})</span>
+                            </div>
+                            {uncategorized.map((item) => (
+                              <div key={item.id} className="mb-2">
+                                <WardrobeItemCard
+                                  item={item}
+                                  selected={selectedIds.has(item.id)}
+                                  onClick={() => handleCardClick(item)}
+                                  onDelete={() => handleDeleteItem(item.id)}
+                                  onEdit={() => setEditingItem(item)}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    items.map((item) => (
+                      <WardrobeItemCard
+                        key={item.id}
+                        item={item}
+                        selected={selectedIds.has(item.id)}
+                        onClick={() => handleCardClick(item)}
+                        onDelete={() => handleDeleteItem(item.id)}
+                        onEdit={() => setEditingItem(item)}
+                      />
+                    ))
+                  )}
                 </div>
               </div>
             );

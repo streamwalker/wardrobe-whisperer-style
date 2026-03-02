@@ -122,6 +122,7 @@ export type Database = {
           photo_url: string | null
           primary_color: string
           style_tags: string[] | null
+          subcategory: string | null
           updated_at: string
           user_id: string
         }
@@ -136,6 +137,7 @@ export type Database = {
           photo_url?: string | null
           primary_color: string
           style_tags?: string[] | null
+          subcategory?: string | null
           updated_at?: string
           user_id: string
         }
@@ -150,6 +152,7 @@ export type Database = {
           photo_url?: string | null
           primary_color?: string
           style_tags?: string[] | null
+          subcategory?: string | null
           updated_at?: string
           user_id?: string
         }
