@@ -1,37 +1,21 @@
 
+## Add 7 Default Silk Dress Shirts to Your Wardrobe
 
-# Remove Hardcoded Demo Data -- Database Only
+Since your wardrobe already has items, the auto-seeding logic was skipped. I'll manually insert the 7 luxury silk dress shirts directly into your wardrobe using a database insert.
 
-## Overview
-Remove the `DEMO_WARDROBE` array and all 26 static image imports from `wardrobe-data.ts`, making the app rely entirely on database items. The types, constants (CATEGORIES, filters), and utility functions remain.
+### Items to Add
+1. White Button-Down Dress Shirt
+2. Purple Button-Down Dress Shirt
+3. Pink Button-Down Dress Shirt
+4. Black Button-Down Dress Shirt
+5. Dark Navy Button-Down Dress Shirt
+6. Light Gray Button-Down Dress Shirt
+7. Dark Storm Gray Button-Down Dress Shirt
 
-## Files to Change
+All items will use the refined silk shirt images already stored in `public/wardrobe/` and will be fully editable/deletable like any other wardrobe item.
 
-### 1. `src/lib/wardrobe-data.ts`
-- Delete all 26 image imports at the top
-- Delete the entire `DEMO_WARDROBE` array (32 items)
-- Keep: `WardrobeItem` interface, `WardrobeCategory`, `StyleTag`, `ColorTone` types, `CATEGORIES`, `TONE_FILTERS`, `STYLE_FILTERS`, `getColorTone()`
-
-### 2. `src/pages/Wardrobe.tsx`
-- Remove `DEMO_WARDROBE` from import
-- Remove dedup logic (`demoNames`, `uniqueUserItems`)
-- Set `allItems = userItems` directly
-- All items are now DB items, so remove the `userItemIds` gate on delete/edit -- every item is editable/deletable
-
-### 3. `src/pages/Outfits.tsx`
-- Remove `DEMO_WARDROBE` from import
-- Change `allItems` from `[...DEMO_WARDROBE, ...userItems]` to just `userItems`
-
-### 4. `src/pages/Shop.tsx`
-- Remove `DEMO_WARDROBE` from import
-- Fetch user's DB wardrobe items (same query pattern as Wardrobe.tsx) and use those for outfit matching instead of the hardcoded list
-- Update `getItemById` to use the fetched items
-
-## What Stays Unchanged
-- `wardrobe-data.ts` still exports all types, interfaces, category/filter constants, and utility functions
-- Components that only import types (`WardrobeItemCard`, `EditItemDialog`, `ExportImportButtons`, `OutfitSuggestionDrawer`, `OccasionOutfitDrawer`, `SharedWardrobe`) need no changes
-- Database rows are untouched
-
-## Risk
-Users who haven't imported the demo data into their DB will see an empty wardrobe. Since the DB already contains copies of all demo items for the current user, this should be seamless.
-
+### Technical Details
+- Run a single SQL `INSERT` into the `wardrobe_items` table for user `51557f90-45be-4ef8-a725-72f6ad45083e`
+- Each row will include: name, category ("tops"), primary_color, color_hex, style_tags, photo_url (pointing to the local `/wardrobe/shirt-*.jpeg` assets), is_new, and is_featured values matching the defaults in `src/lib/default-wardrobe-items.ts`
+- No schema changes needed -- this is a data-only operation
+- After insertion, refreshing the wardrobe page will show the new shirts immediately
