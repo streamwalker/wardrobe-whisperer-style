@@ -3,6 +3,8 @@ import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, SHOE_SUBCATEGORIES, getColorTo
 import { DEFAULT_DRESS_SHIRTS } from "@/lib/default-wardrobe-items";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
+import DraggableItemCard from "@/components/wardrobe/DraggableItemCard";
+import DroppableCategoryColumn from "@/components/wardrobe/DroppableCategoryColumn";
 import EditItemDialog from "@/components/wardrobe/EditItemDialog";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import OccasionOutfitDrawer from "@/components/wardrobe/OccasionOutfitDrawer";
@@ -13,6 +15,7 @@ import TransferRedeemDialogs from "@/components/wardrobe/TransferRedeemDialogs";
 import ExportImportButtons from "@/components/wardrobe/ExportImportButtons";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +31,8 @@ import { Input } from "@/components/ui/input";
 export default function Wardrobe() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [draggingItem, setDraggingItem] = useState<WardrobeItem | null>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
   const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -265,6 +270,34 @@ export default function Wardrobe() {
     setSelectedItems([]);
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = event.active.data.current?.item as WardrobeItem | undefined;
+    setDraggingItem(item || null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setDraggingItem(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const item = active.data.current?.item as WardrobeItem | undefined;
+    const targetCategory = over.data.current?.category as WardrobeCategory | undefined;
+    if (!item || !targetCategory || item.category === targetCategory) return;
+
+    try {
+      const { error } = await supabase
+        .from("wardrobe_items")
+        .update({ category: targetCategory, subcategory: null })
+        .eq("id", item.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
+      const catLabel = CATEGORIES.find(c => c.value === targetCategory)?.label || targetCategory;
+      toast.success(`Moved "${item.name}" to ${catLabel}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to move item");
+    }
+  };
+
   const handleDrawerChange = (open: boolean) => {
     setDrawerOpen(open);
     if (!open) {
@@ -438,11 +471,12 @@ export default function Wardrobe() {
 
       {/* Items */}
       {activeCategory === "all" && !hasFilters ? (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-310px)]">
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-310px)]">
           {CATEGORIES.map((cat) => {
             const items = applyFilters(wardrobeWithPhotos.filter((i) => i.category === cat.value));
             return (
-              <div key={cat.value} className="flex flex-col h-full overflow-y-auto scrollbar-none">
+              <DroppableCategoryColumn key={cat.value} categoryValue={cat.value}>
                 <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
                   <span className="text-sm">{cat.icon}</span>
                   <span className="text-xs font-semibold text-foreground">{cat.label}</span>
@@ -451,7 +485,6 @@ export default function Wardrobe() {
                 <div className="flex flex-col gap-2 pt-1">
                   {cat.value === 'shoes' ? (
                     <>
-                      {/* Subcategorized shoes */}
                       {SHOE_SUBCATEGORIES.map((sub) => {
                         const subItems = items.filter((i) => i.subcategory === sub.value);
                         if (subItems.length === 0) return null;
@@ -463,7 +496,7 @@ export default function Wardrobe() {
                             </div>
                             {subItems.map((item) => (
                               <div key={item.id} className="mb-2">
-                                <WardrobeItemCard
+                                <DraggableItemCard
                                   item={item}
                                   selected={selectedIds.has(item.id)}
                                   onClick={() => handleCardClick(item)}
@@ -475,7 +508,6 @@ export default function Wardrobe() {
                           </div>
                         );
                       })}
-                      {/* Uncategorized shoes */}
                       {(() => {
                         const uncategorized = items.filter((i) => !i.subcategory);
                         if (uncategorized.length === 0) return null;
@@ -487,7 +519,7 @@ export default function Wardrobe() {
                             </div>
                             {uncategorized.map((item) => (
                               <div key={item.id} className="mb-2">
-                                <WardrobeItemCard
+                                <DraggableItemCard
                                   item={item}
                                   selected={selectedIds.has(item.id)}
                                   onClick={() => handleCardClick(item)}
@@ -502,7 +534,7 @@ export default function Wardrobe() {
                     </>
                   ) : (
                     items.map((item) => (
-                      <WardrobeItemCard
+                      <DraggableItemCard
                         key={item.id}
                         item={item}
                         selected={selectedIds.has(item.id)}
@@ -513,10 +545,18 @@ export default function Wardrobe() {
                     ))
                   )}
                 </div>
-              </div>
+              </DroppableCategoryColumn>
             );
           })}
         </div>
+        <DragOverlay>
+          {draggingItem && (
+            <div className="w-40 opacity-90 pointer-events-none">
+              <WardrobeItemCard item={draggingItem} />
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((item) => (
