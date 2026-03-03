@@ -6,12 +6,13 @@ import type { WardrobeItem } from "@/lib/wardrobe-data";
 interface Props {
   item: WardrobeItem;
   selected?: boolean;
+  highlighted?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
 }
 
-export default function DraggableItemCard({ item, selected, onClick, onDelete, onEdit }: Props) {
+export default function DraggableItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     data: { item },
@@ -29,6 +30,7 @@ export default function DraggableItemCard({ item, selected, onClick, onDelete, o
       <WardrobeItemCard
         item={item}
         selected={selected}
+        highlighted={highlighted}
         onClick={onClick}
         onDelete={onDelete}
         onEdit={onEdit}
