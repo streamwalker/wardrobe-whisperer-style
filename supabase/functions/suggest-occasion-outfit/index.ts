@@ -23,6 +23,14 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
+function isFormalItem(item: any): boolean {
+  if (item.category === "suits") return true;
+  if (item.category === "accessories") return true;
+  if (item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt")) return true;
+  if (item.category === "shoes" && item.subcategory === "dress-shoes") return true;
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
@@ -53,13 +61,27 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const stripped = wardrobeItems.map(({ photo, ...rest }: any) => rest);
+    // Detect if the wardrobe has formal items — for formal occasions, prefer formal pairing
+    const hasFormalItems = wardrobeItems.some((i: any) => isFormalItem(i));
+    const formalKeywords = ["formal", "gala", "black tie", "wedding", "interview", "business", "cocktail", "dinner party", "opera", "banquet"];
+    const isFormalOccasion = formalKeywords.some(kw => occasion.toLowerCase().includes(kw));
+    const useFormalMode = isFormalOccasion && hasFormalItems;
+
+    const filteredItems = useFormalMode
+      ? wardrobeItems.filter((i: any) => isFormalItem(i))
+      : wardrobeItems;
+
+    const stripped = filteredItems.map(({ photo, ...rest }: any) => rest);
 
     const weatherContext = weather ? `\nWEATHER / CONDITIONS: ${weather}. Factor this into your choices (e.g., layers for cold, breathable fabrics for hot, waterproof for rain).` : "";
 
+    const categoryDescription = useFormalMode
+      ? "Suit, Dress Shirt (tops), Dress Shoes, and Tie/Accessory"
+      : "Shoes, Pants, Tops, Outerwear";
+
     const systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist. The user is going to a specific event/occasion and needs outfit suggestions from their wardrobe.
 
-Your job: suggest EXACTLY 3 complete outfits suited for the occasion. Each outfit MUST have exactly 4 items — one from each category: Shoes, Pants, Tops, Outerwear.
+Your job: suggest EXACTLY 3 complete ${useFormalMode ? "formal " : ""}outfits suited for the occasion. Each outfit MUST have exactly 4 items — one from each category: ${categoryDescription}.
 
 Consider:
 - The formality and vibe of the occasion (casual hangout vs. date night vs. outdoor activity)
@@ -79,7 +101,7 @@ Make the 3 suggestions distinct — e.g., one more casual, one more polished, on
 WARDROBE ITEMS:
 ${JSON.stringify(stripped)}
 
-Return exactly 3 complete outfits, each with one item from shoes, pants, tops, and outerwear.`;
+Return exactly 3 complete outfits, each with one item from ${categoryDescription.toLowerCase()}.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
