@@ -1,4 +1,4 @@
-export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear';
+export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear' | 'suits';
 export type ShoeSubcategory = 'hi-tops' | 'boots';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
 
@@ -25,6 +25,7 @@ export const CATEGORIES: { value: WardrobeCategory; label: string; icon: string 
   { value: 'pants', label: 'Pants', icon: '👖' },
   { value: 'tops', label: 'Tops', icon: '👕' },
   { value: 'outerwear', label: 'Outerwear', icon: '🧥' },
+  { value: 'suits', label: 'Suits', icon: '🤵' },
 ];
 
 export type ColorTone = 'dark' | 'light' | 'neutral';

@@ -57,7 +57,7 @@ serve(async (req) => {
     const systemPrompt = `You are a fashion item analyzer and identifier. Given a photo of a clothing item, identify:
 - A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
 - A detailed description: try to identify the brand, collection, model name, material, and any distinguishing features. Write a concise 1-2 sentence description. Example: "Ralph Lauren 2025 spring collection 'Joffrey' green sports jacket in lightweight cotton twill." If you cannot identify specific brand details, describe the item's style, material, and notable features.
-- The category: shoes, pants, tops, or outerwear
+- The category: shoes, pants, tops, outerwear, or suits
 - The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
 - The hex code of that color
 - 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty`;
@@ -93,7 +93,7 @@ serve(async (req) => {
                   description: { type: "string", description: "Detailed 1-2 sentence description including brand, collection, model, material, and features if identifiable" },
                   category: {
                     type: "string",
-                    enum: ["shoes", "pants", "tops", "outerwear"],
+                    enum: ["shoes", "pants", "tops", "outerwear", "suits"],
                   },
                   primary_color: { type: "string", description: "Color name" },
                   color_hex: { type: "string", description: "Hex code e.g. #2C3E50" },
