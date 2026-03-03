@@ -19,18 +19,21 @@ export default function CategorySidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 border-r bg-sidebar sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all">
+    <aside className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 border-r border-border/50 bg-sidebar sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all">
       <nav className="flex flex-col gap-0.5 p-2 pt-3">
         {/* All */}
         <button
           onClick={() => handleCategoryClick("all")}
           className={cn(
-            "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
+            "relative flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-all",
             isWardrobePage && activeCat === "all"
-              ? "bg-sidebar-accent text-sidebar-primary"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+              ? "bg-sidebar-accent text-neon-cyan"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:shadow-neon/10"
           )}
         >
+          {isWardrobePage && activeCat === "all" && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-neon-cyan shadow-neon" />
+          )}
           <LayoutGrid className="h-4 w-4 shrink-0" />
           <span className="hidden lg:inline truncate">All Items</span>
         </button>
@@ -42,12 +45,15 @@ export default function CategorySidebar() {
             key={cat.value}
             onClick={() => handleCategoryClick(cat.value)}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
+              "relative flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-all",
               isWardrobePage && activeCat === cat.value
-                ? "bg-sidebar-accent text-sidebar-primary"
+                ? "bg-sidebar-accent text-neon-cyan"
                 : "text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}
           >
+            {isWardrobePage && activeCat === cat.value && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-neon-cyan shadow-neon" />
+            )}
             <span className="text-base leading-none shrink-0">{cat.icon}</span>
             <span className="hidden lg:inline truncate">{cat.label}</span>
           </button>

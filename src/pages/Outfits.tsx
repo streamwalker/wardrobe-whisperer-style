@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
 
 const MOOD_FILTERS = [
@@ -212,11 +213,12 @@ export default function Outfits() {
           <button
             key={f.value}
             onClick={() => setActiveMood(f.value)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
               activeMood === f.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}
+                ? "neon-gradient-cyan-pink text-white shadow-neon"
+                : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
+            )}
           >
             {f.emoji} {f.label}
           </button>
@@ -230,7 +232,7 @@ export default function Outfits() {
       ) : null}
 
       {filteredOutfits.map((outfit) => (
-        <div key={outfit.id} className="rounded-xl border bg-card p-4 space-y-3">
+        <div key={outfit.id} className="rounded-xl glass-card p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-semibold text-card-foreground">
               {outfit.name}
