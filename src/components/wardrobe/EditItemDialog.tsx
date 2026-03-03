@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { SHOE_SUBCATEGORIES } from "@/lib/wardrobe-data";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ interface Props {
   onSave: (updates: {
     name: string;
     category: string;
+    subcategory?: string;
     primary_color: string;
     color_hex: string;
     style_tags: string[];
@@ -39,6 +41,7 @@ interface Props {
 export default function EditItemDialog({ item, open, onOpenChange, onSave }: Props) {
   const [name, setName] = useState(item.name);
   const [category, setCategory] = useState<string>(item.category);
+  const [subcategory, setSubcategory] = useState<string>(item.subcategory || "");
   const [primaryColor, setPrimaryColor] = useState(item.primary_color);
   const [colorHex, setColorHex] = useState(item.color_hex);
   const [styleTags, setStyleTags] = useState<string[]>([...item.style_tags]);
@@ -71,6 +74,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       await onSave({
         name: name.trim(),
         category,
+        subcategory: category === "shoes" && subcategory ? subcategory : undefined,
         primary_color: primaryColor.trim(),
         color_hex: colorHex,
         style_tags: styleTags,
@@ -86,6 +90,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
     if (nextOpen) {
       setName(item.name);
       setCategory(item.category);
+      setSubcategory(item.subcategory || "");
       setPrimaryColor(item.primary_color);
       setColorHex(item.color_hex);
       setStyleTags([...item.style_tags]);
@@ -162,7 +167,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
 
           <div className="space-y-1.5">
             <Label className="text-xs">Category</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes") setSubcategory(""); }}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
@@ -175,6 +180,24 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               </SelectContent>
             </Select>
           </div>
+
+          {category === "shoes" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Subcategory</Label>
+              <Select value={subcategory} onValueChange={setSubcategory}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Optional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SHOE_SUBCATEGORIES.map((sub) => (
+                    <SelectItem key={sub.value} value={sub.value} className="text-sm">
+                      {sub.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
