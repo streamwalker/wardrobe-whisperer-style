@@ -115,6 +115,7 @@ export type Database = {
           category: string
           color_hex: string | null
           created_at: string
+          description: string | null
           id: string
           is_featured: boolean | null
           is_new: boolean | null
@@ -130,6 +131,7 @@ export type Database = {
           category: string
           color_hex?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_featured?: boolean | null
           is_new?: boolean | null
@@ -145,6 +147,7 @@ export type Database = {
           category?: string
           color_hex?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_featured?: boolean | null
           is_new?: boolean | null
