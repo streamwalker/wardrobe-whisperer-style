@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { SHOE_SUBCATEGORIES } from "@/lib/wardrobe-data";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function AddItem() {
   const [primaryColor, setPrimaryColor] = useState("");
   const [colorHex, setColorHex] = useState("#000000");
   const [styleTags, setStyleTags] = useState<string[]>([]);
+  const [subcategory, setSubcategory] = useState<string>("");
 
   const analyzePhoto = useCallback(async (file: File) => {
     if (!user) return;
@@ -134,6 +136,7 @@ export default function AddItem() {
         name,
         description: description || null,
         category,
+        subcategory: category === "shoes" && subcategory ? subcategory : null,
         primary_color: primaryColor,
         color_hex: colorHex,
         style_tags: styleTags,
@@ -245,7 +248,7 @@ export default function AddItem() {
 
         <div className="space-y-2">
           <Label>Category</Label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes") setSubcategory(""); }}>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -258,6 +261,24 @@ export default function AddItem() {
             </SelectContent>
           </Select>
         </div>
+
+        {category === "shoes" && (
+          <div className="space-y-2">
+            <Label>Subcategory</Label>
+            <Select value={subcategory} onValueChange={setSubcategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select subcategory (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {SHOE_SUBCATEGORIES.map((sub) => (
+                  <SelectItem key={sub.value} value={sub.value}>
+                    {sub.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">

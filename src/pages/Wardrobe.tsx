@@ -100,12 +100,13 @@ export default function Wardrobe() {
   const handleEditItem = async (itemId: string, updates: {
     name: string;
     category: string;
+    subcategory?: string;
     primary_color: string;
     color_hex: string;
     style_tags: string[];
     newPhotoFile?: File;
   }) => {
-    const { newPhotoFile, ...dbUpdates } = updates;
+    const { newPhotoFile, subcategory, ...dbUpdates } = updates;
     let photoUrl: string | undefined;
 
     // Upload new photo if provided
@@ -124,7 +125,7 @@ export default function Wardrobe() {
 
     const { error } = await supabase
       .from("wardrobe_items")
-      .update({ ...dbUpdates, ...(photoUrl ? { photo_url: photoUrl } : {}) })
+      .update({ ...dbUpdates, subcategory: subcategory || null, ...(photoUrl ? { photo_url: photoUrl } : {}) })
       .eq("id", itemId);
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
