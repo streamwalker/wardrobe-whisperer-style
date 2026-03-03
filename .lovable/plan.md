@@ -1,42 +1,71 @@
 
 
-## Export Outfits to Shareable PDF
+## UI/UX Refresh: Modern, Sleek, Neon-Accented Design
 
-### What It Does
-Adds an "Export PDF" button on the Outfits page that generates a nicely formatted PDF containing the user's saved outfits. The PDF is designed for sharing — each outfit gets a visual card with item thumbnails, outfit name, mood badge, and styling explanation. Perfect for sending to friends to vote on looks.
+### Vision
+Transform the current soft lavender palette into a **dark-mode-forward design with neon accent pops** — think sleek streetwear app meets luxury closet organizer. Keep the inviting warmth but add energy through neon highlights, glassmorphism, and subtle motion.
 
-### Technical Approach
+### Color & Theme Changes (`src/index.css`)
 
-**Library**: Use the browser-native approach with `window.print()` and a dedicated print-optimized hidden container, OR use `jspdf` + `html2canvas` for a proper downloadable PDF. I recommend **`jspdf` + `html2canvas`** since it produces a real `.pdf` file the user can share via any messaging app.
+**New CSS variables — dark mode as the star, with neon accents:**
+- Introduce neon accent colors: `--neon-cyan: 180 100% 50%`, `--neon-pink: 330 100% 65%`, `--neon-lime: 90 100% 55%`
+- Update dark mode to a richer, deeper background (near-black with blue undertone)
+- Keep light mode refined but add the same neon pops as accents
+- Add a subtle `--glass` variable for glassmorphism panels
 
-**New packages needed**: `jspdf`, `html2canvas`
+**New utility classes:**
+- `.neon-glow` — subtle text-shadow or box-shadow using neon cyan
+- `.glass-card` — `backdrop-blur-xl bg-white/5 border-white/10` (dark) / `bg-white/60` (light)
 
-### Changes
+### Header Refresh (`AppLayout.tsx`)
+- Add a subtle neon underline or glow to the "Drip Slayer" logo text
+- Make the `+` button use a neon gradient (cyan → pink) instead of plain primary
+- Add a very subtle gradient border on the header
 
-**1. `src/pages/Outfits.tsx`**
-- Add an "Export PDF" button in the header area (next to the title)
-- Add state for selecting which outfits to export (default: all filtered outfits, or let user pick specific ones via checkboxes)
-- Import and call the PDF generation utility
+### Bottom Navigation (`AppLayout.tsx`)
+- Active tab gets a neon cyan dot indicator below the icon (instead of just color change)
+- Add a frosted glass effect to the nav bar background
+- Smooth scale transition on tap
 
-**2. New file: `src/lib/export-outfits-pdf.ts`**
-- Utility function `exportOutfitsPdf(outfits, itemsMap)` that:
-  - Creates a hidden DOM container with a styled layout
-  - Renders each outfit as a card: name, mood emoji, item thumbnails in a row, and explanation text
-  - Adds a title page: "Which look do you like best?" with date
-  - Each outfit gets roughly 1/3 of a page (fits ~3 outfits per page)
-  - Uses `html2canvas` to capture the container, then `jspdf` to build the PDF
-  - Triggers download as `outfits-{date}.pdf`
-  - Cleans up the hidden container
+### Sidebar (`CategorySidebar.tsx`)
+- Active category gets a neon left-border accent bar (2px neon cyan)
+- Add item counts next to each category label
+- Subtle hover glow effect
 
-**3. PDF Layout Design**
-- **Header**: App name + "My Outfit Ideas" + date
-- **Per outfit card**: Outfit name (bold), mood badge, horizontal row of item photos/color swatches, explanation text below
-- **Footer prompt**: "Which look is your favorite? Let me know! 💬"
-- Clean, minimal styling — white background, subtle borders, readable typography
+### Action Buttons (`Wardrobe.tsx`)
+- **"Generate Images"** — neon lime/green gradient background
+- **"Occasion"** — neon pink/magenta outline
+- **"Share"** — neon cyan outline
+- **"Match This Outfit"** floating bar — neon gradient button (cyan → pink), with a soft glow shadow
+- Keep Transfer/Redeem/Export/Import as subtle outline buttons
 
-### User Flow
-1. User views their saved outfits (optionally filters by mood)
-2. Clicks "Export PDF" button
-3. A PDF is generated from the currently visible outfits and downloads automatically
-4. User shares the PDF with friends
+### Category Pills (`Wardrobe.tsx`)
+- Active pill: neon gradient background (cyan → purple) with white text
+- Inactive: glass-card style with subtle border
+
+### Item Cards (`WardrobeItemCard.tsx`)
+- Add glassmorphism to the info section at the bottom
+- Selection ring uses neon cyan instead of primary
+- Hover: subtle neon border glow
+- "new" badge gets a neon pink background with a tiny pulse animation
+
+### Floating Selection Bar (`Wardrobe.tsx`)
+- Glass effect background with neon border
+- "Match This Outfit" button: neon gradient with glow shadow
+- Item count badge: neon cyan pill
+
+### Tailwind Config (`tailwind.config.ts`)
+- Add neon color tokens: `neon-cyan`, `neon-pink`, `neon-lime`
+- Add `glass` utility via a custom plugin or extend backgroundImage for gradients
+- Add a `glow` box-shadow utility
+- Add `neon-pulse` keyframe animation for badges
+
+### Files to Change
+1. **`src/index.css`** — New CSS variables for neon colors, glass utilities, glow classes
+2. **`tailwind.config.ts`** — Neon color tokens, glow/glass utilities, new animations
+3. **`src/components/layout/AppLayout.tsx`** — Header glow, neon `+` button, frosted bottom nav with dot indicator
+4. **`src/components/layout/CategorySidebar.tsx`** — Neon active bar, hover glow
+5. **`src/pages/Wardrobe.tsx`** — Colored action buttons, neon category pills, glass floating bar
+6. **`src/components/wardrobe/WardrobeItemCard.tsx`** — Glass info panel, neon selection ring, glow hover
+7. **`src/pages/Outfits.tsx`** — Apply same neon mood filter pills and glass card treatment
 
