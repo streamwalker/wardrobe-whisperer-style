@@ -1,0 +1,1 @@
+ALTER TABLE public.wardrobe_items ADD COLUMN description text;

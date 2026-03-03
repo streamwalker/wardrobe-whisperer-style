@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -33,33 +34,22 @@ export default function AddItem() {
 
   // Form state
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [colorHex, setColorHex] = useState("#000000");
   const [styleTags, setStyleTags] = useState<string[]>([]);
 
-  if (!authLoading && !user) {
-    navigate("/auth", { replace: true });
-    return null;
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-  };
-
-  const handleAnalyze = async () => {
-    if (!photoFile) return;
+  const analyzePhoto = useCallback(async (file: File) => {
+    if (!user) return;
     setAnalyzing(true);
     try {
-      const ext = photoFile.name.split(".").pop() || "jpg";
-      const filePath = `${user!.id}/${Date.now()}.${ext}`;
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("wardrobe-photos")
-        .upload(filePath, photoFile);
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
@@ -77,6 +67,7 @@ export default function AddItem() {
         toast({ title: "Analysis failed", description: data.error, variant: "destructive" });
       } else {
         setName(data.name || "");
+        setDescription(data.description || "");
         setCategory(data.category || "");
         setPrimaryColor(data.primary_color || "");
         setColorHex(data.color_hex || "#000000");
@@ -88,6 +79,20 @@ export default function AddItem() {
     } finally {
       setAnalyzing(false);
     }
+  }, [user]);
+
+  if (!authLoading && !user) {
+    navigate("/auth", { replace: true });
+    return null;
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    // Auto-analyze on photo selection
+    analyzePhoto(file);
   };
 
   const toggleTag = (tag: string) => {
@@ -104,13 +109,11 @@ export default function AddItem() {
 
     setSaving(true);
     try {
-      // Get photo URL if uploaded
       let photoUrl: string | null = null;
       if (photoFile) {
         const ext = photoFile.name.split(".").pop() || "jpg";
         const filePath = `${user!.id}/${Date.now()}.${ext}`;
 
-        // Check if already uploaded during analysis — re-use same approach
         const { error: uploadError } = await supabase.storage
           .from("wardrobe-photos")
           .upload(filePath, photoFile);
@@ -129,6 +132,7 @@ export default function AddItem() {
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user!.id,
         name,
+        description: description || null,
         category,
         primary_color: primaryColor,
         color_hex: colorHex,
@@ -168,6 +172,12 @@ export default function AddItem() {
             alt="Preview"
             className="h-48 w-48 rounded-lg object-cover"
           />
+          {analyzing && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Analyzing your item…</span>
+            </div>
+          )}
           <Button variant="outline" size="sm" onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}>
             Remove photo
           </Button>
@@ -206,11 +216,11 @@ export default function AddItem() {
         onChange={handleFileSelect}
       />
 
-      {/* Analyze button */}
-      {photoPreview && (
-        <Button onClick={handleAnalyze} disabled={analyzing} variant="secondary" className="w-full">
-          {analyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-          {analyzing ? "Analyzing…" : "Analyze Now"}
+      {/* Re-analyze button (if user wants to retry) */}
+      {photoPreview && !analyzing && (
+        <Button onClick={() => photoFile && analyzePhoto(photoFile)} variant="secondary" className="w-full">
+          <Sparkles className="mr-2 h-4 w-4" />
+          Re-analyze
         </Button>
       )}
 
@@ -219,6 +229,18 @@ export default function AddItem() {
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Navy Chinos" />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Ralph Lauren 2025 spring collection 'Joffrey' green sports jacket"
+            className="min-h-[60px] resize-none"
+            rows={2}
+          />
         </div>
 
         <div className="space-y-2">

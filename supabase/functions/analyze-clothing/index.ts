@@ -54,8 +54,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are a fashion item analyzer. Given a photo of a clothing item, identify:
+    const systemPrompt = `You are a fashion item analyzer and identifier. Given a photo of a clothing item, identify:
 - A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
+- A detailed description: try to identify the brand, collection, model name, material, and any distinguishing features. Write a concise 1-2 sentence description. Example: "Ralph Lauren 2025 spring collection 'Joffrey' green sports jacket in lightweight cotton twill." If you cannot identify specific brand details, describe the item's style, material, and notable features.
 - The category: shoes, pants, tops, or outerwear
 - The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
 - The hex code of that color
@@ -89,6 +90,7 @@ serve(async (req) => {
                 type: "object",
                 properties: {
                   name: { type: "string", description: "Short 2-3 word name" },
+                  description: { type: "string", description: "Detailed 1-2 sentence description including brand, collection, model, material, and features if identifiable" },
                   category: {
                     type: "string",
                     enum: ["shoes", "pants", "tops", "outerwear"],
@@ -103,7 +105,7 @@ serve(async (req) => {
                     },
                   },
                 },
-                required: ["name", "category", "primary_color", "color_hex", "style_tags"],
+                required: ["name", "description", "category", "primary_color", "color_hex", "style_tags"],
                 additionalProperties: false,
               },
             },
