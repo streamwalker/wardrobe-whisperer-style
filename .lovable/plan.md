@@ -1,29 +1,21 @@
 
 
-## Make Dress Shoes a Separate Category
+## Auto-Navigate to New Category After Edit
 
-Move "Dress Shoes" from being a subcategory under Shoes to its own top-level wardrobe category, so it appears as a standalone tab alongside Shoes, Pants, Tops, etc.
+When a user changes an item's category in the Edit dialog, automatically switch the active category tab to the new category so the item visibly "moves" to its new home.
 
-### Changes
+### Change
 
-**1. Update `src/lib/wardrobe-data.ts`**
-- Add `'dress-shoes'` to the `WardrobeCategory` type
-- Add a new entry `{ value: 'dress-shoes', label: 'Dress Shoes', icon: '👞' }` to the `CATEGORIES` array
-- Remove `'dress-shoes'` from the `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` array
+**File: `src/pages/Wardrobe.tsx`** -- Update `handleEditItem` to check if the category changed, and if so, call `setActiveCategory(updates.category)` after the successful database update. This way, after saving, the view switches to show the target category tab where the moved item now appears.
 
-**2. Update `src/pages/Wardrobe.tsx`**
-- The new category will automatically appear as a tab since it renders from `CATEGORIES`
-- Dress shoes won't need subcategory grouping since they are their own category now
+Specifically, after line 178 (`toast.success("Item updated")`), add:
 
-**3. Update `src/pages/AddItem.tsx` and `src/components/wardrobe/EditItemDialog.tsx`**
-- Add `'dress-shoes'` to the local `CATEGORIES` arrays used in the add/edit forms
-- These forms already hide the subcategory selector for non-shoes/accessories categories, so dress-shoes items won't show a subcategory dropdown
+```typescript
+// If category changed, switch tab to the new category
+if (editingItem && updates.category !== editingItem.category) {
+  setActiveCategory(updates.category as WardrobeCategory);
+}
+```
 
-**4. Update edge functions for formal detection**
-- In `supabase/functions/match-outfit/index.ts`: Update `isFormalItem()` to check `item.category === "dress-shoes"` instead of `item.category === "shoes" && item.subcategory === "dress-shoes"`
-- In `supabase/functions/suggest-occasion-outfit/index.ts`: Same change to `isFormalItem()`
-- Update formal mode category lists from `["suits", "tops", "shoes", "accessories"]` to `["suits", "tops", "dress-shoes", "accessories"]`
-
-**5. Migrate existing data**
-- Run a database UPDATE to change any existing wardrobe items with `category = 'shoes'` and `subcategory = 'dress-shoes'` to `category = 'dress-shoes'` and `subcategory = null`
+No other files need changes -- the database update and query invalidation already handle the data move correctly.
 
