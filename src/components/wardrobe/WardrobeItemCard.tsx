@@ -6,18 +6,20 @@ import { Star, Check, Trash2, Pencil } from "lucide-react";
 interface Props {
   item: WardrobeItem;
   selected?: boolean;
+  highlighted?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
 }
 
-export default function WardrobeItemCard({ item, selected, onClick, onDelete, onEdit }: Props) {
+export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
   return (
     <button
       onClick={onClick}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md animate-fade-in",
-        selected && "ring-2 ring-primary border-primary"
+        selected && "ring-2 ring-primary border-primary",
+        highlighted && "ring-2 ring-accent border-accent animate-[pulse-highlight_1.5s_ease-in-out]"
       )}
     >
       {/* Selection indicator */}

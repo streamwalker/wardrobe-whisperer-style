@@ -58,6 +58,12 @@ export default function Wardrobe() {
   const [occasionDrawerOpen, setOccasionDrawerOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
+  const [highlightItemId, setHighlightItemId] = useState<string | null>(null);
+
+  const flashHighlight = (id: string) => {
+    setHighlightItemId(id);
+    setTimeout(() => setHighlightItemId(null), 2000);
+  };
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -179,6 +185,7 @@ export default function Wardrobe() {
     // If category changed, switch tab to the new category
     if (editingItem && updates.category !== editingItem.category) {
       setActiveCategory(updates.category as WardrobeCategory);
+      flashHighlight(itemId);
     }
   };
 
@@ -310,6 +317,7 @@ export default function Wardrobe() {
         .eq("id", item.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
+      flashHighlight(item.id);
       const catLabel = CATEGORIES.find(c => c.value === targetCategory)?.label || targetCategory;
       toast.success(`Moved "${item.name}" to ${catLabel}`);
     } catch (err: any) {
@@ -518,6 +526,7 @@ export default function Wardrobe() {
                                 <DraggableItemCard
                                   item={item}
                                   selected={selectedIds.has(item.id)}
+                                  highlighted={highlightItemId === item.id}
                                   onClick={() => handleCardClick(item)}
                                   onDelete={() => setDeleteItemId(item.id)}
                                   onEdit={() => setEditingItem(item)}
@@ -541,6 +550,7 @@ export default function Wardrobe() {
                                 <DraggableItemCard
                                   item={item}
                                   selected={selectedIds.has(item.id)}
+                                  highlighted={highlightItemId === item.id}
                                   onClick={() => handleCardClick(item)}
                                   onDelete={() => setDeleteItemId(item.id)}
                                   onEdit={() => setEditingItem(item)}
@@ -557,6 +567,7 @@ export default function Wardrobe() {
                         key={item.id}
                         item={item}
                         selected={selectedIds.has(item.id)}
+                        highlighted={highlightItemId === item.id}
                         onClick={() => handleCardClick(item)}
                         onDelete={() => setDeleteItemId(item.id)}
                         onEdit={() => setEditingItem(item)}
@@ -583,6 +594,7 @@ export default function Wardrobe() {
               key={item.id}
               item={item}
               selected={selectedIds.has(item.id)}
+              highlighted={highlightItemId === item.id}
               onClick={() => handleCardClick(item)}
               onDelete={() => setDeleteItemId(item.id)}
               onEdit={() => setEditingItem(item)}

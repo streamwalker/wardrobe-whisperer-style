@@ -86,6 +86,12 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "pulse-highlight": {
+          "0%": { boxShadow: "0 0 0 0 hsl(var(--accent) / 0.7)" },
+          "40%": { boxShadow: "0 0 0 8px hsl(var(--accent) / 0.3)" },
+          "70%": { boxShadow: "0 0 0 12px hsl(var(--accent) / 0)" },
+          "100%": { boxShadow: "0 0 0 0 hsl(var(--accent) / 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
