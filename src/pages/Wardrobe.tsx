@@ -396,8 +396,7 @@ export default function Wardrobe() {
         {itemsMissingPhotos.length > 0 && (
           <Button
             size="sm"
-            variant="outline"
-            className="gap-1.5 shrink-0"
+            className="gap-1.5 shrink-0 neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
             onClick={handleGenerateImages}
             disabled={generating}
           >
@@ -414,11 +413,11 @@ export default function Wardrobe() {
             )}
           </Button>
         )}
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOccasionDrawerOpen(true)}>
+          <Button size="sm" variant="outline" className="gap-1.5 border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
             <CalendarDays className="h-4 w-4" />
             Occasion
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShare}>
+          <Button size="sm" variant="outline" className="gap-1.5 border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
             <Share2 className="h-4 w-4" />
             Share
           </Button>
@@ -444,8 +443,8 @@ export default function Wardrobe() {
           className={cn(
             "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
             activeCategory === "all"
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground"
+              ? "neon-gradient-cyan-pink text-white shadow-neon"
+              : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
           )}
         >
           All
@@ -457,8 +456,8 @@ export default function Wardrobe() {
             className={cn(
               "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               activeCategory === cat.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
+                ? "neon-gradient-cyan-pink text-white shadow-neon"
+                : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
             )}
           >
             {cat.icon} {cat.label}
@@ -614,11 +613,14 @@ export default function Wardrobe() {
 
       {/* Floating multi-select bar */}
       {selectedItems.length >= 1 && !drawerOpen && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border bg-card px-4 py-2 shadow-lg">
-          <span className="text-sm font-medium text-card-foreground">
-            {selectedItems.length} {selectedItems.length === 1 ? "item" : "items"} selected
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full glass-card border-neon-cyan/30 px-4 py-2 shadow-neon">
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-card-foreground">
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[11px] font-bold text-white px-1.5">
+              {selectedItems.length}
+            </span>
+            {selectedItems.length === 1 ? "item" : "items"} selected
           </span>
-          <Button size="sm" className="gap-1.5 rounded-full" onClick={handleMatchThese}>
+          <Button size="sm" className="gap-1.5 rounded-full neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
             <Sparkles className="h-4 w-4" />
             Match This Outfit
           </Button>

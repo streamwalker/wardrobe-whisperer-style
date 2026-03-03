@@ -17,15 +17,15 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md animate-fade-in",
-        selected && "ring-2 ring-primary border-primary",
+        "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-neon-cyan/30 animate-fade-in",
+        selected && "ring-2 ring-neon-cyan border-neon-cyan shadow-neon",
         highlighted && "ring-2 ring-accent border-accent animate-[pulse-highlight_1.5s_ease-in-out]"
       )}
     >
       {/* Selection indicator */}
       {selected && (
-        <div className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow">
-          <Check className="h-3.5 w-3.5 text-primary-foreground" />
+        <div className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full neon-gradient-cyan-pink flex items-center justify-center shadow-neon">
+          <Check className="h-3.5 w-3.5 text-white" />
         </div>
       )}
 
@@ -34,7 +34,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <div
-              className="h-6 w-6 rounded-full bg-card/90 border flex items-center justify-center shadow cursor-pointer hover:bg-accent transition-colors"
+              className="h-6 w-6 rounded-full bg-card/90 border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -76,8 +76,8 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex flex-col gap-0.5 p-2">
+      {/* Info — glass panel */}
+      <div className="flex flex-col gap-0.5 p-2 glass-card border-t-0 rounded-t-none">
         <div className="flex items-center justify-between">
           <span className="text-xs sm:text-sm font-medium text-card-foreground truncate">{item.name}</span>
           {item.is_featured && <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />}
@@ -90,7 +90,9 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
             </Badge>
           ))}
           {item.is_new && (
-            <Badge className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0">new</Badge>
+            <Badge className="bg-neon-pink text-white text-[10px] px-1.5 py-0 animate-neon-pulse border-0">
+              new
+            </Badge>
           )}
         </div>
       </div>

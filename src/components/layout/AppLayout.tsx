@@ -23,17 +23,18 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-md">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent" />
         <div className="container flex h-14 items-center justify-between">
           <h1
-            className="cursor-pointer font-display text-xl font-semibold tracking-tight text-foreground"
+            className="cursor-pointer font-display text-xl font-semibold tracking-tight text-foreground neon-glow"
             onClick={() => navigate("/wardrobe")}
           >
             Drip Slayer
           </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg leading-none">
+              <button className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95">
                 <Plus className="h-5 w-5" />
               </button>
             </DropdownMenuTrigger>
@@ -60,7 +61,7 @@ export default function AppLayout() {
       </div>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/90 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 glass-card pb-[env(safe-area-inset-bottom,0px)]">
         <div className="container flex h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
@@ -69,12 +70,15 @@ export default function AppLayout() {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1 transition-colors",
-                  isActive ? "text-accent" : "text-muted-foreground"
+                  "flex flex-col items-center gap-1 px-3 py-1 transition-all active:scale-95",
+                  isActive ? "text-neon-cyan" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{label}</span>
+                {isActive && (
+                  <span className="absolute bottom-1.5 h-1 w-1 rounded-full bg-neon-cyan shadow-neon" />
+                )}
               </button>
             );
           })}
