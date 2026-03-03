@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, SHOE_SUBCATEGORIES, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
+import { DEFAULT_DRESS_SHIRTS } from "@/lib/default-wardrobe-items";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import EditItemDialog from "@/components/wardrobe/EditItemDialog";
@@ -56,6 +57,9 @@ export default function Wardrobe() {
     enabled: !!user?.id,
   });
 
+  // Seed default items for new users
+  const seededRef = useRef(false);
+
   // Fetch user-added items from the database
   const { data: dbItems, isLoading: dbLoading } = useQuery({
     queryKey: ['wardrobe-items', user?.id],
@@ -69,6 +73,28 @@ export default function Wardrobe() {
     },
     enabled: !!user?.id,
   });
+
+  // Auto-seed default dress shirts when wardrobe is empty
+  useEffect(() => {
+    if (!user || dbLoading || seededRef.current) return;
+    if (dbItems && dbItems.length === 0) {
+      seededRef.current = true;
+      const seedItems = DEFAULT_DRESS_SHIRTS.map((item) => ({
+        ...item,
+        user_id: user.id,
+      }));
+      supabase
+        .from('wardrobe_items')
+        .insert(seedItems)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Failed to seed default items:', error);
+          } else {
+            queryClient.invalidateQueries({ queryKey: ['wardrobe-items'] });
+          }
+        });
+    }
+  }, [user, dbItems, dbLoading, queryClient]);
 
   // Map DB items to WardrobeItem shape and merge with demo data
   const userItems: WardrobeItem[] = (dbItems || []).map((row) => ({
