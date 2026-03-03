@@ -1,21 +1,53 @@
 
-## Add 7 Default Silk Dress Shirts to Your Wardrobe
 
-Since your wardrobe already has items, the auto-seeding logic was skipped. I'll manually insert the 7 luxury silk dress shirts directly into your wardrobe using a database insert.
+## Formal Outfit Pairing Mode
 
-### Items to Add
-1. White Button-Down Dress Shirt
-2. Purple Button-Down Dress Shirt
-3. Pink Button-Down Dress Shirt
-4. Black Button-Down Dress Shirt
-5. Dark Navy Button-Down Dress Shirt
-6. Light Gray Button-Down Dress Shirt
-7. Dark Storm Gray Button-Down Dress Shirt
+When you select any "formal" item -- a suit, a dress shirt, dress shoes, or a tie -- the outfit matcher will switch to a formal-only mode that pairs exclusively within these four categories instead of the usual casual categories (shoes/pants/tops/outerwear).
 
-All items will use the refined silk shirt images already stored in `public/wardrobe/` and will be fully editable/deletable like any other wardrobe item.
+### What Changes
+
+**1. Add "Dress Shoes" subcategory**
+- Add `'dress-shoes'` to the `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` array in `src/lib/wardrobe-data.ts`
+- The add/edit forms already support shoe subcategories, so dress shoes will appear automatically in the dropdown
+
+**2. Define formal item detection logic (in the edge function)**
+- An item is "formal" if:
+  - Its category is `suits`
+  - Its category is `accessories` (ties/belts -- accessories are formal by nature in this wardrobe)
+  - Its category is `tops` AND its name contains "Dress Shirt"
+  - Its category is `shoes` AND its subcategory is `dress-shoes`
+
+**3. Update `match-outfit` edge function for formal pairing**
+- When ANY anchor item is detected as formal, switch to a "formal outfit" mode
+- The formal outfit has 4 slots: **Suit + Dress Shirt + Dress Shoes + Tie**
+- Filter `wardrobeItems` to only include formal items before sending to the AI
+- Update the AI system prompts to describe the 4 formal categories instead of shoes/pants/tops/outerwear
+- Update `allCategories` from `["shoes", "pants", "tops", "outerwear"]` to `["suits", "tops", "shoes", "accessories"]` when in formal mode
+
+**4. Update the occasion outfit function**
+- Update `supabase/functions/suggest-occasion-outfit/index.ts` with the same formal detection and filtering logic so occasion-based suggestions also respect formal pairing
+
+### How It Works (example flow)
+
+1. User selects a Navy Two-Button Suit
+2. Edge function detects `category === "suits"` -- formal mode activates
+3. Only dress shirts (tops with "Dress Shirt" in name), dress shoes (shoes with subcategory "dress-shoes"), and ties (accessories) are sent to the AI
+4. AI returns 3 outfit suggestions each containing: 1 suit + 1 dress shirt + 1 pair of dress shoes + 1 tie
 
 ### Technical Details
-- Run a single SQL `INSERT` into the `wardrobe_items` table for user `51557f90-45be-4ef8-a725-72f6ad45083e`
-- Each row will include: name, category ("tops"), primary_color, color_hex, style_tags, photo_url (pointing to the local `/wardrobe/shirt-*.jpeg` assets), is_new, and is_featured values matching the defaults in `src/lib/default-wardrobe-items.ts`
-- No schema changes needed -- this is a data-only operation
-- After insertion, refreshing the wardrobe page will show the new shirts immediately
+
+**`src/lib/wardrobe-data.ts`**
+- Add `'dress-shoes'` to `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` constant
+
+**`supabase/functions/match-outfit/index.ts`**
+- Add `isFormalItem(item)` helper function with the detection rules above
+- Add `isFormalMode` check: `const isFormalMode = anchors.some(a => isFormalItem(a))`
+- When `isFormalMode`:
+  - Filter `wardrobeItems` to only formal items
+  - Use formal categories `["suits", "tops", "shoes", "accessories"]` instead of casual ones
+  - Update system prompts to describe formal outfit structure (Suit + Dress Shirt + Dress Shoes + Tie)
+  - Update compatibility check prompts similarly
+
+**`supabase/functions/suggest-occasion-outfit/index.ts`**
+- Add same `isFormalItem` helper and filtering logic for occasion-based suggestions
+
