@@ -81,6 +81,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         newPhotoFile: newPhotoFile ?? undefined,
       });
       onOpenChange(false);
+    } catch {
+      toast.error("Failed to save changes");
     } finally {
       setSaving(false);
     }
