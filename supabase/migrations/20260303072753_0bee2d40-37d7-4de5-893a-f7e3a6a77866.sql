@@ -1,0 +1,2 @@
+ALTER TABLE public.wardrobe_items DROP CONSTRAINT IF EXISTS wardrobe_items_category_check;
+ALTER TABLE public.wardrobe_items ADD CONSTRAINT wardrobe_items_category_check CHECK (category IN ('shoes', 'pants', 'tops', 'outerwear', 'suits', 'accessories'));
