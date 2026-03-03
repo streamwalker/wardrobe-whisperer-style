@@ -176,6 +176,10 @@ export default function Wardrobe() {
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
     toast.success("Item updated");
+    // If category changed, switch tab to the new category
+    if (editingItem && updates.category !== editingItem.category) {
+      setActiveCategory(updates.category as WardrobeCategory);
+    }
   };
 
   const wardrobeTitle = profile?.display_name
