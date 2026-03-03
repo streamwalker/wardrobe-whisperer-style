@@ -1,5 +1,6 @@
-export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear' | 'suits';
+export type WardrobeCategory = 'shoes' | 'pants' | 'tops' | 'outerwear' | 'suits' | 'accessories';
 export type ShoeSubcategory = 'hi-tops' | 'boots';
+export type AccessorySubcategory = 'ties' | 'belts';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
 
 export interface WardrobeItem {
@@ -20,12 +21,18 @@ export const SHOE_SUBCATEGORIES: { value: ShoeSubcategory; label: string }[] = [
   { value: 'boots', label: '🥾 Boots' },
 ];
 
+export const ACCESSORY_SUBCATEGORIES: { value: AccessorySubcategory; label: string }[] = [
+  { value: 'ties', label: '👔 Ties' },
+  { value: 'belts', label: '🪢 Belts' },
+];
+
 export const CATEGORIES: { value: WardrobeCategory; label: string; icon: string }[] = [
   { value: 'shoes', label: 'Shoes', icon: '👟' },
   { value: 'pants', label: 'Pants', icon: '👖' },
   { value: 'tops', label: 'Tops', icon: '👕' },
   { value: 'outerwear', label: 'Outerwear', icon: '🧥' },
   { value: 'suits', label: 'Suits', icon: '🤵' },
+  { value: 'accessories', label: 'Accessories', icon: '👔' },
 ];
 
 export type ColorTone = 'dark' | 'light' | 'neutral';

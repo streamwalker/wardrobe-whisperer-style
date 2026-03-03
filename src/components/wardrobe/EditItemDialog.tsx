@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { SHOE_SUBCATEGORIES } from "@/lib/wardrobe-data";
+import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES } from "@/lib/wardrobe-data";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import { Loader2, Camera, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits"] as const;
+const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
 interface Props {
@@ -74,7 +74,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       await onSave({
         name: name.trim(),
         category,
-        subcategory: category === "shoes" && subcategory ? subcategory : undefined,
+        subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : undefined,
         primary_color: primaryColor.trim(),
         color_hex: colorHex,
         style_tags: styleTags,
@@ -167,7 +167,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
 
           <div className="space-y-1.5">
             <Label className="text-xs">Category</Label>
-            <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes") setSubcategory(""); }}>
+            <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes" && val !== "accessories") setSubcategory(""); }}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
@@ -181,7 +181,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
             </Select>
           </div>
 
-          {category === "shoes" && (
+          {(category === "shoes" || category === "accessories") && (
             <div className="space-y-1.5">
               <Label className="text-xs">Subcategory</Label>
               <Select value={subcategory} onValueChange={setSubcategory}>
@@ -189,7 +189,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                   <SelectValue placeholder="Optional" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SHOE_SUBCATEGORIES.map((sub) => (
+                  {(category === "shoes" ? SHOE_SUBCATEGORIES : ACCESSORY_SUBCATEGORIES).map((sub) => (
                     <SelectItem key={sub.value} value={sub.value} className="text-sm">
                       {sub.label}
                     </SelectItem>

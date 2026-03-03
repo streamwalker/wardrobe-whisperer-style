@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { SHOE_SUBCATEGORIES } from "@/lib/wardrobe-data";
+import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES } from "@/lib/wardrobe-data";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits"] as const;
+const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
 export default function AddItem() {
@@ -136,7 +136,7 @@ export default function AddItem() {
         name,
         description: description || null,
         category,
-        subcategory: category === "shoes" && subcategory ? subcategory : null,
+        subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : null,
         primary_color: primaryColor,
         color_hex: colorHex,
         style_tags: styleTags,
@@ -248,7 +248,7 @@ export default function AddItem() {
 
         <div className="space-y-2">
           <Label>Category</Label>
-          <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes") setSubcategory(""); }}>
+          <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes" && val !== "accessories") setSubcategory(""); }}>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -262,7 +262,7 @@ export default function AddItem() {
           </Select>
         </div>
 
-        {category === "shoes" && (
+        {(category === "shoes" || category === "accessories") && (
           <div className="space-y-2">
             <Label>Subcategory</Label>
             <Select value={subcategory} onValueChange={setSubcategory}>
@@ -270,7 +270,7 @@ export default function AddItem() {
                 <SelectValue placeholder="Select subcategory (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {SHOE_SUBCATEGORIES.map((sub) => (
+                {(category === "shoes" ? SHOE_SUBCATEGORIES : ACCESSORY_SUBCATEGORIES).map((sub) => (
                   <SelectItem key={sub.value} value={sub.value}>
                     {sub.label}
                   </SelectItem>
