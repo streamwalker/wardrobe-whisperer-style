@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Heart, Trash2, Loader2, LogIn } from "lucide-react";
+import { Heart, Trash2, Loader2, LogIn, FileDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
 
 const MOOD_FILTERS = [
   { value: "all", label: "All", emoji: "🎯" },
@@ -40,6 +41,32 @@ export default function Outfits() {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [activeMood, setActiveMood] = useState("all");
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPdf = async () => {
+    if (filteredOutfits.length === 0) return;
+    setExporting(true);
+    try {
+      const pdfOutfits = filteredOutfits.map((outfit) => ({
+        name: outfit.name,
+        mood: outfit.mood,
+        explanation: outfit.explanation,
+        items: outfit.item_ids
+          .map((id) => {
+            const wi = getItemById(id);
+            if (!wi) return null;
+            return { name: wi.name, photo: wi.photo, color_hex: wi.color_hex };
+          })
+          .filter(Boolean) as { name: string; photo?: string; color_hex: string }[],
+      }));
+      await exportOutfitsPdf(pdfOutfits);
+      toast.success("PDF downloaded!");
+    } catch {
+      toast.error("Failed to generate PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Fetch user-added wardrobe items so saved outfits can resolve them
   const { data: dbItems } = useQuery({
@@ -167,7 +194,18 @@ export default function Outfits() {
 
   return (
     <div className="space-y-4 pb-6">
-      <h2 className="font-display text-xl font-semibold text-foreground">Saved Outfits</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl font-semibold text-foreground">Saved Outfits</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportPdf}
+          disabled={exporting || filteredOutfits.length === 0}
+        >
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+          Export PDF
+        </Button>
+      </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {MOOD_FILTERS.map((f) => (
