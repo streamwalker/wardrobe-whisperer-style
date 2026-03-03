@@ -27,7 +27,7 @@ function isFormalItem(item: any): boolean {
   if (item.category === "suits") return true;
   if (item.category === "accessories") return true;
   if (item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt")) return true;
-  if (item.category === "shoes" && item.subcategory === "dress-shoes") return true;
+  if (item.category === "dress-shoes") return true;
   return false;
 }
 
