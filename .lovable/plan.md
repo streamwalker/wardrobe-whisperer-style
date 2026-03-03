@@ -1,53 +1,29 @@
 
 
-## Formal Outfit Pairing Mode
+## Make Dress Shoes a Separate Category
 
-When you select any "formal" item -- a suit, a dress shirt, dress shoes, or a tie -- the outfit matcher will switch to a formal-only mode that pairs exclusively within these four categories instead of the usual casual categories (shoes/pants/tops/outerwear).
+Move "Dress Shoes" from being a subcategory under Shoes to its own top-level wardrobe category, so it appears as a standalone tab alongside Shoes, Pants, Tops, etc.
 
-### What Changes
+### Changes
 
-**1. Add "Dress Shoes" subcategory**
-- Add `'dress-shoes'` to the `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` array in `src/lib/wardrobe-data.ts`
-- The add/edit forms already support shoe subcategories, so dress shoes will appear automatically in the dropdown
+**1. Update `src/lib/wardrobe-data.ts`**
+- Add `'dress-shoes'` to the `WardrobeCategory` type
+- Add a new entry `{ value: 'dress-shoes', label: 'Dress Shoes', icon: '👞' }` to the `CATEGORIES` array
+- Remove `'dress-shoes'` from the `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` array
 
-**2. Define formal item detection logic (in the edge function)**
-- An item is "formal" if:
-  - Its category is `suits`
-  - Its category is `accessories` (ties/belts -- accessories are formal by nature in this wardrobe)
-  - Its category is `tops` AND its name contains "Dress Shirt"
-  - Its category is `shoes` AND its subcategory is `dress-shoes`
+**2. Update `src/pages/Wardrobe.tsx`**
+- The new category will automatically appear as a tab since it renders from `CATEGORIES`
+- Dress shoes won't need subcategory grouping since they are their own category now
 
-**3. Update `match-outfit` edge function for formal pairing**
-- When ANY anchor item is detected as formal, switch to a "formal outfit" mode
-- The formal outfit has 4 slots: **Suit + Dress Shirt + Dress Shoes + Tie**
-- Filter `wardrobeItems` to only include formal items before sending to the AI
-- Update the AI system prompts to describe the 4 formal categories instead of shoes/pants/tops/outerwear
-- Update `allCategories` from `["shoes", "pants", "tops", "outerwear"]` to `["suits", "tops", "shoes", "accessories"]` when in formal mode
+**3. Update `src/pages/AddItem.tsx` and `src/components/wardrobe/EditItemDialog.tsx`**
+- Add `'dress-shoes'` to the local `CATEGORIES` arrays used in the add/edit forms
+- These forms already hide the subcategory selector for non-shoes/accessories categories, so dress-shoes items won't show a subcategory dropdown
 
-**4. Update the occasion outfit function**
-- Update `supabase/functions/suggest-occasion-outfit/index.ts` with the same formal detection and filtering logic so occasion-based suggestions also respect formal pairing
+**4. Update edge functions for formal detection**
+- In `supabase/functions/match-outfit/index.ts`: Update `isFormalItem()` to check `item.category === "dress-shoes"` instead of `item.category === "shoes" && item.subcategory === "dress-shoes"`
+- In `supabase/functions/suggest-occasion-outfit/index.ts`: Same change to `isFormalItem()`
+- Update formal mode category lists from `["suits", "tops", "shoes", "accessories"]` to `["suits", "tops", "dress-shoes", "accessories"]`
 
-### How It Works (example flow)
-
-1. User selects a Navy Two-Button Suit
-2. Edge function detects `category === "suits"` -- formal mode activates
-3. Only dress shirts (tops with "Dress Shirt" in name), dress shoes (shoes with subcategory "dress-shoes"), and ties (accessories) are sent to the AI
-4. AI returns 3 outfit suggestions each containing: 1 suit + 1 dress shirt + 1 pair of dress shoes + 1 tie
-
-### Technical Details
-
-**`src/lib/wardrobe-data.ts`**
-- Add `'dress-shoes'` to `ShoeSubcategory` type and `SHOE_SUBCATEGORIES` constant
-
-**`supabase/functions/match-outfit/index.ts`**
-- Add `isFormalItem(item)` helper function with the detection rules above
-- Add `isFormalMode` check: `const isFormalMode = anchors.some(a => isFormalItem(a))`
-- When `isFormalMode`:
-  - Filter `wardrobeItems` to only formal items
-  - Use formal categories `["suits", "tops", "shoes", "accessories"]` instead of casual ones
-  - Update system prompts to describe formal outfit structure (Suit + Dress Shirt + Dress Shoes + Tie)
-  - Update compatibility check prompts similarly
-
-**`supabase/functions/suggest-occasion-outfit/index.ts`**
-- Add same `isFormalItem` helper and filtering logic for occasion-based suggestions
+**5. Migrate existing data**
+- Run a database UPDATE to change any existing wardrobe items with `category = 'shoes'` and `subcategory = 'dress-shoes'` to `category = 'dress-shoes'` and `subcategory = null`
 
