@@ -23,6 +23,14 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
+function isFormalItem(item: any): boolean {
+  if (item.category === "suits") return true;
+  if (item.category === "accessories") return true;
+  if (item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt")) return true;
+  if (item.category === "shoes" && item.subcategory === "dress-shoes") return true;
+  return false;
+}
+
 async function callAI(LOVABLE_API_KEY: string, messages: any[], tools: any[], tool_choice: any) {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -62,12 +70,12 @@ async function callAI(LOVABLE_API_KEY: string, messages: any[], tools: any[], to
 async function checkCompatibility(
   LOVABLE_API_KEY: string,
   anchors: any[],
-  wardrobeItems: any[]
+  wardrobeItems: any[],
+  formalMode: boolean
 ) {
   const anchorIds = new Set(anchors.map((a: any) => a.id));
   const otherItems = wardrobeItems.filter((i: any) => !anchorIds.has(i.id));
 
-  // Group alternatives by category of the anchor items for replacement suggestions
   const anchorCategories = anchors.map((a: any) => a.category);
   const replacementPool: any[] = [];
   for (const cat of anchorCategories) {
@@ -75,8 +83,12 @@ async function checkCompatibility(
     replacementPool.push(...alternatives);
   }
 
-  const systemPrompt = `You are StyleMatch, a fashion AI specializing in color theory. Evaluate whether the given wardrobe items can form a cohesive outfit together. Consider color harmony, style consistency, and overall aesthetic.
+  const formalContext = formalMode
+    ? "These items are for a FORMAL outfit (suit + dress shirt + dress shoes + tie). Evaluate formal compatibility — color coordination, formality level, and dress code cohesion."
+    : "";
 
+  const systemPrompt = `You are StyleMatch, a fashion AI specializing in color theory. Evaluate whether the given wardrobe items can form a cohesive outfit together. Consider color harmony, style consistency, and overall aesthetic.
+${formalContext}
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
 If compatible, return compatible: true.
@@ -130,7 +142,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    // Auth check
     await authenticateUser(req);
 
     const body = await req.json();
@@ -160,9 +171,20 @@ serve(async (req) => {
     const anchorIds = new Set(anchors.map((a: any) => a.id));
     const isMulti = anchors.length > 1;
 
+    // --- Formal mode detection ---
+    const formalMode = anchors.some((a: any) => isFormalItem(a));
+    const formalCategories = ["suits", "tops", "shoes", "accessories"];
+    const casualCategories = ["shoes", "pants", "tops", "outerwear"];
+    const allCategories = formalMode ? formalCategories : casualCategories;
+
+    // Filter wardrobe items to formal-only when in formal mode
+    const filteredWardrobeItems = formalMode
+      ? wardrobeItems.filter((i: any) => isFormalItem(i))
+      : wardrobeItems;
+
     // --- Compatibility check for multi-item selections ---
     if (isMulti) {
-      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, wardrobeItems);
+      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, filteredWardrobeItems, formalMode);
       if (compatResult.error) {
         return new Response(
           JSON.stringify({ error: compatResult.error }),
@@ -185,7 +207,7 @@ serve(async (req) => {
     // --- Generate outfit suggestions ---
     const anchorCategories = anchors.map((a: any) => a.category);
 
-    const otherItems = wardrobeItems.filter((i: any) => !anchorIds.has(i.id));
+    const otherItems = filteredWardrobeItems.filter((i: any) => !anchorIds.has(i.id));
     const grouped: Record<string, any[]> = {};
     for (const item of otherItems) {
       const cat = item.category;
@@ -193,7 +215,6 @@ serve(async (req) => {
       grouped[cat].push(item);
     }
 
-    const allCategories = ["shoes", "pants", "tops", "outerwear"];
     const missingCategories = allCategories.filter(cat => !anchorCategories.includes(cat));
     const isFullOutfit = missingCategories.length === 0;
 
@@ -203,17 +224,25 @@ serve(async (req) => {
       excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${limited.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
     }
 
+    // --- Formal vs casual prompt building ---
+    const categoryDescription = formalMode
+      ? "Suit, Dress Shirt, Dress Shoes, and Tie/Accessory"
+      : "Shoes, Pants, Tops, and Outerwear";
+
+    const categoryListNumbered = formalMode
+      ? "1. Suits\n2. Tops (Dress Shirts)\n3. Shoes (Dress Shoes)\n4. Accessories (Ties)"
+      : "1. Shoes\n2. Pants\n3. Tops\n4. Outerwear";
+
     let systemPrompt: string;
     let userPrompt: string;
 
     if (isFullOutfit) {
-      // --- Full-outfit variation mode ---
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-The user has selected a COMPLETE outfit (one item from each category: shoes, pants, tops, outerwear). Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other 3 items intact.
+The user has selected a COMPLETE ${formalMode ? "formal" : ""} outfit (one item from each category: ${categoryDescription}). Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other 3 items intact.
 
 Rules:
-- Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps shoes, suggestion 2 swaps pants, suggestion 3 swaps the top). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
+- Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps ${formalMode ? "the suit" : "shoes"}, suggestion 2 swaps ${formalMode ? "the shirt" : "pants"}, suggestion 3 swaps ${formalMode ? "the shoes" : "the top"}). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
 - NEVER return the original selection unchanged.
 - Each suggestion must still have exactly 4 items (one per category).
 - Explain how the swap changes the outfit's character using color theory terms. Keep explanations concise (2-3 sentences max).
@@ -229,11 +258,8 @@ Return exactly 3 outfit variations. Each must swap exactly ONE item from the ori
     } else if (isMulti) {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit with one item from each of these 4 categories:
-1. Shoes
-2. Pants
-3. Tops
-4. Outerwear
+Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete ${formalMode ? "formal " : ""}outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit with one item from each of these 4 categories:
+${categoryListNumbered}
 
 The anchor items are already assigned to their categories. For any category not covered by an anchor, pick the single best-matching item from the user's wardrobe.
 
@@ -246,22 +272,18 @@ Color theory principles to apply:
 
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
 
-      const anchorLabel = "ANCHOR ITEMS (must ALL appear in every outfit)";
-      userPrompt = `${anchorLabel}:
+      userPrompt = `ANCHOR ITEMS (must ALL appear in every outfit):
 ${JSON.stringify(anchors)}
 
 AVAILABLE ITEMS BY CATEGORY (pick from these to fill remaining categories):
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 complete outfits. Each outfit must include all anchor items plus one item from each of the other categories (to complete shoes, pants, tops, outerwear).${excludeBlock}`;
+Return exactly 3 complete outfits. Each outfit must include all anchor items plus one item from each of the other categories (to complete ${categoryDescription}).${excludeBlock}`;
     } else {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
-1. Shoes
-2. Pants
-3. Tops
-4. Outerwear
+Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete ${formalMode ? "formal " : ""}outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
+${categoryListNumbered}
 
 The anchor item is already assigned to its category. For the remaining 3 categories, pick the single best-matching item from the user's wardrobe.
 
@@ -274,14 +296,13 @@ Color theory principles to apply:
 
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
 
-      const anchorLabel = "ANCHOR ITEM (must appear in every outfit)";
-      userPrompt = `${anchorLabel}:
+      userPrompt = `ANCHOR ITEM (must appear in every outfit):
 ${JSON.stringify(anchors[0])}
 
 AVAILABLE ITEMS BY CATEGORY (pick from these to fill remaining categories):
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other categories (to complete shoes, pants, tops, outerwear).${excludeBlock}`;
+Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other categories (to complete ${categoryDescription}).${excludeBlock}`;
     }
 
     const aiResult = await callAI(LOVABLE_API_KEY, [
@@ -292,7 +313,7 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
         type: "function",
         function: {
           name: "suggest_outfits",
-          description: "Return exactly 3 complete outfit suggestions, each with one item from every category.",
+          description: `Return exactly 3 complete ${formalMode ? "formal " : ""}outfit suggestions, each with one item from every category.`,
           parameters: {
             type: "object",
             properties: {
