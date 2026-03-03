@@ -26,6 +26,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
 export default function Wardrobe() {
@@ -116,15 +126,20 @@ export default function Wardrobe() {
   }));
   const allItems = userItems;
 
-  const handleDeleteItem = async (itemId: string) => {
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+
+  const confirmDeleteItem = async () => {
+    if (!deleteItemId) return;
     try {
-      const { error } = await supabase.from("wardrobe_items").delete().eq("id", itemId);
+      const { error } = await supabase.from("wardrobe_items").delete().eq("id", deleteItemId);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
-      setSelectedItems((prev) => prev.filter((i) => i.id !== itemId));
+      setSelectedItems((prev) => prev.filter((i) => i.id !== deleteItemId));
       toast.success("Item removed from wardrobe");
     } catch (err: any) {
       toast.error(err.message || "Failed to delete item");
+    } finally {
+      setDeleteItemId(null);
     }
   };
 
@@ -500,7 +515,7 @@ export default function Wardrobe() {
                                   item={item}
                                   selected={selectedIds.has(item.id)}
                                   onClick={() => handleCardClick(item)}
-                                  onDelete={() => handleDeleteItem(item.id)}
+                                  onDelete={() => setDeleteItemId(item.id)}
                                   onEdit={() => setEditingItem(item)}
                                 />
                               </div>
@@ -523,7 +538,7 @@ export default function Wardrobe() {
                                   item={item}
                                   selected={selectedIds.has(item.id)}
                                   onClick={() => handleCardClick(item)}
-                                  onDelete={() => handleDeleteItem(item.id)}
+                                  onDelete={() => setDeleteItemId(item.id)}
                                   onEdit={() => setEditingItem(item)}
                                 />
                               </div>
@@ -539,7 +554,7 @@ export default function Wardrobe() {
                         item={item}
                         selected={selectedIds.has(item.id)}
                         onClick={() => handleCardClick(item)}
-                        onDelete={() => handleDeleteItem(item.id)}
+                        onDelete={() => setDeleteItemId(item.id)}
                         onEdit={() => setEditingItem(item)}
                       />
                     ))
@@ -565,7 +580,7 @@ export default function Wardrobe() {
               item={item}
               selected={selectedIds.has(item.id)}
               onClick={() => handleCardClick(item)}
-              onDelete={() => handleDeleteItem(item.id)}
+              onDelete={() => setDeleteItemId(item.id)}
               onEdit={() => setEditingItem(item)}
             />
           ))}
@@ -640,6 +655,22 @@ export default function Wardrobe() {
           onRedeemChange={setRedeemDialogOpen}
         />
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteItemId} onOpenChange={(open) => { if (!open) setDeleteItemId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The item will be permanently removed from your wardrobe.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteItem}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
