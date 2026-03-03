@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, SHOE_SUBCATEGORIES, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { DEFAULT_DRESS_SHIRTS } from "@/lib/default-wardrobe-items";
 import { toast } from "sonner";
@@ -41,9 +42,17 @@ import { Input } from "@/components/ui/input";
 export default function Wardrobe() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [draggingItem, setDraggingItem] = useState<WardrobeItem | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const [activeCategory, setActiveCategory] = useState<WardrobeCategory | "all">("all");
+  const activeCategory = (searchParams.get("cat") as WardrobeCategory) || "all";
+  const setActiveCategory = (cat: WardrobeCategory | "all") => {
+    if (cat === "all") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ cat });
+    }
+  };
   const [selectedItems, setSelectedItems] = useState<WardrobeItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [generatedPhotos, setGeneratedPhotos] = useState<Record<string, string>>({});
