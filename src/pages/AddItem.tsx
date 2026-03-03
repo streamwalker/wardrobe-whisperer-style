@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear"] as const;
+const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
 export default function AddItem() {

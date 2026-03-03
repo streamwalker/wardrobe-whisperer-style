@@ -20,7 +20,7 @@ import { Loader2, Camera, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear"] as const;
+const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
 interface Props {
