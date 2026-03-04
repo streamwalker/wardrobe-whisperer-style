@@ -229,6 +229,11 @@ export default function Wardrobe() {
         if (error) throw error;
         if (data?.url) {
           setGeneratedPhotos((prev) => ({ ...prev, [item.id]: data.url }));
+          // Persist to database
+          await supabase
+            .from("wardrobe_items")
+            .update({ photo_url: data.url })
+            .eq("id", item.id);
           toast.success(`Generated image for ${item.name}`);
         }
       } catch (err: any) {
@@ -236,6 +241,8 @@ export default function Wardrobe() {
         toast.error(`Failed: ${item.name}`);
       }
     }
+    // Refresh wardrobe data so persisted photos show from DB
+    queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
     setGenerating(false);
   };
 
