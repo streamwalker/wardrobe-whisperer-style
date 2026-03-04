@@ -46,10 +46,8 @@ export async function exportOutfitsPdf(outfits: PdfOutfit[]) {
     const itemsHtml = outfit.items
       .map(
         (item) => `
-      <div style="flex-shrink:0;width:90px;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5;">
-        <div style="width:90px;height:90px;background:${item.photo ? "#f4f4f5" : item.color_hex};overflow:hidden;">
-          ${item.photo ? `<img src="${item.photo}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" />` : ""}
-        </div>
+      <div style="flex-shrink:0;width:110px;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5;">
+        <div style="width:110px;height:110px;${item.photo ? `background-image:url(${item.photo});background-size:cover;background-position:center;` : ""}background-color:${item.photo ? "#f4f4f5" : item.color_hex};"></div>
         <p style="margin:0;padding:4px 6px;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</p>
       </div>`
       )
@@ -93,6 +91,7 @@ export async function exportOutfitsPdf(outfits: PdfOutfit[]) {
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
+      allowTaint: true,
       backgroundColor: "#ffffff",
     });
 
