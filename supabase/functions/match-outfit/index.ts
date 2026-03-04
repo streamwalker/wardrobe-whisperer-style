@@ -91,6 +91,9 @@ async function checkCompatibility(
 ${formalContext}
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
+HARD STYLE RULES (always flag as incompatible):
+- NEVER pair button-down dress shirts with joggers or sweatpants. Dress shirts are formal tops and must be paired with chinos, trousers, dress pants, or jeans — never with athletic/casual bottoms like joggers.
+
 If compatible, return compatible: true.
 If incompatible, identify which item is the weakest link, explain why in 1-2 sentences, and suggest 2-3 alternatives from the replacement pool that would work better.`;
 
@@ -245,6 +248,7 @@ Rules:
 - Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps ${formalMode ? "the suit" : "shoes"}, suggestion 2 swaps ${formalMode ? "the shirt" : "pants"}, suggestion 3 swaps ${formalMode ? "the shoes" : "the top"}). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
 - NEVER return the original selection unchanged.
 - Each suggestion must still have exactly 4 items (one per category).
+- NEVER pair button-down dress shirts with joggers or sweatpants. Dress shirts require chinos, trousers, dress pants, or jeans.
 - Explain how the swap changes the outfit's character using color theory terms. Keep explanations concise (2-3 sentences max).
 - Give each variation a short creative name.`;
 
@@ -270,7 +274,10 @@ Color theory principles to apply:
 - Tonal dressing (shades of the same hue) for sophisticated monochrome looks
 - The 60-30-10 rule: 60% dominant color, 30% secondary, 10% accent
 
-Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
+Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
+
+HARD STYLE RULES:
+- NEVER pair button-down dress shirts with joggers or sweatpants. Dress shirts require chinos, trousers, dress pants, or jeans.`;
 
       userPrompt = `ANCHOR ITEMS (must ALL appear in every outfit):
 ${JSON.stringify(anchors)}
@@ -294,7 +301,10 @@ Color theory principles to apply:
 - Tonal dressing (shades of the same hue) for sophisticated monochrome looks
 - The 60-30-10 rule: 60% dominant color, 30% secondary, 10% accent
 
-Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.`;
+Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
+
+HARD STYLE RULES:
+- NEVER pair button-down dress shirts with joggers or sweatpants. Dress shirts require chinos, trousers, dress pants, or jeans.`;
 
       userPrompt = `ANCHOR ITEM (must appear in every outfit):
 ${JSON.stringify(anchors[0])}
