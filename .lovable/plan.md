@@ -1,26 +1,28 @@
 
 
-## Fix: Generated Images Not Persisting to Database
+## Fix: Distorted Photos in PDF Export
 
 ### Problem
-The "Generate Images" feature calls the `generate-clothing-image` edge function and stores the returned URL in local React state (`generatedPhotos`). This means:
-- Generated photos disappear on page refresh or navigation
-- The `photo_url` column in the database stays `null`
-- Items like Gray Hoodie and Black Hoodie that had images generated lose them
+`html2canvas` has poor support for `object-fit: cover`. The images are being stretched to fill the 90x90 container instead of being cropped, causing visible distortion in the PDF output.
 
-### Fix
+### Solution
+Replace the `object-fit: cover` approach with a background-image technique that `html2canvas` handles correctly. Instead of an `<img>` tag, use a `<div>` with `background-image`, `background-size: cover`, and `background-position: center`. This achieves the same visual cropping but renders correctly in `html2canvas`.
 
-**Update `handleGenerateImages` in `src/pages/Wardrobe.tsx`** to persist each generated photo URL to the database immediately after generation:
+### Changes
 
-After `setGeneratedPhotos(...)` succeeds with a URL, add a database update:
-```ts
-await supabase.from("wardrobe_items")
-  .update({ photo_url: data.url })
-  .eq("id", item.id);
+**`src/lib/export-outfits-pdf.ts`** — Update the item thumbnail rendering:
+
+Replace:
+```html
+<div style="width:90px;height:90px;background:...;overflow:hidden;">
+  <img src="..." style="width:100%;height:100%;object-fit:cover;" />
+</div>
 ```
 
-Then invalidate the query cache so the persisted URL is reflected. This way generated images survive page refreshes and show up everywhere (Outfits, shared wardrobes, PDF exports, etc.).
+With:
+```html
+<div style="width:90px;height:90px;background-image:url(...);background-size:cover;background-position:center;background-color:#f4f4f5;"></div>
+```
 
-### Files to Change
-1. **`src/pages/Wardrobe.tsx`** — Add `supabase.update` call inside `handleGenerateImages` loop after successful generation, and invalidate the query cache after the loop completes.
+Also increase thumbnail size from 90px to 110px for better visual quality in the PDF, and add `allowTaint: true` alongside `useCORS: true` for broader image compatibility.
 
