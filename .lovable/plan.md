@@ -1,28 +1,21 @@
 
 
-## Fix: Distorted Photos in PDF Export
+## Fix: Profile Updates Not Saving
 
-### Problem
-`html2canvas` has poor support for `object-fit: cover`. The images are being stretched to fill the 90x90 container instead of being cropped, causing visible distortion in the PDF output.
+### Root Cause
 
-### Solution
-Replace the `object-fit: cover` approach with a background-image technique that `html2canvas` handles correctly. Instead of an `<img>` tag, use a `<div>` with `background-image`, `background-size: cover`, and `background-position: center`. This achieves the same visual cropping but renders correctly in `html2canvas`.
+All RLS policies on the `profiles` table are set as **RESTRICTIVE** (`Permissive: No`). In PostgreSQL, restrictive policies only further narrow access that was already granted by a permissive policy. Since there are **zero permissive policies**, no access is granted at all — reads and writes silently fail.
 
-### Changes
+The same issue affects all four tables (`profiles`, `saved_outfits`, `wardrobe_items`, `wardrobe_shares`, `wardrobe_transfers`), but the user is currently hitting it on `profiles`.
 
-**`src/lib/export-outfits-pdf.ts`** — Update the item thumbnail rendering:
+### Fix
 
-Replace:
-```html
-<div style="width:90px;height:90px;background:...;overflow:hidden;">
-  <img src="..." style="width:100%;height:100%;object-fit:cover;" />
-</div>
-```
+Run a migration to drop the existing restrictive policies on `profiles` and recreate them as **permissive** policies:
 
-With:
-```html
-<div style="width:90px;height:90px;background-image:url(...);background-size:cover;background-position:center;background-color:#f4f4f5;"></div>
-```
+1. Drop all four existing policies on `profiles`
+2. Recreate them as permissive (the default) with the same logic
+3. Also fix the other tables' policies since they have the same problem (prevents future issues)
 
-Also increase thumbnail size from 90px to 110px for better visual quality in the PDF, and add `allowTaint: true` alongside `useCORS: true` for broader image compatibility.
+### Files to Change
+- **Database migration only** — no code changes needed. The frontend code is correct; the RLS policy type is the issue.
 
