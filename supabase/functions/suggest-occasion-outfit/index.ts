@@ -94,6 +94,9 @@ Each outfit should have:
 - A 2-3 sentence explanation of why this outfit works for the event
 - A mood tag (casual, elevated, bold, minimal, sporty)
 
+HARD STYLE RULES:
+- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
+
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
 - THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.

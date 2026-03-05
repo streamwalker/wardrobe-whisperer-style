@@ -92,7 +92,7 @@ ${formalContext}
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
 HARD STYLE RULES (always flag as incompatible):
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts are formal tops and must be paired with chinos, trousers, dress pants, or jeans — never with athletic/casual bottoms.
+- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item. If a dress shirt is selected, the entire outfit must be formal.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -258,7 +258,7 @@ Rules:
 - Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps ${formalMode ? "the suit" : "shoes"}, suggestion 2 swaps ${formalMode ? "the shirt" : "pants"}, suggestion 3 swaps ${formalMode ? "the shoes" : "the top"}). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
 - NEVER return the original selection unchanged.
 - Each suggestion must still have exactly 4 items (one per category).
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -298,7 +298,7 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -335,7 +335,7 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
