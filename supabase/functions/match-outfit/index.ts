@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  isBusinessCasualOuterwear,
+  isBusinessCasualPant,
+  isBusinessCasualShoe,
+  isDressShirt,
+  isFormalItem,
+  isValidDressShirtPairing,
+} from "../_shared/dress-shirt-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,17 +31,6 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
-function isDressShirt(item: any): boolean {
-  return item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt");
-}
-
-function isFormalItem(item: any): boolean {
-  if (item.category === "suits") return true;
-  if (item.category === "accessories") return true;
-  if (isDressShirt(item)) return true;
-  if (item.category === "dress-shoes") return true;
-  return false;
-}
 
 async function callAI(LOVABLE_API_KEY: string, messages: any[], tools: any[], tool_choice: any) {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -198,8 +195,10 @@ serve(async (req) => {
     // --- Mode detection: formal, business casual, or casual ---
     const hasSuit = anchors.some((a: any) => a.category === "suits");
     const hasDressShirt = anchors.some((a: any) => isDressShirt(a));
-    const formalMode = hasSuit || (anchors.some((a: any) => isFormalItem(a)) && !hasDressShirt) || (hasDressShirt && hasSuit);
-    const businessCasualMode = hasDressShirt && !hasSuit && !formalMode;
+    const hasTieAccessory = anchors.some((a: any) => a.category === "accessories");
+    const hasFormalAnchor = anchors.some((a: any) => isFormalItem(a));
+    const formalMode = hasSuit || (hasDressShirt && hasTieAccessory) || (hasFormalAnchor && !hasDressShirt);
+    const businessCasualMode = hasDressShirt && !formalMode;
 
     const formalCategories = ["suits", "tops", "dress-shoes", "accessories"];
     const businessCasualCategories = ["shoes", "pants", "tops", "outerwear"];
@@ -208,16 +207,13 @@ serve(async (req) => {
 
     // Filter wardrobe items based on mode
     const filteredWardrobeItems = formalMode
-      ? wardrobeItems.filter((i: any) => isFormalItem(i))
+      ? wardrobeItems.filter((i: any) => anchorIds.has(i.id) || isFormalItem(i))
       : businessCasualMode
         ? wardrobeItems.filter((i: any) => {
-            // Exclude sporty/athletic items but allow smart casual pieces
-            const name = (i.name || "").toLowerCase();
-            const tags = (i.style_tags || []).map((t: string) => t.toLowerCase());
-            const isSporty = name.includes("jogger") || name.includes("sweatpant") || name.includes("hoodie") || name.includes("athletic") || tags.includes("sporty") || tags.includes("athletic");
-            return !isSporty;
+            if (anchorIds.has(i.id)) return true;
+            return isDressShirt(i) || isBusinessCasualPant(i) || isBusinessCasualShoe(i) || isBusinessCasualOuterwear(i);
           })
-        : wardrobeItems;
+        : wardrobeItems.filter((i: any) => !isDressShirt(i));
 
     // --- Compatibility check for multi-item selections ---
     if (isMulti) {
@@ -447,7 +443,19 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
       );
     }
 
-    return new Response(JSON.stringify({ compatible: true, ...aiResult.result }), {
+    const itemsById = new Map(wardrobeItems.map((item: any) => [item.id, item]));
+    const safeOutfits = (aiResult.result?.outfits || [])
+      .filter((outfit: any) => {
+        const ids = Array.isArray(outfit.item_ids) ? outfit.item_ids : [];
+        if (ids.length === 0) return false;
+        const outfitItems = ids
+          .map((id: string) => itemsById.get(id))
+          .filter(Boolean);
+        return outfitItems.length === ids.length && isValidDressShirtPairing(outfitItems);
+      })
+      .slice(0, 3);
+
+    return new Response(JSON.stringify({ compatible: true, ...aiResult.result, outfits: safeOutfits }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  isBusinessCasualOuterwear,
+  isBusinessCasualPant,
+  isBusinessCasualShoe,
+  isDressShirt,
+  isFormalItem,
+  isValidDressShirtPairing,
+} from "../_shared/dress-shirt-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,17 +31,6 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
-function isDressShirt(item: any): boolean {
-  return item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt");
-}
-
-function isFormalItem(item: any): boolean {
-  if (item.category === "suits") return true;
-  if (item.category === "accessories") return true;
-  if (isDressShirt(item)) return true;
-  if (item.category === "dress-shoes") return true;
-  return false;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -77,13 +74,10 @@ serve(async (req) => {
     const filteredItems = useFormalMode
       ? wardrobeItems.filter((i: any) => isFormalItem(i))
       : useBusinessCasualMode
-        ? wardrobeItems.filter((i: any) => {
-            const name = (i.name || "").toLowerCase();
-            const tags = (i.style_tags || []).map((t: string) => t.toLowerCase());
-            const isSporty = name.includes("jogger") || name.includes("sweatpant") || name.includes("hoodie") || name.includes("athletic") || tags.includes("sporty") || tags.includes("athletic");
-            return !isSporty;
-          })
-        : wardrobeItems;
+        ? wardrobeItems.filter((i: any) =>
+            isDressShirt(i) || isBusinessCasualPant(i) || isBusinessCasualShoe(i) || isBusinessCasualOuterwear(i)
+          )
+        : wardrobeItems.filter((i: any) => !isDressShirt(i));
 
     const stripped = filteredItems.map(({ photo, ...rest }: any) => rest);
 
@@ -225,7 +219,19 @@ Return exactly 3 complete outfits, each with one item from ${categoryDescription
     }
 
     const result = JSON.parse(toolCall.function.arguments);
-    return new Response(JSON.stringify(result), {
+    const itemsById = new Map(wardrobeItems.map((item: any) => [item.id, item]));
+    const safeOutfits = (result.outfits || [])
+      .filter((outfit: any) => {
+        const ids = Array.isArray(outfit.item_ids) ? outfit.item_ids : [];
+        if (ids.length === 0) return false;
+        const outfitItems = ids
+          .map((id: string) => itemsById.get(id))
+          .filter(Boolean);
+        return outfitItems.length === ids.length && isValidDressShirtPairing(outfitItems);
+      })
+      .slice(0, 3);
+
+    return new Response(JSON.stringify({ ...result, outfits: safeOutfits }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
