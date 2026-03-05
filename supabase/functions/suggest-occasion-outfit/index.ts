@@ -23,10 +23,14 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
+function isDressShirt(item: any): boolean {
+  return item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt");
+}
+
 function isFormalItem(item: any): boolean {
   if (item.category === "suits") return true;
   if (item.category === "accessories") return true;
-  if (item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt")) return true;
+  if (isDressShirt(item)) return true;
   if (item.category === "dress-shoes") return true;
   return false;
 }
@@ -65,23 +69,36 @@ serve(async (req) => {
     const hasFormalItems = wardrobeItems.some((i: any) => isFormalItem(i));
     const formalKeywords = ["formal", "gala", "black tie", "wedding", "interview", "business", "cocktail", "dinner party", "opera", "banquet"];
     const isFormalOccasion = formalKeywords.some(kw => occasion.toLowerCase().includes(kw));
-    const useFormalMode = isFormalOccasion && hasFormalItems;
+    const businessCasualKeywords = ["business casual", "office", "brunch", "lunch meeting", "networking", "casual friday", "smart casual"];
+    const isBusinessCasualOccasion = businessCasualKeywords.some(kw => occasion.toLowerCase().includes(kw));
+    const useFormalMode = isFormalOccasion && hasFormalItems && !isBusinessCasualOccasion;
+    const useBusinessCasualMode = isBusinessCasualOccasion && wardrobeItems.some((i: any) => isDressShirt(i));
 
     const filteredItems = useFormalMode
       ? wardrobeItems.filter((i: any) => isFormalItem(i))
-      : wardrobeItems;
+      : useBusinessCasualMode
+        ? wardrobeItems.filter((i: any) => {
+            const name = (i.name || "").toLowerCase();
+            const tags = (i.style_tags || []).map((t: string) => t.toLowerCase());
+            const isSporty = name.includes("jogger") || name.includes("sweatpant") || name.includes("hoodie") || name.includes("athletic") || tags.includes("sporty") || tags.includes("athletic");
+            return !isSporty;
+          })
+        : wardrobeItems;
 
     const stripped = filteredItems.map(({ photo, ...rest }: any) => rest);
 
     const weatherContext = weather ? `\nWEATHER / CONDITIONS: ${weather}. Factor this into your choices (e.g., layers for cold, breathable fabrics for hot, waterproof for rain).` : "";
 
+    const modeLabel = useFormalMode ? "formal" : useBusinessCasualMode ? "business casual" : "";
     const categoryDescription = useFormalMode
       ? "Suit, Dress Shirt (tops), Dress Shoes, and Tie/Accessory"
-      : "Shoes, Pants, Tops, Outerwear";
+      : useBusinessCasualMode
+        ? "Shoes (loafers/Chelsea boots/dress shoes), Pants (chinos/trousers), Tops (dress shirt), and Outerwear (blazer/structured jacket)"
+        : "Shoes, Pants, Tops, Outerwear";
 
     const systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist. The user is going to a specific event/occasion and needs outfit suggestions from their wardrobe.
 
-Your job: suggest EXACTLY 3 complete ${useFormalMode ? "formal " : ""}outfits suited for the occasion. Each outfit MUST have exactly 4 items — one from each category: ${categoryDescription}.
+Your job: suggest EXACTLY 3 complete ${modeLabel} outfits suited for the occasion. Each outfit MUST have exactly 4 items — one from each category: ${categoryDescription}.
 
 Consider:
 - The formality and vibe of the occasion (casual hangout vs. date night vs. outdoor activity)
@@ -95,7 +112,10 @@ Each outfit should have:
 - A mood tag (casual, elevated, bold, minimal, sporty)
 
 HARD STYLE RULES:
-- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.

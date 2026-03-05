@@ -23,10 +23,14 @@ async function authenticateUser(req: Request) {
   return data.claims.sub as string;
 }
 
+function isDressShirt(item: any): boolean {
+  return item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt");
+}
+
 function isFormalItem(item: any): boolean {
   if (item.category === "suits") return true;
   if (item.category === "accessories") return true;
-  if (item.category === "tops" && typeof item.name === "string" && item.name.toLowerCase().includes("dress shirt")) return true;
+  if (isDressShirt(item)) return true;
   if (item.category === "dress-shoes") return true;
   return false;
 }
@@ -71,7 +75,8 @@ async function checkCompatibility(
   LOVABLE_API_KEY: string,
   anchors: any[],
   wardrobeItems: any[],
-  formalMode: boolean
+  formalMode: boolean,
+  businessCasualMode: boolean = false
 ) {
   const anchorIds = new Set(anchors.map((a: any) => a.id));
   const otherItems = wardrobeItems.filter((i: any) => !anchorIds.has(i.id));
@@ -83,16 +88,22 @@ async function checkCompatibility(
     replacementPool.push(...alternatives);
   }
 
+  const bizCasualContext = businessCasualMode
+    ? "These items are for a BUSINESS CASUAL outfit (dress shirt + chinos/trousers + loafers/Chelsea boots + blazer/structured jacket). Evaluate business casual compatibility — the look should be polished but not full-suit formal."
+    : "";
   const formalContext = formalMode
     ? "These items are for a FORMAL outfit (suit + dress shirt + dress shoes + tie). Evaluate formal compatibility — color coordination, formality level, and dress code cohesion."
     : "";
 
   const systemPrompt = `You are StyleMatch, a fashion AI specializing in color theory. Evaluate whether the given wardrobe items can form a cohesive outfit together. Consider color harmony, style consistency, and overall aesthetic.
-${formalContext}
+${formalContext}${bizCasualContext}
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
 HARD STYLE RULES (always flag as incompatible):
-- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item. If a dress shirt is selected, the entire outfit must be formal.
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -184,20 +195,33 @@ serve(async (req) => {
     const anchorIds = new Set(anchors.map((a: any) => a.id));
     const isMulti = anchors.length > 1;
 
-    // --- Formal mode detection ---
-    const formalMode = anchors.some((a: any) => isFormalItem(a));
-    const formalCategories = ["suits", "tops", "dress-shoes", "accessories"];
-    const casualCategories = ["shoes", "pants", "tops", "outerwear"];
-    const allCategories = formalMode ? formalCategories : casualCategories;
+    // --- Mode detection: formal, business casual, or casual ---
+    const hasSuit = anchors.some((a: any) => a.category === "suits");
+    const hasDressShirt = anchors.some((a: any) => isDressShirt(a));
+    const formalMode = hasSuit || (anchors.some((a: any) => isFormalItem(a)) && !hasDressShirt) || (hasDressShirt && hasSuit);
+    const businessCasualMode = hasDressShirt && !hasSuit && !formalMode;
 
-    // Filter wardrobe items to formal-only when in formal mode
+    const formalCategories = ["suits", "tops", "dress-shoes", "accessories"];
+    const businessCasualCategories = ["shoes", "pants", "tops", "outerwear"];
+    const casualCategories = ["shoes", "pants", "tops", "outerwear"];
+    const allCategories = formalMode ? formalCategories : businessCasualMode ? businessCasualCategories : casualCategories;
+
+    // Filter wardrobe items based on mode
     const filteredWardrobeItems = formalMode
       ? wardrobeItems.filter((i: any) => isFormalItem(i))
-      : wardrobeItems;
+      : businessCasualMode
+        ? wardrobeItems.filter((i: any) => {
+            // Exclude sporty/athletic items but allow smart casual pieces
+            const name = (i.name || "").toLowerCase();
+            const tags = (i.style_tags || []).map((t: string) => t.toLowerCase());
+            const isSporty = name.includes("jogger") || name.includes("sweatpant") || name.includes("hoodie") || name.includes("athletic") || tags.includes("sporty") || tags.includes("athletic");
+            return !isSporty;
+          })
+        : wardrobeItems;
 
     // --- Compatibility check for multi-item selections ---
     if (isMulti) {
-      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, filteredWardrobeItems, formalMode);
+      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, filteredWardrobeItems, formalMode, businessCasualMode);
       if (compatResult.error) {
         return new Response(
           JSON.stringify({ error: compatResult.error }),
@@ -237,14 +261,19 @@ serve(async (req) => {
       excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${limited.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
     }
 
-    // --- Formal vs casual prompt building ---
+    // --- Mode-based prompt building ---
+    const modeLabel = formalMode ? "formal" : businessCasualMode ? "business casual" : "";
     const categoryDescription = formalMode
       ? "Suit, Dress Shirt, Dress Shoes, and Tie/Accessory"
-      : "Shoes, Pants, Tops, and Outerwear";
+      : businessCasualMode
+        ? "Shoes (loafers/Chelsea boots/dress shoes), Pants (chinos/trousers), Tops (dress shirt), and Outerwear (blazer/structured jacket)"
+        : "Shoes, Pants, Tops, and Outerwear";
 
     const categoryListNumbered = formalMode
       ? "1. Suits\n2. Tops (Dress Shirts)\n3. Shoes (Dress Shoes)\n4. Accessories (Ties)"
-      : "1. Shoes\n2. Pants\n3. Tops\n4. Outerwear";
+      : businessCasualMode
+        ? "1. Shoes (loafers, Chelsea boots, dress shoes)\n2. Pants (chinos, tailored trousers)\n3. Tops (dress shirt)\n4. Outerwear (blazer, structured jacket)"
+        : "1. Shoes\n2. Pants\n3. Tops\n4. Outerwear";
 
     let systemPrompt: string;
     let userPrompt: string;
@@ -252,13 +281,16 @@ serve(async (req) => {
     if (isFullOutfit) {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-The user has selected a COMPLETE ${formalMode ? "formal" : ""} outfit (one item from each category: ${categoryDescription}). Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other 3 items intact.
+The user has selected a COMPLETE ${modeLabel} outfit (one item from each category: ${categoryDescription}). Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other 3 items intact.
 
 Rules:
 - Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps ${formalMode ? "the suit" : "shoes"}, suggestion 2 swaps ${formalMode ? "the shirt" : "pants"}, suggestion 3 swaps ${formalMode ? "the shoes" : "the top"}). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
 - NEVER return the original selection unchanged.
 - Each suggestion must still have exactly 4 items (one per category).
-- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -283,7 +315,7 @@ Return exactly 3 outfit variations. Each must swap exactly ONE item from the ori
     } else if (isMulti) {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete ${formalMode ? "formal " : ""}outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit with one item from each of these 4 categories:
+Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete ${modeLabel} outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit with one item from each of these 4 categories:
 ${categoryListNumbered}
 
 The anchor items are already assigned to their categories. For any category not covered by an anchor, pick the single best-matching item from the user's wardrobe.
@@ -298,7 +330,10 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -320,7 +355,7 @@ Return exactly 3 complete outfits. Each outfit must include all anchor items plu
     } else {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete ${formalMode ? "formal " : ""}outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
+Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete ${modeLabel} outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
 ${categoryListNumbered}
 
 The anchor item is already assigned to its category. For the remaining 3 categories, pick the single best-matching item from the user's wardrobe.
@@ -335,7 +370,10 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- Dress shirts are EXCLUSIVELY formal items. They must ONLY be paired with suits, ties/accessories, and dress shoes. Never pair a dress shirt with casual pants, jeans, sneakers, hoodies, or any non-formal item.
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
@@ -364,7 +402,7 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
         type: "function",
         function: {
           name: "suggest_outfits",
-          description: `Return exactly 3 complete ${formalMode ? "formal " : ""}outfit suggestions, each with one item from every category.`,
+          description: `Return exactly 3 complete ${modeLabel} outfit suggestions, each with one item from every category.`,
           parameters: {
             type: "object",
             properties: {
