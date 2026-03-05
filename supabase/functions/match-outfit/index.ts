@@ -94,6 +94,16 @@ Be reasonably flexible — most neutral + bold combinations work. Only flag trul
 HARD STYLE RULES (always flag as incompatible):
 - NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts are formal tops and must be paired with chinos, trousers, dress pants, or jeans — never with athletic/casual bottoms.
 
+PROPORTION & SILHOUETTE RULES (always apply):
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
+- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
+- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
+- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
+- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
+- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
+- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
+- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
+
 If compatible, return compatible: true.
 If incompatible, identify which item is the weakest link, explain why in 1-2 sentences, and suggest 2-3 alternatives from the replacement pool that would work better.`;
 
@@ -249,6 +259,17 @@ Rules:
 - NEVER return the original selection unchanged.
 - Each suggestion must still have exactly 4 items (one per category).
 - NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+
+PROPORTION & SILHOUETTE RULES (always apply):
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
+- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
+- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
+- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
+- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
+- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
+- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
+- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
+
 - Explain how the swap changes the outfit's character using color theory terms. Keep explanations concise (2-3 sentences max).
 - Give each variation a short creative name.`;
 
@@ -277,7 +298,17 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.`;
+- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+
+PROPORTION & SILHOUETTE RULES (always apply):
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
+- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
+- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
+- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
+- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
+- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
+- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
+- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.`;
 
       userPrompt = `ANCHOR ITEMS (must ALL appear in every outfit):
 ${JSON.stringify(anchors)}
@@ -304,7 +335,17 @@ Color theory principles to apply:
 Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
 HARD STYLE RULES:
-- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.`;
+- NEVER pair button-down dress shirts with joggers, sweatpants, or sporty pants. Dress shirts require chinos, trousers, dress pants, or jeans.
+
+PROPORTION & SILHOUETTE RULES (always apply):
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
+- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
+- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
+- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
+- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
+- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
+- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
+- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.`;
 
       userPrompt = `ANCHOR ITEM (must appear in every outfit):
 ${JSON.stringify(anchors[0])}
