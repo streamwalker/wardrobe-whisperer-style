@@ -525,14 +525,14 @@ export default function Wardrobe() {
                   <span className="text-sm font-semibold text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <div className="flex gap-3 overflow-x-auto overscroll-x-contain pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
                   {cat.value === 'shoes' ? (
                     <>
                       {SHOE_SUBCATEGORIES.map((sub) => {
                         const subItems = items.filter((i) => i.subcategory === sub.value);
                         if (subItems.length === 0) return null;
                         return subItems.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -547,7 +547,7 @@ export default function Wardrobe() {
                       {(() => {
                         const uncategorized = items.filter((i) => !i.subcategory);
                         return uncategorized.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -562,7 +562,7 @@ export default function Wardrobe() {
                     </>
                   ) : (
                     items.map((item) => (
-                      <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                      <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                         <DraggableItemCard
                           item={item}
                           selected={selectedIds.has(item.id)}
