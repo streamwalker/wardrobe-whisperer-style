@@ -443,15 +443,15 @@ export default function Wardrobe() {
         <Progress value={(genProgress.current / genProgress.total) * 100} className="h-1.5" />
       )}
 
-      {/* Category tabs */}
+      {/* Category pills — Pinterest-style */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
         <button
           onClick={() => setActiveCategory("all")}
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+            "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all",
             activeCategory === "all"
-              ? "neon-gradient-cyan-pink text-white shadow-neon"
-              : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
+              ? "bg-foreground text-background shadow-sm"
+              : "bg-secondary text-secondary-foreground hover:bg-muted"
           )}
         >
           All
@@ -461,10 +461,10 @@ export default function Wardrobe() {
             key={cat.value}
             onClick={() => setActiveCategory(cat.value)}
             className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all",
               activeCategory === cat.value
-                ? "neon-gradient-cyan-pink text-white shadow-neon"
-                : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
+                ? "bg-foreground text-background shadow-sm"
+                : "bg-secondary text-secondary-foreground hover:bg-muted"
             )}
           >
             {cat.icon} {cat.label}
@@ -511,129 +511,36 @@ export default function Wardrobe() {
         )}
       </div>
 
-      {/* Items */}
-      {activeCategory === "all" && !hasFilters ? (
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-310px)]">
-          {CATEGORIES.map((cat) => {
-            const items = applyFilters(wardrobeWithPhotos.filter((i) => i.category === cat.value));
-            return (
-              <DroppableCategoryColumn key={cat.value} categoryValue={cat.value}>
-                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
-                  <span className="text-sm">{cat.icon}</span>
-                  <span className="text-xs font-semibold text-foreground">{cat.label}</span>
-                  <span className="text-xs text-muted-foreground">({items.length})</span>
-                </div>
-                <div className="flex flex-col gap-2 pt-1">
-                  {cat.value === 'shoes' ? (
-                    <>
-                      {SHOE_SUBCATEGORIES.map((sub) => {
-                        const subItems = items.filter((i) => i.subcategory === sub.value);
-                        if (subItems.length === 0) return null;
-                        return (
-                          <div key={sub.value}>
-                            <div className="py-1 px-1 flex items-center gap-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{sub.label}</span>
-                              <span className="text-[10px] text-muted-foreground">({subItems.length})</span>
-                            </div>
-                            {subItems.map((item) => (
-                              <div key={item.id} className="mb-2">
-                                <DraggableItemCard
-                                  item={item}
-                                  selected={selectedIds.has(item.id)}
-                                  highlighted={highlightItemId === item.id}
-                                  onClick={() => handleCardClick(item)}
-                                  onDelete={() => setDeleteItemId(item.id)}
-                                  onEdit={() => setEditingItem(item)}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                      {(() => {
-                        const uncategorized = items.filter((i) => !i.subcategory);
-                        if (uncategorized.length === 0) return null;
-                        return (
-                          <div>
-                            <div className="py-1 px-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Other</span>
-                              <span className="text-[10px] text-muted-foreground ml-1">({uncategorized.length})</span>
-                            </div>
-                            {uncategorized.map((item) => (
-                              <div key={item.id} className="mb-2">
-                                <DraggableItemCard
-                                  item={item}
-                                  selected={selectedIds.has(item.id)}
-                                  highlighted={highlightItemId === item.id}
-                                  onClick={() => handleCardClick(item)}
-                                  onDelete={() => setDeleteItemId(item.id)}
-                                  onEdit={() => setEditingItem(item)}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </>
-                  ) : (
-                    items.map((item) => (
-                      <DraggableItemCard
-                        key={item.id}
-                        item={item}
-                        selected={selectedIds.has(item.id)}
-                        highlighted={highlightItemId === item.id}
-                        onClick={() => handleCardClick(item)}
-                        onDelete={() => setDeleteItemId(item.id)}
-                        onEdit={() => setEditingItem(item)}
-                      />
-                    ))
-                  )}
-                </div>
-              </DroppableCategoryColumn>
-            );
-          })}
-        </div>
-        <DragOverlay>
-          {draggingItem && (
-            <div className="w-40 opacity-90 pointer-events-none">
-              <WardrobeItemCard item={draggingItem} />
-            </div>
-          )}
-        </DragOverlay>
-      </DndContext>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((item) => (
-            <WardrobeItemCard
-              key={item.id}
-              item={item}
-              selected={selectedIds.has(item.id)}
-              highlighted={highlightItemId === item.id}
-              onClick={() => handleCardClick(item)}
-              onDelete={() => setDeleteItemId(item.id)}
-              onEdit={() => setEditingItem(item)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Masonry Pinterest-style grid */}
+      <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-4">
+        {(activeCategory === "all" && !hasFilters ? wardrobeWithPhotos : filtered).map((item) => (
+          <WardrobeItemCard
+            key={item.id}
+            item={item}
+            selected={selectedIds.has(item.id)}
+            highlighted={highlightItemId === item.id}
+            onClick={() => handleCardClick(item)}
+            onDelete={() => setDeleteItemId(item.id)}
+            onEdit={() => setEditingItem(item)}
+          />
+        ))}
+      </div>
 
       {/* Floating multi-select bar */}
       {selectedItems.length >= 1 && !drawerOpen && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full glass-card border-neon-cyan/30 px-4 py-2 shadow-neon">
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-card-foreground">
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[11px] font-bold text-white px-1.5">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full bg-foreground text-background px-5 py-2.5 shadow-lg">
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold px-1.5">
               {selectedItems.length}
             </span>
-            {selectedItems.length === 1 ? "item" : "items"} selected
+            {selectedItems.length === 1 ? "item" : "items"}
           </span>
-          <Button size="sm" className="gap-1.5 rounded-full neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
+          <Button size="sm" className="gap-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleMatchThese}>
             <Sparkles className="h-4 w-4" />
-            Match This Outfit
+            Match
           </Button>
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-full" onClick={clearSelection}>
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-full text-background hover:text-background hover:bg-background/10" onClick={clearSelection}>
             <X className="h-4 w-4" />
-            Clear All
           </Button>
         </div>
       )}
