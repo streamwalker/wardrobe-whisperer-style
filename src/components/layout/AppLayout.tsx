@@ -22,19 +22,20 @@ export default function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Header — clean, Pinterest-style */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-md">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent" />
         <div className="container flex h-14 items-center justify-between">
           <h1
-            className="cursor-pointer font-display text-xl font-bold tracking-tight text-foreground"
+            className="cursor-pointer font-display text-xl font-semibold tracking-tight text-foreground neon-glow"
             onClick={() => navigate("/wardrobe")}
           >
             Drip Slayer
           </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-sm">
-                <Plus className="h-4 w-4" />
+              <button className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95">
+                <Plus className="h-5 w-5" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -59,9 +60,9 @@ export default function AppLayout() {
         </main>
       </div>
 
-      {/* Bottom navigation — clean pill style */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/30 pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="container flex h-14 items-center justify-around">
+      {/* Bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 glass-card pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="container flex h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
             return (
@@ -69,14 +70,15 @@ export default function AppLayout() {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all active:scale-95",
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "flex flex-col items-center gap-1 px-3 py-1 transition-all active:scale-95",
+                  isActive ? "text-neon-cyan" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{label}</span>
+                {isActive && (
+                  <span className="absolute bottom-1.5 h-1 w-1 rounded-full bg-neon-cyan shadow-neon" />
+                )}
               </button>
             );
           })}
