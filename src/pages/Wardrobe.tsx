@@ -394,12 +394,12 @@ export default function Wardrobe() {
 
   return (
     <div className="space-y-5 pb-24">
-      <div className="flex items-start justify-between">
+      <div className="space-y-3">
         <div>
           <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
           <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2">
         {itemsMissingPhotos.length > 0 && (
           <Button
             size="sm"
