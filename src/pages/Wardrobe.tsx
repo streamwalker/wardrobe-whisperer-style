@@ -514,79 +514,64 @@ export default function Wardrobe() {
       {/* Items */}
       {activeCategory === "all" && !hasFilters ? (
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 h-[calc(100vh-260px)]">
+        <div className="space-y-6">
           {CATEGORIES.map((cat) => {
             const items = applyFilters(wardrobeWithPhotos.filter((i) => i.category === cat.value));
+            if (items.length === 0) return null;
             return (
               <DroppableCategoryColumn key={cat.value} categoryValue={cat.value}>
-                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-1.5 px-1 flex items-center gap-1.5">
-                  <span className="text-sm">{cat.icon}</span>
-                  <span className="text-xs font-semibold text-foreground">{cat.label}</span>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-base">{cat.icon}</span>
+                  <span className="text-sm font-semibold text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <div className="flex flex-col gap-2 pt-1">
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
                   {cat.value === 'shoes' ? (
                     <>
                       {SHOE_SUBCATEGORIES.map((sub) => {
                         const subItems = items.filter((i) => i.subcategory === sub.value);
                         if (subItems.length === 0) return null;
-                        return (
-                          <div key={sub.value}>
-                            <div className="py-1 px-1 flex items-center gap-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{sub.label}</span>
-                              <span className="text-[10px] text-muted-foreground">({subItems.length})</span>
-                            </div>
-                            {subItems.map((item) => (
-                              <div key={item.id} className="mb-2">
-                                <DraggableItemCard
-                                  item={item}
-                                  selected={selectedIds.has(item.id)}
-                                  highlighted={highlightItemId === item.id}
-                                  onClick={() => handleCardClick(item)}
-                                  onDelete={() => setDeleteItemId(item.id)}
-                                  onEdit={() => setEditingItem(item)}
-                                />
-                              </div>
-                            ))}
+                        return subItems.map((item) => (
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                            <DraggableItemCard
+                              item={item}
+                              selected={selectedIds.has(item.id)}
+                              highlighted={highlightItemId === item.id}
+                              onClick={() => handleCardClick(item)}
+                              onDelete={() => setDeleteItemId(item.id)}
+                              onEdit={() => setEditingItem(item)}
+                            />
                           </div>
-                        );
+                        ));
                       })}
                       {(() => {
                         const uncategorized = items.filter((i) => !i.subcategory);
-                        if (uncategorized.length === 0) return null;
-                        return (
-                          <div>
-                            <div className="py-1 px-1">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Other</span>
-                              <span className="text-[10px] text-muted-foreground ml-1">({uncategorized.length})</span>
-                            </div>
-                            {uncategorized.map((item) => (
-                              <div key={item.id} className="mb-2">
-                                <DraggableItemCard
-                                  item={item}
-                                  selected={selectedIds.has(item.id)}
-                                  highlighted={highlightItemId === item.id}
-                                  onClick={() => handleCardClick(item)}
-                                  onDelete={() => setDeleteItemId(item.id)}
-                                  onEdit={() => setEditingItem(item)}
-                                />
-                              </div>
-                            ))}
+                        return uncategorized.map((item) => (
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                            <DraggableItemCard
+                              item={item}
+                              selected={selectedIds.has(item.id)}
+                              highlighted={highlightItemId === item.id}
+                              onClick={() => handleCardClick(item)}
+                              onDelete={() => setDeleteItemId(item.id)}
+                              onEdit={() => setEditingItem(item)}
+                            />
                           </div>
-                        );
+                        ));
                       })()}
                     </>
                   ) : (
                     items.map((item) => (
-                      <DraggableItemCard
-                        key={item.id}
-                        item={item}
-                        selected={selectedIds.has(item.id)}
-                        highlighted={highlightItemId === item.id}
-                        onClick={() => handleCardClick(item)}
-                        onDelete={() => setDeleteItemId(item.id)}
-                        onEdit={() => setEditingItem(item)}
-                      />
+                      <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                        <DraggableItemCard
+                          item={item}
+                          selected={selectedIds.has(item.id)}
+                          highlighted={highlightItemId === item.id}
+                          onClick={() => handleCardClick(item)}
+                          onDelete={() => setDeleteItemId(item.id)}
+                          onEdit={() => setEditingItem(item)}
+                        />
+                      </div>
                     ))
                   )}
                 </div>
