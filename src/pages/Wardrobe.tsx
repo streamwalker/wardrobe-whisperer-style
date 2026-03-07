@@ -393,54 +393,46 @@ export default function Wardrobe() {
   };
 
   return (
-    <div className="space-y-5 pb-24">
-      <div className="flex items-start justify-between">
+    <div className="space-y-4 pb-24">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
+          <h2 className="font-display text-2xl font-bold text-foreground">{wardrobeTitle}</h2>
+          <p className="text-sm text-muted-foreground">{wardrobeWithPhotos.length} pieces</p>
         </div>
-        <div className="flex gap-2 shrink-0">
-        {itemsMissingPhotos.length > 0 && (
-          <Button
-            size="sm"
-            className="gap-1.5 shrink-0 neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
-            onClick={handleGenerateImages}
-            disabled={generating}
-          >
-            {generating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {genProgress.current}/{genProgress.total}
-              </>
-            ) : (
-              <>
-                <ImagePlus className="h-4 w-4" />
-                Generate Images ({itemsMissingPhotos.length})
-              </>
-            )}
+        <div className="flex gap-1.5 shrink-0">
+          {itemsMissingPhotos.length > 0 && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-1.5 rounded-full"
+              onClick={handleGenerateImages}
+              disabled={generating}
+            >
+              {generating ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" />{genProgress.current}/{genProgress.total}</>
+              ) : (
+                <><ImagePlus className="h-3.5 w-3.5" />Generate</>
+              )}
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" className="gap-1.5 rounded-full" onClick={() => setOccasionDrawerOpen(true)}>
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Occasion</span>
           </Button>
-        )}
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
-            <CalendarDays className="h-4 w-4" />
-            Occasion
+          <Button size="sm" variant="secondary" className="gap-1.5 rounded-full" onClick={handleShare}>
+            <Share2 className="h-3.5 w-3.5" />
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
-            <Share2 className="h-4 w-4" />
-            Share
+          <Button size="sm" variant="secondary" className="gap-1.5 rounded-full" onClick={() => setTransferDialogOpen(true)}>
+            <ArrowRightLeft className="h-3.5 w-3.5" />
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setTransferDialogOpen(true)}>
-            <ArrowRightLeft className="h-4 w-4" />
-            Transfer
-          </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setRedeemDialogOpen(true)}>
-            <Gift className="h-4 w-4" />
-            Redeem
+          <Button size="sm" variant="secondary" className="gap-1.5 rounded-full" onClick={() => setRedeemDialogOpen(true)}>
+            <Gift className="h-3.5 w-3.5" />
           </Button>
           {user && <ExportImportButtons userId={user.id} allItems={wardrobeWithPhotos} />}
         </div>
       </div>
       {generating && (
-        <Progress value={(genProgress.current / genProgress.total) * 100} className="h-1.5" />
+        <Progress value={(genProgress.current / genProgress.total) * 100} className="h-1" />
       )}
 
       {/* Category pills — Pinterest-style */}
