@@ -532,7 +532,7 @@ export default function Wardrobe() {
                         const subItems = items.filter((i) => i.subcategory === sub.value);
                         if (subItems.length === 0) return null;
                         return subItems.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -547,7 +547,7 @@ export default function Wardrobe() {
                       {(() => {
                         const uncategorized = items.filter((i) => !i.subcategory);
                         return uncategorized.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -562,7 +562,7 @@ export default function Wardrobe() {
                     </>
                   ) : (
                     items.map((item) => (
-                      <div key={item.id} className="shrink-0 w-36 sm:w-44">
+                      <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
                         <DraggableItemCard
                           item={item}
                           selected={selectedIds.has(item.id)}
