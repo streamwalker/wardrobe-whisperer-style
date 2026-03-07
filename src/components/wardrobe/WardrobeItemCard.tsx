@@ -17,80 +17,78 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-neon-cyan/30 animate-fade-in",
-        selected && "ring-2 ring-neon-cyan border-neon-cyan shadow-neon",
-        highlighted && "ring-2 ring-accent border-accent animate-[pulse-highlight_1.5s_ease-in-out]"
+        "group relative flex flex-col overflow-hidden rounded-2xl bg-card text-left transition-all duration-300 break-inside-avoid mb-4",
+        "hover:shadow-lg hover:-translate-y-0.5",
+        selected && "ring-2 ring-primary shadow-neon",
+        highlighted && "ring-2 ring-accent animate-[pulse-highlight_1.5s_ease-in-out]",
+        !selected && !highlighted && "shadow-sm"
       )}
     >
       {/* Selection indicator */}
       {selected && (
-        <div className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full neon-gradient-cyan-pink flex items-center justify-center shadow-neon">
-          <Check className="h-3.5 w-3.5 text-white" />
+        <div className="absolute top-3 right-3 z-10 h-7 w-7 rounded-full bg-primary flex items-center justify-center shadow-md">
+          <Check className="h-4 w-4 text-primary-foreground" />
         </div>
       )}
 
-      {/* Action buttons for user-added items */}
+      {/* Action buttons */}
       {(onDelete || onEdit) && !selected && (
-        <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-3 left-3 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           {onEdit && (
             <div
-              className="h-6 w-6 rounded-full bg-card/90 border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
+              className="h-7 w-7 rounded-full bg-card/90 backdrop-blur-sm border border-border/50 flex items-center justify-center shadow-sm cursor-pointer hover:bg-accent/20 transition-colors"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
               role="button"
               aria-label={`Edit ${item.name}`}
             >
-              <Pencil className="h-3 w-3 text-foreground" />
+              <Pencil className="h-3.5 w-3.5 text-foreground" />
             </div>
           )}
           {onDelete && (
             <div
-              className="h-6 w-6 rounded-full bg-destructive/90 flex items-center justify-center shadow cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
+              className="h-7 w-7 rounded-full bg-destructive/90 backdrop-blur-sm flex items-center justify-center shadow-sm cursor-pointer hover:bg-destructive transition-colors"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
               role="button"
               aria-label={`Delete ${item.name}`}
             >
-              <Trash2 className="h-3 w-3 text-destructive-foreground" />
+              <Trash2 className="h-3.5 w-3.5 text-destructive-foreground" />
             </div>
           )}
         </div>
       )}
 
-      {/* Photo or color swatch fallback */}
+      {/* Photo — natural aspect ratio for masonry feel */}
       <div
-        className="aspect-square w-full overflow-hidden"
+        className="w-full overflow-hidden"
         style={{ backgroundColor: item.color_hex }}
       >
-        {item.photo && (
+        {item.photo ? (
           <img
             src={item.photo}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
+        ) : (
+          <div className="aspect-[3/4] w-full" />
         )}
       </div>
 
-      {/* Info — glass panel */}
-      <div className="flex flex-col gap-0.5 p-2 glass-card border-t-0 rounded-t-none">
-        <div className="flex items-center justify-between">
-          <span className="text-xs sm:text-sm font-medium text-card-foreground truncate">{item.name}</span>
+      {/* Info overlay — clean, minimal */}
+      <div className="flex flex-col gap-1 p-3">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-sm font-medium text-card-foreground leading-snug line-clamp-2">{item.name}</span>
           {item.is_featured && <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />}
         </div>
         <span className="text-xs text-muted-foreground">{item.primary_color}</span>
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className="flex flex-wrap gap-1 mt-0.5">
           {item.style_tags.slice(0, 2).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+            <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 rounded-full font-normal">
               {tag}
             </Badge>
           ))}
           {item.is_new && (
-            <Badge className="bg-neon-pink text-white text-[10px] px-1.5 py-0 animate-neon-pulse border-0">
+            <Badge className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 rounded-full border-0 font-medium">
               new
             </Badge>
           )}
