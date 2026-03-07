@@ -514,7 +514,7 @@ export default function Wardrobe() {
       {/* Items */}
       {activeCategory === "all" && !hasFilters ? (
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-[calc(100vh-310px)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 h-[calc(100vh-260px)]">
           {CATEGORIES.map((cat) => {
             const items = applyFilters(wardrobeWithPhotos.filter((i) => i.category === cat.value));
             return (
