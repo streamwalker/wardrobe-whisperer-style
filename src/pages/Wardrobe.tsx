@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, SHOE_SUBCATEGORIES, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
+import { CATEGORIES, TONE_FILTERS, STYLE_FILTERS, PATTERN_OPTIONS, TEXTURE_OPTIONS, SHOE_SUBCATEGORIES, getColorTone, type WardrobeCategory, type WardrobeItem, type ColorTone, type StyleTag } from "@/lib/wardrobe-data";
 import { DEFAULT_DRESS_SHIRTS } from "@/lib/default-wardrobe-items";
 import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
@@ -60,6 +60,8 @@ export default function Wardrobe() {
   const [genProgress, setGenProgress] = useState({ current: 0, total: 0 });
   const [activeTones, setActiveTones] = useState<Set<ColorTone>>(new Set());
   const [activeStyles, setActiveStyles] = useState<Set<StyleTag>>(new Set());
+  const [activePatterns, setActivePatterns] = useState<Set<string>>(new Set());
+  const [activeTextures, setActiveTextures] = useState<Set<string>>(new Set());
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
@@ -250,7 +252,7 @@ export default function Wardrobe() {
     setGenerating(false);
   };
 
-  const hasFilters = activeTones.size > 0 || activeStyles.size > 0;
+  const hasFilters = activeTones.size > 0 || activeStyles.size > 0 || activePatterns.size > 0 || activeTextures.size > 0;
 
   const applyFilters = (items: WardrobeItem[]) => {
     let result = items;
@@ -259,6 +261,12 @@ export default function Wardrobe() {
     }
     if (activeStyles.size > 0) {
       result = result.filter((i) => i.style_tags.some((t) => activeStyles.has(t)));
+    }
+    if (activePatterns.size > 0) {
+      result = result.filter((i) => i.pattern && activePatterns.has(i.pattern));
+    }
+    if (activeTextures.size > 0) {
+      result = result.filter((i) => i.texture && activeTextures.has(i.texture));
     }
     return result;
   };
@@ -282,6 +290,24 @@ export default function Wardrobe() {
   const clearFilters = () => {
     setActiveTones(new Set());
     setActiveStyles(new Set());
+    setActivePatterns(new Set());
+    setActiveTextures(new Set());
+  };
+
+  const togglePattern = (p: string) => {
+    setActivePatterns((prev) => {
+      const next = new Set(prev);
+      next.has(p) ? next.delete(p) : next.add(p);
+      return next;
+    });
+  };
+
+  const toggleTexture = (t: string) => {
+    setActiveTextures((prev) => {
+      const next = new Set(prev);
+      next.has(t) ? next.delete(t) : next.add(t);
+      return next;
+    });
   };
 
   const filtered =
@@ -506,6 +532,36 @@ export default function Wardrobe() {
             )}
           >
             {s.label}
+          </button>
+        ))}
+        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Pattern</span>
+        {PATTERN_OPTIONS.filter(p => wardrobeWithPhotos.some(i => i.pattern === p)).map((p) => (
+          <button
+            key={p}
+            onClick={() => togglePattern(p)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              activePatterns.has(p)
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground"
+            )}
+          >
+            {p}
+          </button>
+        ))}
+        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Texture</span>
+        {TEXTURE_OPTIONS.filter(t => wardrobeWithPhotos.some(i => i.texture === t)).map((t) => (
+          <button
+            key={t}
+            onClick={() => toggleTexture(t)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              activeTextures.has(t)
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground"
+            )}
+          >
+            {t}
           </button>
         ))}
         {hasFilters && (
