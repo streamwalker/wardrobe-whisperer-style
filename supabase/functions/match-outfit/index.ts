@@ -113,11 +113,12 @@ PROPORTION & SILHOUETTE RULES (always apply):
 - STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
 
 PATTERN & TEXTURE RULES (always apply):
+- Each item may have explicit "pattern" (e.g., solid, striped, plaid, camo) and "texture" (e.g., cotton, wool, silk, denim, suede) fields. USE these fields for accurate assessment instead of guessing from names.
 - PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
 - PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
 - TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
 - TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer. Infer from item names when possible.
+- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer.
 - PATTERN FORMALITY: Subtle patterns (micro-check, tone-on-tone, pinstripe) are dressier. Bold patterns (large plaid, camo, graphic prints) are casual. Match pattern formality to the outfit's overall register.
 
 If compatible, return compatible: true.
@@ -307,12 +308,12 @@ PROPORTION & SILHOUETTE RULES (always apply):
 - STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
 
 PATTERN & TEXTURE RULES (always apply):
+- Each item may have explicit "pattern" (e.g., solid, striped, plaid, camo) and "texture" (e.g., cotton, wool, silk, denim, suede) fields. USE these fields for accurate assessment instead of guessing from names.
 - PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
 - PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
 - TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
 - TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer. Infer from item names when possible.
-- PATTERN FORMALITY: Subtle patterns (micro-check, tone-on-tone, pinstripe) are dressier. Bold patterns (large plaid, camo, graphic prints) are casual. Match pattern formality to the outfit's overall register.
+- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer.
 
 - Explain how the swap changes the outfit's character using color theory terms. Keep explanations concise (2-3 sentences max).
 - Give each variation a short creative name.`;

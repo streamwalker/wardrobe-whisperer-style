@@ -3,6 +3,12 @@ export type ShoeSubcategory = 'hi-tops' | 'boots';
 export type AccessorySubcategory = 'ties' | 'belts';
 export type StyleTag = 'casual' | 'neutral' | 'bold' | 'luxury' | 'minimal' | 'sporty';
 
+export const PATTERN_OPTIONS = ['solid', 'striped', 'plaid', 'checkered', 'floral', 'camo', 'graphic', 'herringbone', 'pinstripe', 'houndstooth'] as const;
+export type PatternType = typeof PATTERN_OPTIONS[number];
+
+export const TEXTURE_OPTIONS = ['cotton', 'linen', 'wool', 'silk', 'denim', 'corduroy', 'suede', 'leather', 'knit', 'fleece', 'tweed', 'canvas', 'poplin', 'flannel', 'chambray', 'velvet'] as const;
+export type TextureType = typeof TEXTURE_OPTIONS[number];
+
 export interface WardrobeItem {
   id: string;
   name: string;
@@ -11,6 +17,8 @@ export interface WardrobeItem {
   primary_color: string;
   color_hex: string;
   style_tags: StyleTag[];
+  pattern?: string;
+  texture?: string;
   is_new: boolean;
   is_featured: boolean;
   photo?: string;
