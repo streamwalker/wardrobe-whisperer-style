@@ -120,10 +120,12 @@ export type Database = {
           is_featured: boolean | null
           is_new: boolean | null
           name: string
+          pattern: string | null
           photo_url: string | null
           primary_color: string
           style_tags: string[] | null
           subcategory: string | null
+          texture: string | null
           updated_at: string
           user_id: string
         }
@@ -136,10 +138,12 @@ export type Database = {
           is_featured?: boolean | null
           is_new?: boolean | null
           name: string
+          pattern?: string | null
           photo_url?: string | null
           primary_color: string
           style_tags?: string[] | null
           subcategory?: string | null
+          texture?: string | null
           updated_at?: string
           user_id: string
         }
@@ -152,10 +156,12 @@ export type Database = {
           is_featured?: boolean | null
           is_new?: boolean | null
           name?: string
+          pattern?: string | null
           photo_url?: string | null
           primary_color?: string
           style_tags?: string[] | null
           subcategory?: string | null
+          texture?: string | null
           updated_at?: string
           user_id?: string
         }
