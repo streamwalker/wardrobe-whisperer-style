@@ -76,6 +76,8 @@ export default function AddItem() {
         setPrimaryColor(data.primary_color || "");
         setColorHex(data.color_hex || "#000000");
         setStyleTags(data.style_tags || []);
+        setPattern(data.pattern || "");
+        setTexture(data.texture || "");
       }
     } catch (err: any) {
       console.error("Upload/analyze error:", err);

@@ -29,6 +29,8 @@ interface BatchItem {
   primaryColor: string;
   colorHex: string;
   styleTags: string[];
+  pattern: string;
+  texture: string;
   analyzing: boolean;
   analyzed: boolean;
   saving: boolean;
@@ -68,6 +70,8 @@ export default function BatchAddItems() {
       primaryColor: "",
       colorHex: "#888888",
       styleTags: [],
+      pattern: "",
+      texture: "",
       analyzing: false,
       analyzed: false,
       saving: false,
@@ -91,6 +95,8 @@ export default function BatchAddItems() {
       primaryColor: "",
       colorHex: "#888888",
       styleTags: [],
+      pattern: "",
+      texture: "",
       analyzing: false,
       analyzed: false,
       saving: false,
@@ -175,6 +181,8 @@ export default function BatchAddItems() {
           primaryColor: data.primary_color || "",
           colorHex: data.color_hex || "#888888",
           styleTags: data.style_tags || [],
+          pattern: data.pattern || "",
+          texture: data.texture || "",
           analyzed: true,
         });
       }
@@ -223,9 +231,11 @@ export default function BatchAddItems() {
         primary_color: item.primaryColor,
         color_hex: item.colorHex,
         style_tags: item.styleTags,
+        pattern: item.pattern || null,
+        texture: item.texture || null,
         photo_url: photoUrl,
         is_new: true,
-      });
+      } as any);
 
       if (insertError) throw insertError;
       updateItem(item.id, { saved: true, saving: false });
