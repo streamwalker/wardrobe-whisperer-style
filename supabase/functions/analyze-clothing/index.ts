@@ -60,7 +60,9 @@ serve(async (req) => {
 - The category: shoes, pants, tops, outerwear, suits, or accessories
 - The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
 - The hex code of that color
-- 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty`;
+- 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty
+- The pattern: solid, striped, plaid, checkered, floral, camo, graphic, herringbone, pinstripe, houndstooth. Use "solid" if no visible pattern.
+- The texture/fabric: cotton, linen, wool, silk, denim, corduroy, suede, leather, knit, fleece, tweed, canvas, poplin, flannel, chambray, velvet. Pick the closest match based on visual appearance.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -97,15 +99,25 @@ serve(async (req) => {
                   },
                   primary_color: { type: "string", description: "Color name" },
                   color_hex: { type: "string", description: "Hex code e.g. #2C3E50" },
-                  style_tags: {
+                   style_tags: {
                     type: "array",
                     items: {
                       type: "string",
                       enum: ["casual", "neutral", "bold", "luxury", "minimal", "sporty"],
                     },
                   },
+                  pattern: {
+                    type: "string",
+                    enum: ["solid", "striped", "plaid", "checkered", "floral", "camo", "graphic", "herringbone", "pinstripe", "houndstooth"],
+                    description: "The visible pattern of the item",
+                  },
+                  texture: {
+                    type: "string",
+                    enum: ["cotton", "linen", "wool", "silk", "denim", "corduroy", "suede", "leather", "knit", "fleece", "tweed", "canvas", "poplin", "flannel", "chambray", "velvet"],
+                    description: "The fabric/texture of the item",
+                  },
                 },
-                required: ["name", "description", "category", "primary_color", "color_hex", "style_tags"],
+                required: ["name", "description", "category", "primary_color", "color_hex", "style_tags", "pattern", "texture"],
                 additionalProperties: false,
               },
             },
