@@ -29,6 +29,8 @@ interface BatchItem {
   primaryColor: string;
   colorHex: string;
   styleTags: string[];
+  pattern: string;
+  texture: string;
   analyzing: boolean;
   analyzed: boolean;
   saving: boolean;
