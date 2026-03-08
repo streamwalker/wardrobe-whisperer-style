@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES } from "@/lib/wardrobe-data";
+import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES, PATTERN_OPTIONS, TEXTURE_OPTIONS } from "@/lib/wardrobe-data";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,8 @@ export default function AddItem() {
   const [colorHex, setColorHex] = useState("#000000");
   const [styleTags, setStyleTags] = useState<string[]>([]);
   const [subcategory, setSubcategory] = useState<string>("");
+  const [pattern, setPattern] = useState<string>("");
+  const [texture, setTexture] = useState<string>("");
 
   const analyzePhoto = useCallback(async (file: File) => {
     if (!user) return;
@@ -140,9 +142,11 @@ export default function AddItem() {
         primary_color: primaryColor,
         color_hex: colorHex,
         style_tags: styleTags,
+        pattern: pattern || null,
+        texture: texture || null,
         photo_url: photoUrl,
         is_new: true,
-      });
+      } as any);
 
       if (insertError) throw insertError;
 
@@ -296,6 +300,35 @@ export default function AddItem() {
               />
               <Input id="hex" value={colorHex} onChange={(e) => setColorHex(e.target.value)} className="font-mono text-xs" />
             </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label>Pattern</Label>
+            <Select value={pattern} onValueChange={setPattern}>
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                {PATTERN_OPTIONS.map((p) => (
+                  <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Texture</Label>
+            <Select value={texture} onValueChange={setTexture}>
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                {TEXTURE_OPTIONS.map((t) => (
+                  <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

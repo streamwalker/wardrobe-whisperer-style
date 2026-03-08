@@ -135,6 +135,8 @@ export default function Wardrobe() {
     primary_color: row.primary_color,
     color_hex: row.color_hex || '#888888',
     style_tags: (row.style_tags || []) as WardrobeItem['style_tags'],
+    pattern: (row as any).pattern || undefined,
+    texture: (row as any).texture || undefined,
     is_new: row.is_new ?? false,
     is_featured: row.is_featured ?? false,
     photo: row.photo_url || undefined,
@@ -165,9 +167,11 @@ export default function Wardrobe() {
     primary_color: string;
     color_hex: string;
     style_tags: string[];
+    pattern?: string;
+    texture?: string;
     newPhotoFile?: File;
   }) => {
-    const { newPhotoFile, subcategory, ...dbUpdates } = updates;
+    const { newPhotoFile, subcategory, pattern, texture, ...dbUpdates } = updates;
     let photoUrl: string | undefined;
 
     // Upload new photo if provided
@@ -186,7 +190,7 @@ export default function Wardrobe() {
 
     const { error } = await supabase
       .from("wardrobe_items")
-      .update({ ...dbUpdates, subcategory: subcategory || null, ...(photoUrl ? { photo_url: photoUrl } : {}) })
+      .update({ ...dbUpdates, subcategory: subcategory || null, pattern: pattern || null, texture: texture || null, ...(photoUrl ? { photo_url: photoUrl } : {}) } as any)
       .eq("id", itemId);
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });

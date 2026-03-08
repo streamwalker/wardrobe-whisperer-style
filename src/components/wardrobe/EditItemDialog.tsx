@@ -19,7 +19,7 @@ import {
 import { Loader2, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { WardrobeItem } from "@/lib/wardrobe-data";
+import { PATTERN_OPTIONS, TEXTURE_OPTIONS, type WardrobeItem } from "@/lib/wardrobe-data";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
@@ -35,6 +35,8 @@ interface Props {
     primary_color: string;
     color_hex: string;
     style_tags: string[];
+    pattern?: string;
+    texture?: string;
     newPhotoFile?: File;
   }) => Promise<void>;
 }
@@ -46,6 +48,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const [primaryColor, setPrimaryColor] = useState(item.primary_color);
   const [colorHex, setColorHex] = useState(item.color_hex);
   const [styleTags, setStyleTags] = useState<string[]>([...item.style_tags]);
+  const [pattern, setPattern] = useState<string>(item.pattern || "");
+  const [texture, setTexture] = useState<string>(item.texture || "");
   const [saving, setSaving] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -79,6 +83,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         primary_color: primaryColor.trim(),
         color_hex: colorHex,
         style_tags: styleTags,
+        pattern: pattern || undefined,
+        texture: texture || undefined,
         newPhotoFile: newPhotoFile ?? undefined,
       });
       onOpenChange(false);
@@ -97,6 +103,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       setPrimaryColor(item.primary_color);
       setColorHex(item.color_hex);
       setStyleTags([...item.style_tags]);
+      setPattern(item.pattern || "");
+      setTexture(item.texture || "");
       setNewPhotoFile(null);
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
@@ -227,6 +235,35 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                   className="h-9 text-xs font-mono"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Pattern</Label>
+              <Select value={pattern} onValueChange={setPattern}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PATTERN_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={p} className="capitalize text-sm">{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Texture</Label>
+              <Select value={texture} onValueChange={setTexture}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEXTURE_OPTIONS.map((t) => (
+                    <SelectItem key={t} value={t} className="capitalize text-sm">{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
