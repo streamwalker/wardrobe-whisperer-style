@@ -97,6 +97,7 @@ export default function BatchAddItems() {
       styleTags: [],
       pattern: "",
       texture: "",
+      analyzing: false,
       analyzed: false,
       saving: false,
       saved: false,
