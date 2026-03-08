@@ -84,6 +84,16 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         </div>
         <span className="text-xs text-muted-foreground">{item.primary_color}</span>
         <div className="flex flex-wrap gap-1 mt-1">
+          {item.pattern && item.pattern !== "solid" && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize border-neon-cyan/40 text-neon-cyan">
+              {item.pattern}
+            </Badge>
+          )}
+          {item.texture && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize border-neon-pink/40 text-neon-pink">
+              {item.texture}
+            </Badge>
+          )}
           {item.style_tags.slice(0, 2).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
               {tag}
