@@ -371,6 +371,70 @@ export default function Profile() {
 
       {/* Wardrobe Sharing */}
       <ShareSection userId={user?.id} />
+
+      {/* GDPR: Data Export & Account Deletion */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Data & Privacy</p>
+        <p className="text-sm text-muted-foreground">
+          Export all your data or permanently delete your account. See our{" "}
+          <a href="/privacy" className="text-primary underline underline-offset-2">Privacy Policy</a> for details.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-1.5"
+            onClick={async () => {
+              try {
+                const [{ data: profileData }, { data: items }, { data: outfits }] = await Promise.all([
+                  supabase.from("profiles").select("*").eq("user_id", user!.id),
+                  supabase.from("wardrobe_items").select("*").eq("user_id", user!.id),
+                  supabase.from("saved_outfits").select("*").eq("user_id", user!.id),
+                ]);
+                const exportData = { profile: profileData, wardrobe_items: items, saved_outfits: outfits, exported_at: new Date().toISOString() };
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `drip-slayer-data-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success("Data exported successfully");
+              } catch {
+                toast.error("Failed to export data");
+              }
+            }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download My Data
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1.5"
+            onClick={async () => {
+              if (!window.confirm("Are you sure you want to permanently delete your account and all data? This action cannot be undone.")) return;
+              try {
+                await Promise.all([
+                  supabase.from("saved_outfits").delete().eq("user_id", user!.id),
+                  supabase.from("wardrobe_items").delete().eq("user_id", user!.id),
+                  supabase.from("wardrobe_shares").delete().eq("user_id", user!.id),
+                  supabase.from("profiles").delete().eq("user_id", user!.id),
+                ]);
+                await supabase.auth.signOut();
+                queryClient.clear();
+                toast.success("Account data deleted");
+                navigate("/auth");
+              } catch {
+                toast.error("Failed to delete account data");
+              }
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete My Account
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
