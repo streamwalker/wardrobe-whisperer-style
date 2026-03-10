@@ -131,15 +131,77 @@
     box-shadow: 0 0 8px hsl(var(--neon-cyan) / 0.4), 0 0 20px hsl(var(--neon-cyan) / 0.15);
   }
 
+  /* Enhanced glass card with stronger blur and inner glow */
   .glass-card {
-    @apply backdrop-blur-xl border;
-    background: hsl(var(--card) / 0.6);
-    border-color: hsl(var(--border) / 0.5);
+    @apply backdrop-blur-2xl border;
+    background: hsl(var(--card) / 0.55);
+    border-color: hsl(var(--border) / 0.4);
+    box-shadow:
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.08),
+      0 4px 24px -4px hsl(230 20% 7% / 0.08);
   }
 
   .dark .glass-card {
-    background: hsl(var(--card) / 0.4);
-    border-color: hsl(220 15% 92% / 0.08);
+    background: hsl(var(--card) / 0.35);
+    border-color: hsl(220 15% 92% / 0.06);
+    box-shadow:
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
+      0 4px 24px -4px hsl(230 20% 7% / 0.3);
+  }
+
+  /* Lighter glass panel for sections */
+  .glass-panel {
+    @apply backdrop-blur-xl border;
+    background: hsl(var(--card) / 0.3);
+    border-color: hsl(var(--border) / 0.3);
+    box-shadow: inset 0 1px 0 0 hsl(0 0% 100% / 0.06);
+  }
+
+  .dark .glass-panel {
+    background: hsl(var(--card) / 0.2);
+    border-color: hsl(220 15% 92% / 0.04);
+  }
+
+  /* Gradient border shimmer */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--neon-cyan) / 0.4),
+      hsl(var(--neon-pink) / 0.3),
+      hsl(var(--neon-cyan) / 0.1),
+      hsl(var(--neon-pink) / 0.4)
+    );
+    background-size: 300% 300%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Mesh gradient background */
+  .bg-mesh {
+    background:
+      radial-gradient(ellipse at 20% 0%, hsl(var(--neon-cyan) / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(var(--neon-pink) / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(270 25% 35% / 0.04) 0%, transparent 60%),
+      hsl(var(--background));
+  }
+
+  .dark .bg-mesh {
+    background:
+      radial-gradient(ellipse at 20% 0%, hsl(var(--neon-cyan) / 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(var(--neon-pink) / 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(275 25% 72% / 0.03) 0%, transparent 60%),
+      hsl(var(--background));
   }
 
   .neon-gradient-cyan-pink {
@@ -149,4 +211,39 @@
   .neon-gradient-lime {
     background: linear-gradient(135deg, hsl(var(--neon-lime)), hsl(130 80% 45%));
   }
+
+  /* Floating gradient blobs */
+  .gradient-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    pointer-events: none;
+    animation: blob-float 12s ease-in-out infinite;
+  }
+
+  .gradient-blob-cyan {
+    background: radial-gradient(circle, hsl(var(--neon-cyan) / 0.5), hsl(var(--neon-cyan) / 0));
+  }
+
+  .gradient-blob-pink {
+    background: radial-gradient(circle, hsl(var(--neon-pink) / 0.5), hsl(var(--neon-pink) / 0));
+  }
+
+  .gradient-blob-purple {
+    background: radial-gradient(circle, hsl(270 60% 60% / 0.4), hsl(270 60% 60% / 0));
+  }
+}
+
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(15px, 10px) scale(1.02); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }

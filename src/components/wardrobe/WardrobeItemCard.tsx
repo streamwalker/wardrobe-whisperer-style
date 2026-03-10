@@ -17,7 +17,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all hover:shadow-md hover:border-neon-cyan/30 animate-fade-in",
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-card/60 backdrop-blur-sm text-left shadow-sm transition-all duration-300 hover:shadow-glass hover:border-neon-cyan/30 hover:-translate-y-0.5 animate-fade-in",
         selected && "ring-2 ring-neon-cyan border-neon-cyan shadow-neon",
         highlighted && "ring-2 ring-accent border-accent animate-[pulse-highlight_1.5s_ease-in-out]"
       )}
@@ -34,7 +34,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <div
-              className="h-6 w-6 rounded-full bg-card/90 border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
+              className="h-6 w-6 rounded-full bg-card/90 backdrop-blur-sm border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -47,7 +47,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
           )}
           {onDelete && (
             <div
-              className="h-6 w-6 rounded-full bg-destructive/90 flex items-center justify-center shadow cursor-pointer"
+              className="h-6 w-6 rounded-full bg-destructive/90 backdrop-blur-sm flex items-center justify-center shadow cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
@@ -70,14 +70,14 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
           <img
             src={item.photo}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
         )}
       </div>
 
       {/* Info — glass panel */}
-      <div className="flex flex-col gap-0.5 p-2 glass-card border-t-0 rounded-t-none">
+      <div className="flex flex-col gap-0.5 p-2 glass-card border-t-0 border-x-0 border-b-0 rounded-none">
         <div className="flex items-center justify-between">
           <span className="text-xs sm:text-sm font-medium text-card-foreground truncate">{item.name}</span>
           {item.is_featured && <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />}
