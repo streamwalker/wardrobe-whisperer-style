@@ -19,16 +19,17 @@ export default function CategorySidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 border-r border-border/50 bg-sidebar sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all">
+    <aside className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 glass-panel border-r-0 rounded-none sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all">
+      <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-neon-cyan/20 via-neon-pink/10 to-transparent" />
       <nav className="flex flex-col gap-0.5 p-2 pt-3">
         {/* All */}
         <button
           onClick={() => handleCategoryClick("all")}
           className={cn(
-            "relative flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-all",
+            "relative flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-all",
             isWardrobePage && activeCat === "all"
-              ? "bg-sidebar-accent text-neon-cyan"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:shadow-neon/10"
+              ? "glass-card text-neon-cyan shadow-neon/20"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
           )}
         >
           {isWardrobePage && activeCat === "all" && (
@@ -38,16 +39,16 @@ export default function CategorySidebar() {
           <span className="hidden lg:inline truncate">All Items</span>
         </button>
 
-        <div className="my-1 h-px bg-sidebar-border" />
+        <div className="my-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
             onClick={() => handleCategoryClick(cat.value)}
             className={cn(
-              "relative flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-all",
+              "relative flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-all",
               isWardrobePage && activeCat === cat.value
-                ? "bg-sidebar-accent text-neon-cyan"
+                ? "glass-card text-neon-cyan shadow-neon/20"
                 : "text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}
           >

@@ -21,10 +21,10 @@ export default function AppLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-mesh">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent" />
+      <header className="sticky top-0 z-40 glass-card border-b-0 rounded-none">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/40 to-transparent" />
         <div className="container flex h-14 items-center justify-between">
           <h1
             className="cursor-pointer font-display text-xl font-semibold tracking-tight text-foreground neon-glow"
@@ -38,7 +38,7 @@ export default function AppLayout() {
                 <Plus className="h-5 w-5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-44 glass-card border-border/30">
               <DropdownMenuItem onClick={() => navigate("/wardrobe/add")} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add Single Item
@@ -61,7 +61,8 @@ export default function AppLayout() {
       </div>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 glass-card pb-[env(safe-area-inset-bottom,0px)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card border-t-0 rounded-none pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neon-pink/40 to-transparent" />
         <div className="container flex h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
@@ -70,14 +71,14 @@ export default function AppLayout() {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1 transition-all active:scale-95",
+                  "relative flex flex-col items-center gap-1 px-3 py-1 transition-all active:scale-95",
                   isActive ? "text-neon-cyan" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{label}</span>
                 {isActive && (
-                  <span className="absolute bottom-1.5 h-1 w-1 rounded-full bg-neon-cyan shadow-neon" />
+                  <span className="absolute -bottom-0.5 h-0.5 w-8 rounded-full neon-gradient-cyan-pink shadow-neon" />
                 )}
               </button>
             );
