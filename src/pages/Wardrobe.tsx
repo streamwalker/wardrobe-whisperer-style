@@ -474,11 +474,11 @@ export default function Wardrobe() {
       )}
 
       {/* Category tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] md:hidden">
         <button
           onClick={() => setActiveCategory("all")}
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+            "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
             activeCategory === "all"
               ? "neon-gradient-cyan-pink text-white shadow-neon"
               : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
@@ -491,7 +491,7 @@ export default function Wardrobe() {
             key={cat.value}
             onClick={() => setActiveCategory(cat.value)}
             className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
               activeCategory === cat.value
                 ? "neon-gradient-cyan-pink text-white shadow-neon"
                 : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
