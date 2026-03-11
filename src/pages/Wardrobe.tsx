@@ -423,47 +423,47 @@ export default function Wardrobe() {
   };
 
   return (
-    <div className="space-y-5 pb-24">
-      <div className="space-y-3">
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
+    <div className="space-y-3 sm:space-y-5 pb-24">
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
+          <span className="text-xs text-muted-foreground">{wardrobeWithPhotos.length} items</span>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
         {itemsMissingPhotos.length > 0 && (
           <Button
             size="sm"
-            className="gap-1.5 shrink-0 neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
+            className="gap-1 sm:gap-1.5 shrink-0 text-xs sm:text-sm neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
             onClick={handleGenerateImages}
             disabled={generating}
           >
             {generating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {genProgress.current}/{genProgress.total}
               </>
             ) : (
               <>
-                <ImagePlus className="h-4 w-4" />
-                Generate Images ({itemsMissingPhotos.length})
+                <ImagePlus className="h-3.5 w-3.5" />
+                <span className="hidden xs:inline">Generate</span> ({itemsMissingPhotos.length})
               </>
             )}
           </Button>
         )}
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
-            <CalendarDays className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
+            <CalendarDays className="h-3.5 w-3.5" />
             Occasion
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
-            <Share2 className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
+            <Share2 className="h-3.5 w-3.5" />
             Share
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setTransferDialogOpen(true)}>
-            <ArrowRightLeft className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm" onClick={() => setTransferDialogOpen(true)}>
+            <ArrowRightLeft className="h-3.5 w-3.5" />
             Transfer
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setRedeemDialogOpen(true)}>
-            <Gift className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm" onClick={() => setRedeemDialogOpen(true)}>
+            <Gift className="h-3.5 w-3.5" />
             Redeem
           </Button>
           {user && <ExportImportButtons userId={user.id} allItems={wardrobeWithPhotos} />}
