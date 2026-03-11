@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  isBusinessCasualOuterwear,
-  isBusinessCasualPant,
-  isBusinessCasualShoe,
   isDressShirt,
   isFormalItem,
   isValidDressShirtPairing,
@@ -72,8 +69,6 @@ async function checkCompatibility(
   LOVABLE_API_KEY: string,
   anchors: any[],
   wardrobeItems: any[],
-  formalMode: boolean,
-  businessCasualMode: boolean = false
 ) {
   const anchorIds = new Set(anchors.map((a: any) => a.id));
   const otherItems = wardrobeItems.filter((i: any) => !anchorIds.has(i.id));
@@ -85,15 +80,8 @@ async function checkCompatibility(
     replacementPool.push(...alternatives);
   }
 
-  const bizCasualContext = businessCasualMode
-    ? "These items are for a BUSINESS CASUAL outfit (dress shirt + chinos/trousers + loafers/Chelsea boots + blazer/structured jacket). Evaluate business casual compatibility — the look should be polished but not full-suit formal."
-    : "";
-  const formalContext = formalMode
-    ? "These items are for a FORMAL outfit (suit + dress shirt + dress shoes + tie). Evaluate formal compatibility — color coordination, formality level, and dress code cohesion."
-    : "";
-
   const systemPrompt = `You are StyleMatch, a fashion AI specializing in color theory. Evaluate whether the given wardrobe items can form a cohesive outfit together. Consider color harmony, style consistency, and overall aesthetic.
-${formalContext}${bizCasualContext}
+
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
 HARD STYLE RULES (always flag as incompatible):
@@ -103,23 +91,14 @@ HARD STYLE RULES (always flag as incompatible):
   Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
 
 PROPORTION & SILHOUETTE RULES (always apply):
-- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
-- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
-- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
-- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
-- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
-- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
-- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
-- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured.
+- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes. Wide/relaxed pants → chunkier shoes.
+- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors.
 
 PATTERN & TEXTURE RULES (always apply):
-- Each item may have explicit "pattern" (e.g., solid, striped, plaid, camo) and "texture" (e.g., cotton, wool, silk, denim, suede) fields. USE these fields for accurate assessment instead of guessing from names.
-- PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
-- PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
-- TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
-- TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer.
-- PATTERN FORMALITY: Subtle patterns (micro-check, tone-on-tone, pinstripe) are dressier. Bold patterns (large plaid, camo, graphic prints) are casual. Match pattern formality to the outfit's overall register.
+- Each item may have explicit "pattern" and "texture" fields. USE these fields for accurate assessment.
+- PATTERN MIXING: Pair at most 2 patterned items per outfit with different scales.
+- TEXTURE-FORMALITY MATCH: Don't mix extreme casual textures with formal textures.
 
 If compatible, return compatible: true.
 If incompatible, identify which item is the weakest link, explain why in 1-2 sentences, and suggest 2-3 alternatives from the replacement pool that would work better.`;
@@ -201,32 +180,12 @@ serve(async (req) => {
     const anchorIds = new Set(anchors.map((a: any) => a.id));
     const isMulti = anchors.length > 1;
 
-    // --- Mode detection: formal, business casual, or casual ---
-    const hasSuit = anchors.some((a: any) => a.category === "suits");
-    const hasDressShirt = anchors.some((a: any) => isDressShirt(a));
-    const hasTieAccessory = anchors.some((a: any) => a.category === "accessories");
-    const hasFormalAnchor = anchors.some((a: any) => isFormalItem(a));
-    const formalMode = hasSuit || (hasDressShirt && hasTieAccessory) || (hasFormalAnchor && !hasDressShirt);
-    const businessCasualMode = hasDressShirt && !formalMode;
-
-    const formalCategories = ["suits", "tops", "dress-shoes", "accessories"];
-    const businessCasualCategories = ["shoes", "pants", "tops", "outerwear"];
-    const casualCategories = ["shoes", "pants", "tops", "outerwear"];
-    const allCategories = formalMode ? formalCategories : businessCasualMode ? businessCasualCategories : casualCategories;
-
-    // Filter wardrobe items based on mode
-    const filteredWardrobeItems = formalMode
-      ? wardrobeItems.filter((i: any) => anchorIds.has(i.id) || isFormalItem(i))
-      : businessCasualMode
-        ? wardrobeItems.filter((i: any) => {
-            if (anchorIds.has(i.id)) return true;
-            return isDressShirt(i) || isBusinessCasualPant(i) || isBusinessCasualShoe(i) || isBusinessCasualOuterwear(i);
-          })
-        : wardrobeItems.filter((i: any) => !isDressShirt(i));
+    // Send ALL wardrobe items to the AI — let it decide what works
+    const allItems = wardrobeItems;
 
     // --- Compatibility check for multi-item selections ---
     if (isMulti) {
-      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, filteredWardrobeItems, formalMode, businessCasualMode);
+      const compatResult = await checkCompatibility(LOVABLE_API_KEY, anchors, allItems);
       if (compatResult.error) {
         return new Response(
           JSON.stringify({ error: compatResult.error }),
@@ -249,7 +208,7 @@ serve(async (req) => {
     // --- Generate outfit suggestions ---
     const anchorCategories = anchors.map((a: any) => a.category);
 
-    const otherItems = filteredWardrobeItems.filter((i: any) => !anchorIds.has(i.id));
+    const otherItems = allItems.filter((i: any) => !anchorIds.has(i.id));
     const grouped: Record<string, any[]> = {};
     for (const item of otherItems) {
       const cat = item.category;
@@ -257,7 +216,9 @@ serve(async (req) => {
       grouped[cat].push(item);
     }
 
-    const missingCategories = allCategories.filter(cat => !anchorCategories.includes(cat));
+    // Determine what categories the AI should fill
+    const ALL_CATEGORIES = ["shoes", "dress-shoes", "pants", "tops", "outerwear", "suits", "accessories"];
+    const missingCategories = ALL_CATEGORIES.filter(cat => !anchorCategories.includes(cat));
     const isFullOutfit = missingCategories.length === 0;
 
     let excludeBlock = "";
@@ -266,19 +227,43 @@ serve(async (req) => {
       excludeBlock = `\n\nIMPORTANT — Do NOT reuse any of the following outfit combinations (listed by item IDs):\n${limited.map((ids: string[], i: number) => `- Outfit ${i + 1}: ${ids.join(", ")}`).join("\n")}\n\nYou must suggest DIFFERENT combinations that have not appeared above. If you cannot produce 3 new unique outfits, return as many as you can (even 0).`;
     }
 
-    // --- Mode-based prompt building ---
-    const modeLabel = formalMode ? "formal" : businessCasualMode ? "business casual" : "";
-    const categoryDescription = formalMode
-      ? "Suit, Dress Shirt, Dress Shoes, and Tie/Accessory"
-      : businessCasualMode
-        ? "Shoes (loafers/Chelsea boots/dress shoes), Pants (chinos/trousers), Tops (dress shirt), and Outerwear (blazer/structured jacket)"
-        : "Shoes, Pants, Tops, and Outerwear";
+    const categoryRules = `
+CATEGORY RULES FOR COMPLETE OUTFITS:
+Every outfit MUST have these core categories filled (one item each):
+1. Footwear: Pick from "shoes" OR "dress-shoes" (not both) — use dress-shoes for formal/business looks, regular shoes for casual/sporty
+2. Pants: One item from "pants"
+3. Tops: One item from "tops"
+4. Outerwear OR Suits: Pick from "outerwear" for casual/smart-casual, OR "suits" for formal looks (not both unless layering a suit jacket as outerwear)
 
-    const categoryListNumbered = formalMode
-      ? "1. Suits\n2. Tops (Dress Shirts)\n3. Shoes (Dress Shoes)\n4. Accessories (Ties)"
-      : businessCasualMode
-        ? "1. Shoes (loafers, Chelsea boots, dress shoes)\n2. Pants (chinos, tailored trousers)\n3. Tops (dress shirt)\n4. Outerwear (blazer, structured jacket)"
-        : "1. Shoes\n2. Pants\n3. Tops\n4. Outerwear";
+OPTIONAL additions (include when they enhance the outfit):
+5. Accessories: Add a tie, belt, bag, or other accessory when it elevates the look. Always include a tie with suits and dress shirts.
+
+This means each outfit should have 4-5 items total. Use ALL available categories from the wardrobe — don't exclude items just because they're formal or casual. The AI should decide based on the styling context.`;
+
+    const styleRules = `
+HARD STYLE RULES:
+- Dress shirts have TWO valid contexts:
+  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
+  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket.
+  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+
+PROPORTION & SILHOUETTE RULES:
+- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered and vice versa.
+- SHOE-PANT HARMONY: Slim pants → slimmer shoes. Wide pants → chunkier shoes.
+- 3-4 COLOR MAXIMUM per outfit.
+
+PATTERN & TEXTURE RULES:
+- Use each item's explicit "pattern" and "texture" fields for assessment.
+- PATTERN MIXING: Max 2 patterned items, must differ in scale.
+- TEXTURE CONTRAST: Mix smooth with textured for visual interest.
+- TEXTURE-FORMALITY MATCH: Don't mix extreme casual textures with formal ones.
+
+Color theory principles:
+- Complementary colors for bold contrast
+- Analogous colors for harmonious looks
+- Neutral anchoring to ground bold pieces
+- Tonal dressing for sophisticated monochrome
+- The 60-30-10 rule: 60% dominant, 30% secondary, 10% accent`;
 
     let systemPrompt: string;
     let userPrompt: string;
@@ -286,37 +271,16 @@ serve(async (req) => {
     if (isFullOutfit) {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-The user has selected a COMPLETE ${modeLabel} outfit (one item from each category: ${categoryDescription}). Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other 3 items intact.
+The user has selected a complete outfit. Your job is to suggest EXACTLY 3 variation outfits. Each variation must SWAP exactly ONE item from the original selection for a different item from the same category, keeping the other items intact.
 
 Rules:
-- Each of the 3 suggestions must swap a DIFFERENT item (e.g., suggestion 1 swaps ${formalMode ? "the suit" : "shoes"}, suggestion 2 swaps ${formalMode ? "the shirt" : "pants"}, suggestion 3 swaps ${formalMode ? "the shoes" : "the top"}). If there are not enough alternatives in a category, you may swap the same category twice with different replacements.
+- Each of the 3 suggestions should swap a DIFFERENT item when possible.
 - NEVER return the original selection unchanged.
-- Each suggestion must still have exactly 4 items (one per category).
-- Dress shirts have TWO valid contexts:
-  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
-  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
-  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- Each suggestion should maintain the same number of items as the original.
+- Explain how the swap changes the outfit's character. Keep explanations concise (2-3 sentences max).
+- Give each variation a short creative name.
 
-PROPORTION & SILHOUETTE RULES (always apply):
-- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
-- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
-- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
-- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
-- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
-- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
-- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
-- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
-
-PATTERN & TEXTURE RULES (always apply):
-- Each item may have explicit "pattern" (e.g., solid, striped, plaid, camo) and "texture" (e.g., cotton, wool, silk, denim, suede) fields. USE these fields for accurate assessment instead of guessing from names.
-- PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
-- PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
-- TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
-- TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer.
-
-- Explain how the swap changes the outfit's character using color theory terms. Keep explanations concise (2-3 sentences max).
-- Give each variation a short creative name.`;
+${styleRules}`;
 
       userPrompt = `ORIGINAL OUTFIT (the user's current selection):
 ${JSON.stringify(anchors)}
@@ -324,47 +288,19 @@ ${JSON.stringify(anchors)}
 AVAILABLE ALTERNATIVES BY CATEGORY (pick swaps from these):
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 outfit variations. Each must swap exactly ONE item from the original for an alternative, keeping the other 3 items.${excludeBlock}`;
+Return exactly 3 outfit variations. Each must swap exactly ONE item from the original for an alternative, keeping the other items.${excludeBlock}`;
     } else if (isMulti) {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete ${modeLabel} outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit with one item from each of these 4 categories:
-${categoryListNumbered}
+Given ${anchors.length} selected wardrobe items (the "anchors"), return EXACTLY 3 complete outfit suggestions. Each outfit MUST include ALL of the anchor items, plus items from the remaining categories to complete a full outfit.
+
+${categoryRules}
 
 The anchor items are already assigned to their categories. For any category not covered by an anchor, pick the single best-matching item from the user's wardrobe.
 
-Color theory principles to apply:
-- Complementary colors (opposite on the color wheel) for bold contrast
-- Analogous colors (adjacent on the color wheel) for harmonious looks
-- Neutral anchoring (black, white, gray, beige) to ground bold pieces
-- Tonal dressing (shades of the same hue) for sophisticated monochrome looks
-- The 60-30-10 rule: 60% dominant color, 30% secondary, 10% accent
+Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. Explain WHY the colors and pieces work together. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
-Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
-
-HARD STYLE RULES:
-- Dress shirts have TWO valid contexts:
-  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
-  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
-  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
-
-PROPORTION & SILHOUETTE RULES (always apply):
-- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
-- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
-- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
-- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
-- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
-- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
-- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
-- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
-
-PATTERN & TEXTURE RULES (always apply):
-- PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
-- PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
-- TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
-- TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer. Infer from item names when possible.
-- PATTERN FORMALITY: Subtle patterns (micro-check, tone-on-tone, pinstripe) are dressier. Bold patterns (large plaid, camo, graphic prints) are casual. Match pattern formality to the outfit's overall register.`;
+${styleRules}`;
 
       userPrompt = `ANCHOR ITEMS (must ALL appear in every outfit):
 ${JSON.stringify(anchors)}
@@ -372,47 +308,19 @@ ${JSON.stringify(anchors)}
 AVAILABLE ITEMS BY CATEGORY (pick from these to fill remaining categories):
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 complete outfits. Each outfit must include all anchor items plus one item from each of the other categories (to complete ${categoryDescription}).${excludeBlock}`;
+Return exactly 3 complete outfits. Each must include all anchor items plus items to fill the remaining categories.${excludeBlock}`;
     } else {
       systemPrompt = `You are StyleMatch, a fashion-savvy AI stylist specializing in color theory and outfit coordination.
 
-Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete ${modeLabel} outfit suggestions. Each outfit MUST contain exactly 4 items — one from each of these categories:
-${categoryListNumbered}
+Given a selected wardrobe item (the "anchor"), return EXACTLY 3 complete outfit suggestions.
 
-The anchor item is already assigned to its category. For the remaining 3 categories, pick the single best-matching item from the user's wardrobe.
+${categoryRules}
 
-Color theory principles to apply:
-- Complementary colors (opposite on the color wheel) for bold contrast
-- Analogous colors (adjacent on the color wheel) for harmonious looks
-- Neutral anchoring (black, white, gray, beige) to ground bold pieces
-- Tonal dressing (shades of the same hue) for sophisticated monochrome looks
-- The 60-30-10 rule: 60% dominant color, 30% secondary, 10% accent
+The anchor item is already assigned to its category. For the remaining categories, pick the single best-matching item from the user's wardrobe.
 
-Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. For each outfit, explain WHY the colors and pieces work together using specific color theory terms. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
+Each outfit must use a DIFFERENT styling approach so the 3 suggestions feel distinct. Explain WHY the colors and pieces work together. Keep explanations concise (2-3 sentences max). Give each outfit a short creative name.
 
-HARD STYLE RULES:
-- Dress shirts have TWO valid contexts:
-  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
-  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
-  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
-
-PROPORTION & SILHOUETTE RULES (always apply):
-- VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
-- THREE SILHOUETTES: Top-heavy (loose top + slim bottom), Bottom-heavy (fitted top + wide bottom), or Balanced (both moderately fitted/tailored). Every outfit must fit one of these.
-- SHOE-PANT HARMONY: Slim/tapered pants → slimmer shoes (Chelsea boots, low sneakers). Wide/relaxed pants → chunkier shoes (boots, chunky sneakers). Mismatched shoe-pant volume ruins proportions.
-- MONOCHROME ADVANTAGE: When possible, favor outfits in one color family (head to toe) for a taller, leaner look. Avoid high-contrast color breaks at the waist.
-- VERTICAL STRUCTURE: Prefer items that create vertical lines (structured lapels, front-creased trousers, long coats) for a lengthening effect.
-- POWER FORMULA: Structured jacket + fitted shirt + tapered trousers + substantial footwear = the most universally flattering combination. Prioritize this when the wardrobe supports it.
-- 3-4 COLOR MAXIMUM: Keep each outfit to 3-4 total colors. Fewer colors = more intentional and confident.
-- STREETWEAR EXCEPTION: Full oversized (top + bottom + chunky shoes) is acceptable ONLY when all three pieces are intentionally exaggerated and the style tags indicate streetwear/sporty.
-
-PATTERN & TEXTURE RULES (always apply):
-- PATTERN MIXING: Pair at most 2 patterned items per outfit. If both are patterned, they must differ in scale (e.g., thin pinstripe + bold plaid). Never pair two patterns of similar scale.
-- PATTERN + SOLID: One patterned item works best anchored by solid-colored companions. Use the pattern's accent color in a solid piece to tie the look together.
-- TEXTURE CONTRAST: Mix textures for visual interest — pair smooth fabrics (cotton, silk) with textured ones (knit, corduroy, tweed, suede). Avoid head-to-toe identical textures unless intentionally minimal.
-- TEXTURE-FORMALITY MATCH: Rough/heavy textures (denim, canvas, chunky knit) read casual. Smooth/fine textures (wool suiting, poplin, polished leather) read formal. Don't mix extremes within one outfit.
-- SEASONAL TEXTURE SENSE: Heavier textures (flannel, wool, corduroy, suede) suit fall/winter. Lighter textures (linen, chambray, cotton) suit spring/summer. Infer from item names when possible.
-- PATTERN FORMALITY: Subtle patterns (micro-check, tone-on-tone, pinstripe) are dressier. Bold patterns (large plaid, camo, graphic prints) are casual. Match pattern formality to the outfit's overall register.`;
+${styleRules}`;
 
       userPrompt = `ANCHOR ITEM (must appear in every outfit):
 ${JSON.stringify(anchors[0])}
@@ -420,7 +328,7 @@ ${JSON.stringify(anchors[0])}
 AVAILABLE ITEMS BY CATEGORY (pick from these to fill remaining categories):
 ${Object.entries(grouped).map(([cat, items]) => `## ${cat}\n${JSON.stringify(items)}`).join("\n\n")}
 
-Return exactly 3 complete outfits. Each outfit must include the anchor item plus one item from each of the other categories (to complete ${categoryDescription}).${excludeBlock}`;
+Return exactly 3 complete outfits. Each must include the anchor item plus items to fill the remaining categories.${excludeBlock}`;
     }
 
     const aiResult = await callAI(LOVABLE_API_KEY, [
@@ -431,7 +339,7 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
         type: "function",
         function: {
           name: "suggest_outfits",
-          description: `Return exactly 3 complete ${modeLabel} outfit suggestions, each with one item from every category.`,
+          description: `Return exactly 3 complete outfit suggestions, each with items from the user's wardrobe.`,
           parameters: {
             type: "object",
             properties: {
@@ -446,7 +354,7 @@ Return exactly 3 complete outfits. Each outfit must include the anchor item plus
                     item_ids: {
                       type: "array",
                       items: { type: "string" },
-                      description: "IDs of wardrobe items in this outfit (must include all selected items)",
+                      description: "IDs of wardrobe items in this outfit (must include all selected items, typically 4-5 items)",
                     },
                     explanation: {
                       type: "string",
