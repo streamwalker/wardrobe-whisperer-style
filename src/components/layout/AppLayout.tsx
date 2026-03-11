@@ -55,7 +55,7 @@ export default function AppLayout() {
       {/* Body: sidebar + content */}
       <div className="flex flex-1">
         <CategorySidebar />
-        <main className="flex-1 container py-4 pb-20">
+        <main className="flex-1 container px-3 sm:px-4 py-3 sm:py-4 pb-20">
           <Outlet />
         </main>
       </div>
