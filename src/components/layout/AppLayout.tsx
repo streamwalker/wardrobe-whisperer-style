@@ -55,7 +55,7 @@ export default function AppLayout() {
       {/* Body: sidebar + content */}
       <div className="flex flex-1">
         <CategorySidebar />
-        <main className="flex-1 container py-4 pb-20">
+        <main className="flex-1 container px-3 sm:px-4 py-3 sm:py-4 pb-20">
           <Outlet />
         </main>
       </div>
@@ -63,7 +63,7 @@ export default function AppLayout() {
       {/* Bottom navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 glass-card border-t-0 rounded-none pb-[env(safe-area-inset-bottom,0px)]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neon-pink/40 to-transparent" />
-        <div className="container flex h-16 items-center justify-around">
+        <div className="container flex h-14 sm:h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
             return (

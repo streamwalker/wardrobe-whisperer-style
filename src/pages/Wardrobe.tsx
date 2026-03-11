@@ -423,47 +423,47 @@ export default function Wardrobe() {
   };
 
   return (
-    <div className="space-y-5 pb-24">
-      <div className="space-y-3">
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{wardrobeWithPhotos.length} items</p>
+    <div className="space-y-3 sm:space-y-5 pb-24">
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{wardrobeTitle}</h2>
+          <span className="text-xs text-muted-foreground">{wardrobeWithPhotos.length} items</span>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
         {itemsMissingPhotos.length > 0 && (
           <Button
             size="sm"
-            className="gap-1.5 shrink-0 neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
+            className="gap-1 sm:gap-1.5 shrink-0 text-xs sm:text-sm neon-gradient-lime text-white border-0 shadow-neon-lime hover:opacity-90"
             onClick={handleGenerateImages}
             disabled={generating}
           >
             {generating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {genProgress.current}/{genProgress.total}
               </>
             ) : (
               <>
-                <ImagePlus className="h-4 w-4" />
-                Generate Images ({itemsMissingPhotos.length})
+                <ImagePlus className="h-3.5 w-3.5" />
+                <span className="hidden xs:inline">Generate</span> ({itemsMissingPhotos.length})
               </>
             )}
           </Button>
         )}
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
-            <CalendarDays className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm border-neon-pink/50 text-neon-pink hover:bg-neon-pink/10 hover:text-neon-pink" onClick={() => setOccasionDrawerOpen(true)}>
+            <CalendarDays className="h-3.5 w-3.5" />
             Occasion
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
-            <Share2 className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10 hover:text-neon-cyan" onClick={handleShare}>
+            <Share2 className="h-3.5 w-3.5" />
             Share
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setTransferDialogOpen(true)}>
-            <ArrowRightLeft className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm" onClick={() => setTransferDialogOpen(true)}>
+            <ArrowRightLeft className="h-3.5 w-3.5" />
             Transfer
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setRedeemDialogOpen(true)}>
-            <Gift className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="gap-1 shrink-0 text-xs sm:text-sm" onClick={() => setRedeemDialogOpen(true)}>
+            <Gift className="h-3.5 w-3.5" />
             Redeem
           </Button>
           {user && <ExportImportButtons userId={user.id} allItems={wardrobeWithPhotos} />}
@@ -474,11 +474,11 @@ export default function Wardrobe() {
       )}
 
       {/* Category tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] md:hidden">
         <button
           onClick={() => setActiveCategory("all")}
           className={cn(
-            "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+            "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
             activeCategory === "all"
               ? "neon-gradient-cyan-pink text-white shadow-neon"
               : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
@@ -491,7 +491,7 @@ export default function Wardrobe() {
             key={cat.value}
             onClick={() => setActiveCategory(cat.value)}
             className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
               activeCategory === cat.value
                 ? "neon-gradient-cyan-pink text-white shadow-neon"
                 : "glass-card text-secondary-foreground hover:border-neon-cyan/30"
@@ -502,15 +502,15 @@ export default function Wardrobe() {
         ))}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground mr-1">Tone</span>
+      {/* Filter bar — horizontally scrollable on mobile */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0">Tone</span>
         {TONE_FILTERS.map((t) => (
           <button
             key={t.value}
             onClick={() => toggleTone(t.value)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
               activeTones.has(t.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -519,13 +519,13 @@ export default function Wardrobe() {
             {t.label}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Style</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Style</span>
         {STYLE_FILTERS.map((s) => (
           <button
             key={s.value}
             onClick={() => toggleStyle(s.value)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
               activeStyles.has(s.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -534,13 +534,13 @@ export default function Wardrobe() {
             {s.label}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Pattern</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Pattern</span>
         {PATTERN_OPTIONS.filter(p => wardrobeWithPhotos.some(i => i.pattern === p)).map((p) => (
           <button
             key={p}
             onClick={() => togglePattern(p)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
               activePatterns.has(p)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -549,13 +549,13 @@ export default function Wardrobe() {
             {p}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Texture</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Texture</span>
         {TEXTURE_OPTIONS.filter(t => wardrobeWithPhotos.some(i => i.texture === t)).map((t) => (
           <button
             key={t}
             onClick={() => toggleTexture(t)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
               activeTextures.has(t)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -565,8 +565,8 @@ export default function Wardrobe() {
           </button>
         ))}
         {hasFilters && (
-          <button onClick={clearFilters} className="text-xs text-muted-foreground underline ml-1">
-            Clear filters
+          <button onClick={clearFilters} className="shrink-0 text-[10px] sm:text-xs text-muted-foreground underline ml-1">
+            Clear
           </button>
         )}
       </div>
@@ -585,14 +585,14 @@ export default function Wardrobe() {
                   <span className="text-sm font-semibold text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <div className="flex gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
                   {cat.value === 'shoes' ? (
                     <>
                       {SHOE_SUBCATEGORIES.map((sub) => {
                         const subItems = items.filter((i) => i.subcategory === sub.value);
                         if (subItems.length === 0) return null;
                         return subItems.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
+                          <div key={item.id} className="shrink-0 w-28 sm:w-36 md:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -607,7 +607,7 @@ export default function Wardrobe() {
                       {(() => {
                         const uncategorized = items.filter((i) => !i.subcategory);
                         return uncategorized.map((item) => (
-                          <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
+                          <div key={item.id} className="shrink-0 w-28 sm:w-36 md:w-44 snap-start">
                             <DraggableItemCard
                               item={item}
                               selected={selectedIds.has(item.id)}
@@ -622,7 +622,7 @@ export default function Wardrobe() {
                     </>
                   ) : (
                     items.map((item) => (
-                      <div key={item.id} className="shrink-0 w-36 sm:w-44 snap-start">
+                      <div key={item.id} className="shrink-0 w-28 sm:w-36 md:w-44 snap-start">
                         <DraggableItemCard
                           item={item}
                           selected={selectedIds.has(item.id)}
@@ -648,7 +648,7 @@ export default function Wardrobe() {
         </DragOverlay>
       </DndContext>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((item) => (
             <WardrobeItemCard
               key={item.id}
@@ -665,20 +665,19 @@ export default function Wardrobe() {
 
       {/* Floating multi-select bar */}
       {selectedItems.length >= 1 && !drawerOpen && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full glass-card border-neon-cyan/30 px-4 py-2 shadow-neon">
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-card-foreground">
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[11px] font-bold text-white px-1.5">
+        <div className="fixed bottom-[4.5rem] sm:bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-full glass-card border-neon-cyan/30 px-3 sm:px-4 py-1.5 sm:py-2 shadow-neon max-w-[calc(100vw-2rem)]">
+          <span className="inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-card-foreground whitespace-nowrap">
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[10px] sm:text-[11px] font-bold text-white px-1">
               {selectedItems.length}
             </span>
-            {selectedItems.length === 1 ? "item" : "items"} selected
+            <span className="hidden xs:inline">{selectedItems.length === 1 ? "item" : "items"}</span>
           </span>
-          <Button size="sm" className="gap-1.5 rounded-full neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
-            <Sparkles className="h-4 w-4" />
-            Match This Outfit
+          <Button size="sm" className="gap-1 sm:gap-1.5 rounded-full text-xs sm:text-sm neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Match
           </Button>
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-full" onClick={clearSelection}>
-            <X className="h-4 w-4" />
-            Clear All
+          <Button size="sm" variant="ghost" className="gap-1 rounded-full text-xs sm:text-sm px-2" onClick={clearSelection}>
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       )}
