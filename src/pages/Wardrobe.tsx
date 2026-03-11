@@ -665,20 +665,19 @@ export default function Wardrobe() {
 
       {/* Floating multi-select bar */}
       {selectedItems.length >= 1 && !drawerOpen && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full glass-card border-neon-cyan/30 px-4 py-2 shadow-neon">
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-card-foreground">
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[11px] font-bold text-white px-1.5">
+        <div className="fixed bottom-[4.5rem] sm:bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 rounded-full glass-card border-neon-cyan/30 px-3 sm:px-4 py-1.5 sm:py-2 shadow-neon max-w-[calc(100vw-2rem)]">
+          <span className="inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-card-foreground whitespace-nowrap">
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-neon-cyan text-[10px] sm:text-[11px] font-bold text-white px-1">
               {selectedItems.length}
             </span>
-            {selectedItems.length === 1 ? "item" : "items"} selected
+            <span className="hidden xs:inline">{selectedItems.length === 1 ? "item" : "items"}</span>
           </span>
-          <Button size="sm" className="gap-1.5 rounded-full neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
-            <Sparkles className="h-4 w-4" />
-            Match This Outfit
+          <Button size="sm" className="gap-1 sm:gap-1.5 rounded-full text-xs sm:text-sm neon-gradient-cyan-pink text-white border-0 shadow-neon hover:opacity-90" onClick={handleMatchThese}>
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Match
           </Button>
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-full" onClick={clearSelection}>
-            <X className="h-4 w-4" />
-            Clear All
+          <Button size="sm" variant="ghost" className="gap-1 rounded-full text-xs sm:text-sm px-2" onClick={clearSelection}>
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       )}
