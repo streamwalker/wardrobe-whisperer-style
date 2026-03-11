@@ -502,15 +502,15 @@ export default function Wardrobe() {
         ))}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground mr-1">Tone</span>
+      {/* Filter bar — horizontally scrollable on mobile */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0">Tone</span>
         {TONE_FILTERS.map((t) => (
           <button
             key={t.value}
             onClick={() => toggleTone(t.value)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
               activeTones.has(t.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -519,13 +519,13 @@ export default function Wardrobe() {
             {t.label}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Style</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Style</span>
         {STYLE_FILTERS.map((s) => (
           <button
             key={s.value}
             onClick={() => toggleStyle(s.value)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
               activeStyles.has(s.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -534,13 +534,13 @@ export default function Wardrobe() {
             {s.label}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Pattern</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Pattern</span>
         {PATTERN_OPTIONS.filter(p => wardrobeWithPhotos.some(i => i.pattern === p)).map((p) => (
           <button
             key={p}
             onClick={() => togglePattern(p)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
               activePatterns.has(p)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -549,13 +549,13 @@ export default function Wardrobe() {
             {p}
           </button>
         ))}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 mr-1">Texture</span>
+        <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0 ml-1">Texture</span>
         {TEXTURE_OPTIONS.filter(t => wardrobeWithPhotos.some(i => i.texture === t)).map((t) => (
           <button
             key={t}
             onClick={() => toggleTexture(t)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
               activeTextures.has(t)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -565,8 +565,8 @@ export default function Wardrobe() {
           </button>
         ))}
         {hasFilters && (
-          <button onClick={clearFilters} className="text-xs text-muted-foreground underline ml-1">
-            Clear filters
+          <button onClick={clearFilters} className="shrink-0 text-[10px] sm:text-xs text-muted-foreground underline ml-1">
+            Clear
           </button>
         )}
       </div>
