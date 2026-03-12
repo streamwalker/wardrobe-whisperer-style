@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   isDressShirt,
   isFormalItem,
-  isValidDressShirtPairing,
+  isValidOutfitPairing,
 } from "../_shared/dress-shirt-rules.ts";
 
 const corsHeaders = {
@@ -89,6 +89,10 @@ HARD STYLE RULES (always flag as incompatible):
   FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
   BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
   Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
+- SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
+- JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
+- HOODIES are strictly casual — NEVER pair with suits, dress shoes, or formal accessories.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured.
@@ -246,6 +250,10 @@ HARD STYLE RULES:
   FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
   BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket.
   Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
+- SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
+- JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
+- HOODIES are strictly casual — NEVER pair with suits, dress shoes, or formal accessories.
 
 PROPORTION & SILHOUETTE RULES:
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered and vice versa.
@@ -392,7 +400,7 @@ Return exactly 3 complete outfits. Each must include the anchor item plus items 
         const outfitItems = ids
           .map((id: string) => itemsById.get(id))
           .filter(Boolean);
-        return outfitItems.length === ids.length && isValidDressShirtPairing(outfitItems);
+        return outfitItems.length === ids.length && isValidOutfitPairing(outfitItems);
       })
       .slice(0, 3);
 
