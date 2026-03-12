@@ -20,6 +20,7 @@ const NAV_ITEMS = [
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex min-h-screen flex-col bg-mesh">
