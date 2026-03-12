@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers } from "lucide-react";
+import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
 export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex min-h-screen flex-col bg-mesh">
@@ -32,23 +34,32 @@ export default function AppLayout() {
           >
             Drip Slayer
           </h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95">
-                <Plus className="h-5 w-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 glass-card border-border/30">
-              <DropdownMenuItem onClick={() => navigate("/wardrobe/add")} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Single Item
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/wardrobe/batch")} className="gap-2">
-                <Layers className="h-4 w-4" />
-                Batch Upload
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="flex h-9 w-9 items-center justify-center rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors hover:shadow-neon"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95">
+                  <Plus className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 glass-card border-border/30">
+                <DropdownMenuItem onClick={() => navigate("/wardrobe/add")} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Single Item
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/wardrobe/batch")} className="gap-2">
+                  <Layers className="h-4 w-4" />
+                  Batch Upload
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
