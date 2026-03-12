@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   isDressShirt,
   isFormalItem,
-  isValidDressShirtPairing,
+  isValidOutfitPairing,
 } from "../_shared/dress-shirt-rules.ts";
 
 const corsHeaders = {
