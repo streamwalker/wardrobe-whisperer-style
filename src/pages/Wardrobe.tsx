@@ -585,7 +585,7 @@ export default function Wardrobe() {
                   <span className="text-sm font-semibold text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <div className="flex gap-2 sm:gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
                   {cat.value === 'shoes' ? (
                     <>
                       {SHOE_SUBCATEGORIES.map((sub) => {
