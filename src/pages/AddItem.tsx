@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
@@ -33,7 +34,6 @@ export default function AddItem() {
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("");
@@ -97,7 +97,6 @@ export default function AddItem() {
     if (!file) return;
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
-    // Auto-analyze on photo selection
     analyzePhoto(file);
   };
 
@@ -167,7 +166,7 @@ export default function AddItem() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground">
+        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground glass-card rounded-full p-2 hover:shadow-neon transition-shadow">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h2 className="font-display text-xl font-semibold">Add Item</h2>
@@ -195,14 +194,14 @@ export default function AddItem() {
         <div className="flex w-full gap-3">
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-6 transition-colors hover:bg-muted/60"
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
           >
             <Camera className="h-8 w-8 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Take Photo</span>
           </button>
           <button
             onClick={() => galleryInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-6 transition-colors hover:bg-muted/60"
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
           >
             <ImageIcon className="h-8 w-8 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Choose Photo</span>
@@ -225,16 +224,16 @@ export default function AddItem() {
         onChange={handleFileSelect}
       />
 
-      {/* Re-analyze button (if user wants to retry) */}
+      {/* Re-analyze button */}
       {photoPreview && !analyzing && (
-        <Button onClick={() => photoFile && analyzePhoto(photoFile)} variant="secondary" className="w-full">
+        <Button onClick={() => photoFile && analyzePhoto(photoFile)} variant="neon" className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
           Re-analyze
         </Button>
       )}
 
       {/* Form fields */}
-      <div className="space-y-4">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Navy Chinos" />
@@ -341,11 +340,12 @@ export default function AddItem() {
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium capitalize transition-all",
                   styleTags.includes(tag)
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-secondary text-secondary-foreground"
-                }`}
+                    ? "neon-gradient-cyan-pink text-white shadow-neon"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                )}
               >
                 {tag}
               </button>

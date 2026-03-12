@@ -233,6 +233,50 @@
   .gradient-blob-purple {
     background: radial-gradient(circle, hsl(270 60% 60% / 0.4), hsl(270 60% 60% / 0));
   }
+
+  /* Glass input for form fields */
+  .glass-input {
+    @apply backdrop-blur-lg border;
+    background: hsl(var(--card) / 0.4);
+    border-color: hsl(var(--border) / 0.5);
+  }
+  .dark .glass-input {
+    background: hsl(var(--card) / 0.25);
+    border-color: hsl(220 15% 92% / 0.06);
+  }
+
+  /* Neon gradient ring for avatars/icons */
+  .neon-ring {
+    background: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-pink)));
+    padding: 2px;
+  }
+
+  /* Hover lift micro-interaction */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.2);
+  }
+
+  /* Empty state floating blob decoration */
+  .empty-state-blob {
+    @apply relative;
+  }
+  .empty-state-blob::before {
+    content: '';
+    @apply absolute rounded-full;
+    width: 120px;
+    height: 120px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, hsl(var(--neon-cyan) / 0.15), hsl(var(--neon-pink) / 0.1), transparent 70%);
+    filter: blur(30px);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 @keyframes blob-float {

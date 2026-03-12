@@ -79,7 +79,6 @@ export default function BatchAddItems() {
     }));
 
     setItems((prev) => [...prev, ...newItems]);
-    // Reset so the same files can be re-selected
     e.target.value = "";
   };
 
@@ -290,7 +289,7 @@ export default function BatchAddItems() {
     >
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground">
+        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground glass-card rounded-full p-2 hover:shadow-neon transition-shadow">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
@@ -302,7 +301,7 @@ export default function BatchAddItems() {
       {/* Drag overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-none">
-          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary p-12">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary p-12 glass-card">
             <ImageIcon className="h-12 w-12 text-primary" />
             <p className="text-lg font-medium text-primary">Drop photos here</p>
           </div>
@@ -313,14 +312,14 @@ export default function BatchAddItems() {
       <div className="flex gap-3">
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-5 transition-colors hover:bg-muted/60"
+          className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-5 transition-all hover:shadow-neon"
         >
           <ImageIcon className="h-7 w-7 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Choose Photos</span>
         </button>
         <button
           onClick={() => cameraInputRef.current?.click()}
-          className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-5 transition-colors hover:bg-muted/60"
+          className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-5 transition-all hover:shadow-neon"
         >
           <Camera className="h-7 w-7 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Take Photo</span>
@@ -348,7 +347,7 @@ export default function BatchAddItems() {
         <div className="flex gap-2">
           {unanalyzedCount > 0 && (
             <Button
-              variant="secondary"
+              variant="neon"
               size="sm"
               className="gap-1.5"
               onClick={handleAnalyzeAll}
@@ -367,8 +366,10 @@ export default function BatchAddItems() {
       {/* Item cards grid */}
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ImageIcon className="h-12 w-12 text-muted-foreground/40 mb-3" />
-          <p className="text-sm text-muted-foreground">Select photos to get started</p>
+          <div className="empty-state-blob">
+            <ImageIcon className="h-12 w-12 text-muted-foreground/40 mb-3 relative z-10" />
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">Select photos to get started</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -392,7 +393,7 @@ export default function BatchAddItems() {
             <Button
               onClick={handleSaveAll}
               disabled={savingAll || readyToSave === 0}
-              className="w-full shadow-lg"
+              className="w-full shadow-lg neon-gradient-cyan-pink text-white shadow-neon"
               size="lg"
             >
               {savingAll ? (
@@ -424,7 +425,7 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
 
   if (item.saved) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-3">
+      <div className="flex items-center gap-3 rounded-xl glass-card p-3">
         <img src={item.preview} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{item.name}</p>
@@ -436,7 +437,7 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
   }
 
   return (
-    <div className="rounded-xl border bg-card overflow-hidden">
+    <div className="rounded-xl glass-card gradient-border overflow-hidden">
       {/* Top bar: thumbnail + name + actions */}
       <div className="flex items-center gap-3 p-3">
         <img
@@ -466,7 +467,7 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
             </Select>
             {!item.analyzed && (
               <Button
-                variant="secondary"
+                variant="neon"
                 size="sm"
                 className="h-7 text-xs gap-1 px-2"
                 onClick={onAnalyze}
@@ -486,13 +487,13 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
       {/* Expandable details */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-xs text-muted-foreground px-3 py-1.5 border-t bg-muted/20 text-center hover:bg-muted/40 transition-colors"
+        className="w-full text-xs text-muted-foreground px-3 py-1.5 border-t border-border/30 bg-muted/10 text-center hover:bg-muted/20 transition-colors"
       >
         {expanded ? "Hide details" : "Show details"}
       </button>
 
       {expanded && (
-        <div className="px-3 pb-3 pt-2 space-y-3 border-t">
+        <div className="px-3 pb-3 pt-2 space-y-3 border-t border-border/30">
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Color</Label>
@@ -528,9 +529,9 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
                   key={tag}
                   onClick={() => onToggleTag(tag)}
                   className={cn(
-                    "rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize transition-colors",
+                    "rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize transition-all",
                     item.styleTags.includes(tag)
-                      ? "bg-accent text-accent-foreground"
+                      ? "neon-gradient-cyan-pink text-white shadow-neon"
                       : "bg-secondary text-secondary-foreground"
                   )}
                 >

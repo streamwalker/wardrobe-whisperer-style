@@ -98,7 +98,6 @@ export default function Shop() {
       return;
     }
 
-    // Step 1: Upload & analyze
     setAnalyzing(true);
     let item: AnalyzedItem | null = null;
     try {
@@ -143,7 +142,6 @@ export default function Shop() {
       setAnalyzing(false);
     }
 
-    // Step 2: Match with wardrobe
     if (!item) return;
     setMatching(true);
     try {
@@ -234,7 +232,7 @@ export default function Shop() {
 
           {/* Analyzed badge */}
           {analyzedItem && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-3 glass-panel gradient-border rounded-xl p-3 flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{analyzedItem.category}</Badge>
               <div className="flex items-center gap-1.5">
                 <div
@@ -270,17 +268,18 @@ export default function Shop() {
           )}
         </div>
       ) : (
-        <div className="flex w-full gap-3">
+        <div className="flex w-full gap-3 relative">
+          <div className="gradient-blob gradient-blob-cyan absolute -top-8 -left-8 w-32 h-32 opacity-30" />
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-8 transition-colors hover:bg-muted/60"
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-8 transition-all hover:shadow-neon relative z-10"
           >
             <Camera className="h-8 w-8 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">Take Photo</span>
           </button>
           <button
             onClick={() => galleryInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-muted/40 p-8 transition-colors hover:bg-muted/60"
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-8 transition-all hover:shadow-neon relative z-10"
           >
             <ImageIcon className="h-8 w-8 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">Upload</span>
@@ -293,7 +292,7 @@ export default function Shop() {
 
       {/* Action button */}
       {photoPreview && outfits.length === 0 && (
-        <Button onClick={handleAnalyzeAndMatch} disabled={isProcessing} className="w-full gap-2" size="lg">
+        <Button onClick={handleAnalyzeAndMatch} disabled={isProcessing} variant="neon" className="w-full gap-2" size="lg">
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -315,7 +314,7 @@ export default function Shop() {
             Outfit Ideas with This Item
           </h3>
           {outfits.map((outfit, idx) => (
-            <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
+            <div key={idx} className="rounded-xl glass-card hover-lift p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-display text-base font-semibold text-card-foreground">
                   {outfit.name}
@@ -329,7 +328,7 @@ export default function Shop() {
                 {outfit.item_ids.map((id) => {
                   if (id === "shop-item") {
                     return (
-                      <div key={id} className="shrink-0 w-20 rounded-lg overflow-hidden border-2 border-primary bg-secondary">
+                      <div key={id} className="shrink-0 w-20 rounded-lg overflow-hidden border-2 border-primary glass-card">
                         <div className="aspect-square w-full overflow-hidden">
                           <img src={photoPreview!} alt="Shopping item" className="h-full w-full object-cover" />
                         </div>
@@ -342,7 +341,7 @@ export default function Shop() {
                   const wi = getItemById(id);
                   if (!wi) return null;
                   return (
-                    <div key={id} className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary">
+                    <div key={id} className="shrink-0 w-20 rounded-lg overflow-hidden glass-card">
                       <div className="aspect-square w-full overflow-hidden" style={{ backgroundColor: wi.color_hex }}>
                         {wi.photo && (
                           <img src={wi.photo} alt={wi.name} className="h-full w-full object-cover" loading="lazy" />
