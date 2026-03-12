@@ -396,7 +396,7 @@ Return exactly 3 complete outfits. Each must include the anchor item plus items 
         const outfitItems = ids
           .map((id: string) => itemsById.get(id))
           .filter(Boolean);
-        return outfitItems.length === ids.length && isValidDressShirtPairing(outfitItems);
+        return outfitItems.length === ids.length && isValidOutfitPairing(outfitItems);
       })
       .slice(0, 3);
 
