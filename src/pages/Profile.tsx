@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const STYLE_MOODS = ["neutral", "bold", "luxury", "streetwear", "classic", "minimalist"];
 const SKIN_TONES = ["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Dark"];
@@ -163,10 +164,12 @@ export default function Profile() {
       </div>
 
       {/* Name & Mood */}
-      <div className="rounded-lg border bg-card p-5 space-y-3">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-semibold shrink-0">
-            {initial}
+          <div className="neon-ring rounded-full shrink-0">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-background text-foreground text-xl font-semibold">
+              {initial}
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             {editingName ? (
@@ -203,7 +206,7 @@ export default function Profile() {
       </div>
 
       {/* Style & Appearance */}
-      <div className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <SectionHeader label="Style & Appearance" section="style" fields={["style_mood", "skin_tone", "body_type"]} />
 
         {editingSection === "style" ? (
@@ -255,7 +258,7 @@ export default function Profile() {
       </div>
 
       {/* Color Preferences */}
-      <div className="rounded-lg border bg-card p-5 space-y-3">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
         <SectionHeader label="Color Preferences" section="colors" fields={["color_preferences"]} />
 
         {editingSection === "colors" ? (
@@ -264,11 +267,12 @@ export default function Profile() {
               <button
                 key={color}
                 onClick={() => toggleColorPref(color)}
-                className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium border transition-all",
                   (formData.color_preferences ?? []).includes(color)
-                    ? "bg-primary text-primary-foreground border-primary"
+                    ? "neon-gradient-cyan-pink text-white border-transparent shadow-neon"
                     : "bg-muted text-muted-foreground border-border hover:border-primary/50"
-                }`}
+                )}
               >
                 {color}
               </button>
@@ -287,7 +291,7 @@ export default function Profile() {
       </div>
 
       {/* Body Measurements */}
-      <div className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <SectionHeader label="Body Measurements" section="measurements" fields={["height", "weight", "shoulder", "waist", "thigh", "inseam"]} />
 
         {editingSection === "measurements" ? (
@@ -331,7 +335,7 @@ export default function Profile() {
       </div>
 
       {/* Sizing */}
-      <div className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <SectionHeader label="Suit & Shoe Sizing" section="sizing" fields={["suit_size", "shoe_size"]} />
 
         {editingSection === "sizing" ? (
@@ -373,7 +377,7 @@ export default function Profile() {
       <ShareSection userId={user?.id} />
 
       {/* GDPR: Data Export & Account Deletion */}
-      <div className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Data & Privacy</p>
         <p className="text-sm text-muted-foreground">
           Export all your data or permanently delete your account. See our{" "}
@@ -503,7 +507,7 @@ function ShareSection({ userId }: { userId?: string }) {
   if (isLoading) return <Skeleton className="h-24 w-full rounded-lg" />;
 
   return (
-    <div className="rounded-lg border bg-card p-5 space-y-3">
+    <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Wardrobe Sharing</p>
         {activeShare ? (

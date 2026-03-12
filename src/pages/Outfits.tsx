@@ -69,7 +69,6 @@ export default function Outfits() {
     }
   };
 
-  // Fetch user-added wardrobe items so saved outfits can resolve them
   const { data: dbItems } = useQuery({
     queryKey: ["wardrobe-items", user?.id],
     queryFn: async () => {
@@ -149,8 +148,10 @@ export default function Outfits() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-          <LogIn className="h-8 w-8 text-muted-foreground" />
+        <div className="empty-state-blob">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+            <LogIn className="h-8 w-8 text-muted-foreground" />
+          </div>
         </div>
         <div>
           <h2 className="font-display text-2xl font-semibold text-foreground">Saved Outfits</h2>
@@ -176,8 +177,10 @@ export default function Outfits() {
   if (outfits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-          <Heart className="h-8 w-8 text-muted-foreground" />
+        <div className="empty-state-blob">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+            <Heart className="h-8 w-8 text-muted-foreground" />
+          </div>
         </div>
         <div>
           <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
@@ -202,6 +205,7 @@ export default function Outfits() {
           size="sm"
           onClick={handleExportPdf}
           disabled={exporting || filteredOutfits.length === 0}
+          className="shadow-neon"
         >
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
           Export PDF
@@ -232,7 +236,7 @@ export default function Outfits() {
       ) : null}
 
       {filteredOutfits.map((outfit) => (
-        <div key={outfit.id} className="rounded-xl glass-card p-4 space-y-3">
+        <div key={outfit.id} className="rounded-xl glass-card gradient-border hover-lift p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-semibold text-card-foreground">
               {outfit.name}
@@ -273,7 +277,7 @@ export default function Outfits() {
               return (
                 <div
                   key={id}
-                  className="shrink-0 w-20 rounded-lg overflow-hidden border bg-secondary"
+                  className="shrink-0 w-20 rounded-lg overflow-hidden glass-card"
                 >
                   <div
                     className="aspect-square w-full overflow-hidden"
