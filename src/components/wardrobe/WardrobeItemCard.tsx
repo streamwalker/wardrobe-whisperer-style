@@ -29,9 +29,9 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         </div>
       )}
 
-      {/* Action buttons for user-added items */}
+      {/* Action buttons for user-added items — always visible on touch, hover on desktop */}
       {(onDelete || onEdit) && !selected && (
-        <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <div
               className="h-6 w-6 rounded-full bg-card/90 backdrop-blur-sm border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
