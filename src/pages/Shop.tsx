@@ -1,13 +1,15 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check } from "lucide-react";
+import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useQueryClient } from "@tanstack/react-query";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface AnalyzedItem {
   name: string;
