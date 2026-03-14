@@ -42,7 +42,17 @@ import { Input } from "@/components/ui/input";
 export default function Wardrobe() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Handle checkout success redirect
   const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Welcome to Pro! 🎉 Your subscription is now active.");
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      searchParams.delete("checkout");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
   const [draggingItem, setDraggingItem] = useState<WardrobeItem | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const activeCategory = (searchParams.get("cat") as WardrobeCategory) || "all";
