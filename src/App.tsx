@@ -11,6 +11,7 @@ import BatchAddItems from "@/pages/BatchAddItems";
 import Shop from "@/pages/Shop";
 import Outfits from "@/pages/Outfits";
 import Profile from "@/pages/Profile";
+import Pricing from "@/pages/Pricing";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import SharedWardrobe from "@/pages/SharedWardrobe";
