@@ -213,11 +213,36 @@ export default function Shop() {
     <div className="space-y-6 pb-8">
       {/* Header */}
       <div>
-        <h2 className="font-display text-2xl font-semibold text-foreground">Shopping Mode</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-display text-2xl font-semibold text-foreground">Shopping Mode</h2>
+          {!isPro && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Pro</Badge>}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Snap a photo of something you're eyeing and see how it pairs with your wardrobe.
         </p>
       </div>
+
+      {/* Pro gate */}
+      {!isPro ? (
+        <div className="flex flex-col items-center justify-center gap-5 py-12 text-center">
+          <div className="empty-state-blob">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+              <Crown className="h-8 w-8 text-neon-cyan" />
+            </div>
+          </div>
+          <div>
+            <h3 className="font-display text-xl font-semibold text-foreground">Pro Feature</h3>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+              Shopping Mode uses AI to analyze clothing items and match them with your wardrobe. Upgrade to Pro to unlock this feature.
+            </p>
+          </div>
+          <Button variant="neon" onClick={() => navigate("/pricing")} className="gap-2">
+            <Crown className="h-4 w-4" />
+            Upgrade to Pro
+          </Button>
+        </div>
+      ) : (
+        <>
 
       {/* Photo area */}
       {photoPreview ? (
