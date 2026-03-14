@@ -394,7 +394,6 @@ export default function Shop() {
             Try Another Item
           </Button>
         </div>
-        </div>
       )}
       </>
       )}
