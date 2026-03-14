@@ -22,6 +22,7 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { isPro } = useSubscription();
 
   return (
     <div className="flex min-h-screen flex-col bg-mesh">
