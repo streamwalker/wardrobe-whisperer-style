@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers, Sun, Moon } from "lucide-react";
+import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers, Sun, Moon, Crown } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import {
