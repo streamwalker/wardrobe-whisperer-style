@@ -45,6 +45,7 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isPro, currentPlan, subscription } = useSubscription();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [editingSection, setEditingSection] = useState<string | null>(null);
