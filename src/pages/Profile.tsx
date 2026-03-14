@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2 } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isPro, currentPlan, subscription } = useSubscription();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -203,6 +205,51 @@ export default function Profile() {
             <p className="text-sm text-muted-foreground capitalize">{profile?.style_mood ?? "neutral"}</p>
           </div>
         </div>
+      </div>
+
+      {/* Subscription */}
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Subscription</p>
+          {isPro && <Badge className="neon-gradient-cyan-pink text-white border-0 gap-1"><Crown className="h-3 w-3" /> Pro</Badge>}
+        </div>
+        {isPro ? (
+          <div className="space-y-3">
+            <p className="text-sm text-card-foreground">
+              You're on the <span className="font-semibold capitalize">{currentPlan}</span> plan.
+              {subscription?.subscription_end && (
+                <span className="text-muted-foreground"> Renews {new Date(subscription.subscription_end).toLocaleDateString()}</span>
+              )}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={async () => {
+                try {
+                  const { data, error } = await supabase.functions.invoke("customer-portal");
+                  if (error) throw error;
+                  if (data?.url) window.open(data.url, "_blank");
+                } catch (err: any) {
+                  toast.error(err.message || "Failed to open billing portal");
+                }
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Manage Subscription
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              You're on the Free plan. Upgrade to unlock unlimited AI styling.
+            </p>
+            <Button size="sm" variant="neon" className="gap-1.5" onClick={() => navigate("/pricing")}>
+              <Crown className="h-3.5 w-3.5" />
+              Upgrade to Pro
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Style & Appearance */}

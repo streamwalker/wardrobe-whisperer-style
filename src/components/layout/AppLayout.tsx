@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers, Sun, Moon } from "lucide-react";
+import { ShoppingBag, Heart, User, Grid3X3, Plus, Layers, Sun, Moon, Crown } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +22,7 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { isPro } = useSubscription();
 
   return (
     <div className="flex min-h-screen flex-col bg-mesh">
@@ -35,6 +37,15 @@ export default function AppLayout() {
             Drip Slayer
           </h1>
           <div className="flex items-center gap-2">
+            {!isPro && (
+              <button
+                onClick={() => navigate("/pricing")}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium neon-gradient-cyan-pink text-white shadow-neon transition-transform hover:scale-105 active:scale-95"
+              >
+                <Crown className="h-3.5 w-3.5" />
+                Pro
+              </button>
+            )}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="flex h-9 w-9 items-center justify-center rounded-full glass-card text-muted-foreground hover:text-foreground transition-colors hover:shadow-neon"

@@ -1,13 +1,15 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check } from "lucide-react";
+import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useQueryClient } from "@tanstack/react-query";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface AnalyzedItem {
   name: string;
@@ -36,6 +38,8 @@ export default function Shop() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { isPro } = useSubscription();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch user's wardrobe items from DB
@@ -209,11 +213,36 @@ export default function Shop() {
     <div className="space-y-6 pb-8">
       {/* Header */}
       <div>
-        <h2 className="font-display text-2xl font-semibold text-foreground">Shopping Mode</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-display text-2xl font-semibold text-foreground">Shopping Mode</h2>
+          {!isPro && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Pro</Badge>}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Snap a photo of something you're eyeing and see how it pairs with your wardrobe.
         </p>
       </div>
+
+      {/* Pro gate */}
+      {!isPro ? (
+        <div className="flex flex-col items-center justify-center gap-5 py-12 text-center">
+          <div className="empty-state-blob">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+              <Crown className="h-8 w-8 text-neon-cyan" />
+            </div>
+          </div>
+          <div>
+            <h3 className="font-display text-xl font-semibold text-foreground">Pro Feature</h3>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+              Shopping Mode uses AI to analyze clothing items and match them with your wardrobe. Upgrade to Pro to unlock this feature.
+            </p>
+          </div>
+          <Button variant="neon" onClick={() => navigate("/pricing")} className="gap-2">
+            <Crown className="h-4 w-4" />
+            Upgrade to Pro
+          </Button>
+        </div>
+      ) : (
+        <>
 
       {/* Photo area */}
       {photoPreview ? (
@@ -365,6 +394,8 @@ export default function Shop() {
             Try Another Item
           </Button>
         </div>
+      )}
+      </>
       )}
     </div>
   );
