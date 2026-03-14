@@ -38,6 +38,8 @@ export default function Shop() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { isPro } = useSubscription();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch user's wardrobe items from DB
