@@ -250,6 +250,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_shared_profile: {
+        Args: { p_token: string }
+        Returns: {
+          display_name: string
+        }[]
+      }
+      get_shared_wardrobe: {
+        Args: { p_token: string }
+        Returns: {
+          category: string
+          color_hex: string
+          description: string
+          id: string
+          is_featured: boolean
+          is_new: boolean
+          name: string
+          pattern: string
+          photo_url: string
+          primary_color: string
+          style_tags: string[]
+          subcategory: string
+          texture: string
+        }[]
+      }
       redeem_wardrobe_transfer: { Args: { p_code: string }; Returns: number }
     }
     Enums: {
