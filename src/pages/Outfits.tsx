@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { Heart, Trash2, Loader2, LogIn, FileDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -69,32 +69,7 @@ export default function Outfits() {
     }
   };
 
-  const { data: dbItems } = useQuery({
-    queryKey: ["wardrobe-items", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("wardrobe_items")
-        .select("*")
-        .eq("user_id", user!.id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const userItems: WardrobeItem[] = (dbItems || []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    category: row.category as WardrobeCategory,
-    primary_color: row.primary_color,
-    color_hex: row.color_hex || "#888888",
-    style_tags: (row.style_tags || []) as WardrobeItem["style_tags"],
-    is_new: row.is_new ?? false,
-    is_featured: row.is_featured ?? false,
-    photo: row.photo_url || undefined,
-  }));
-
-  const allItems = useMemo(() => userItems, [userItems]);
+  const { items: allItems } = useWardrobeItems(user?.id);
   const getItemById = (id: string) => allItems.find((i) => i.id === id);
 
   const { data: outfits = [], isLoading } = useQuery({
