@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { useQueryClient } from "@tanstack/react-query";
-import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
-import { useQuery } from "@tanstack/react-query";
+import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -42,31 +42,8 @@ export default function Shop() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch user's wardrobe items from DB
-  const { data: dbItems } = useQuery({
-    queryKey: ["wardrobe-items", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("wardrobe_items")
-        .select("*")
-        .eq("user_id", user!.id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const wardrobeItems: WardrobeItem[] = (dbItems || []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    category: row.category as WardrobeCategory,
-    primary_color: row.primary_color,
-    color_hex: row.color_hex || "#888888",
-    style_tags: (row.style_tags || []) as WardrobeItem["style_tags"],
-    is_new: row.is_new ?? false,
-    is_featured: row.is_featured ?? false,
-    photo: row.photo_url || undefined,
-  }));
+  // Fetch user's wardrobe items (shared hook handles DB->client mapping + default seeding)
+  const { items: wardrobeItems } = useWardrobeItems(user?.id);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
