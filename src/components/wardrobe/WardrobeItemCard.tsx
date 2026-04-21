@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon } from "lucide-react";
+import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import EditItemPopover, { type EditItemSaveUpdates } from "./EditItemPopover";
 import DeleteItemPopover from "./DeleteItemPopover";
