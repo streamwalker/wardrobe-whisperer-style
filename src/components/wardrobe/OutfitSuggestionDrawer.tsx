@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import OutfitPreviewBoard from "./OutfitPreviewBoard";
+import OutfitCompareView from "./OutfitCompareView";
 import CompleteLookView from "./CompleteLookView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface OutfitSuggestion {
   name: string;
