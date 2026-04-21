@@ -200,9 +200,11 @@ export default function Outfits() {
     }
   };
 
+  const filteredOutfits = useMemo(
     () => activeMood === "all" ? outfits : outfits.filter((o) => o.mood === activeMood),
     [outfits, activeMood]
   );
+
 
   const onboardingReady = !!user?.id && !isLoading && outfits.length > 0;
   const onboarding = useOnboarding({
