@@ -1,62 +1,52 @@
 
 
 ## Goal
-Let users optionally upload/take a **back photo** of a garment alongside the front photo, so the wardrobe captures the full essence of an item (back details inform fit/style matching).
+Stop the Edit dialog from disappearing off-screen on long wardrobe pages. Render the edit form **anchored to the card being edited** (Popover) instead of a centered modal floating somewhere far from the user's tap.
 
 ## Approach
 
-### 1. Database — add `photo_back_url` column
-New migration adds an optional `photo_back_url TEXT` column to `wardrobe_items`. Nullable, no default — fully backward compatible (existing items just don't have a back photo).
+### 1. Replace the centered Dialog with an anchored Popover
+Convert `EditItemDialog` from a `Dialog` (centered, fixed-positioned modal) to a `Popover` (anchored to the trigger). Radix's `Popover` from our existing `src/components/ui/popover.tsx` handles all the smart placement: it auto-flips above/below based on viewport space, stays within the visible area, and is anchored to the element that opened it (the card's pencil icon).
 
-### 2. AddItem (single-item flow)
-After the front photo is captured, reveal a small secondary "Add back photo (optional)" slot beneath it with two buttons:
-- **Camera** → opens rear camera (capture="environment")
-- **Choose** → file picker
+This solves the bug directly: the form opens **right next to the card the user tapped**, never below the fold.
 
-Once captured, show a thumbnail with a small "Remove" button. Both photos upload to the `wardrobe-photos` bucket on save; the front URL goes to `photo_url`, back URL to `photo_back_url`.
+### 2. Per-card Popover trigger
+Move the popover ownership from the page level (`Wardrobe.tsx`) into `WardrobeItemCard` so the trigger and content live together. The pencil icon on each card becomes the `PopoverTrigger`, and a `PopoverContent` holding the edit form opens anchored to it.
 
-The front photo continues to be the one sent to `analyze-clothing` (AI auto-tagging is anchored on the front view, unchanged behavior).
+- `Wardrobe.tsx` no longer holds `editingItem` state; instead each card manages its own open/close.
+- `onEdit` prop is replaced by an `onSave` prop passed down (the existing `handleEditItem(itemId, updates)` callback), so the page still owns the mutation.
+- The `DraggableItemCard` wrapper just forwards the new prop.
 
-### 3. BatchAddItems (batch flow)
-Each `BatchItemCard` gets a small "Add back" affordance in its expanded details section. Tapping it opens a per-item file/camera picker. Stores `backFile` + `backPreview` per item; uploads alongside the front on save.
+### 3. New component: `EditItemPopover`
+Refactor `EditItemDialog.tsx` into `EditItemPopover.tsx`:
+- Same form fields, same validation, same `onSave` shape (no behavior changes — just the shell).
+- Wraps content in `<Popover>` / `<PopoverTrigger asChild>` / `<PopoverContent>`.
+- `PopoverContent` sized `w-[22rem] max-w-[calc(100vw-1.5rem)] max-h-[80vh] overflow-y-auto` with `align="start"` and `side="bottom"` (Radix auto-flips to top when there's no room below — exactly the behavior the user wants).
+- The pencil icon is the `PopoverTrigger asChild`, preserving the existing styling.
+- Clicking outside or pressing Escape closes it (Radix default).
+- The save button stays sticky at the bottom of the popover content.
 
-To keep batch UX uncluttered, the back-photo control lives inside the **expanded details** panel (not the collapsed top bar), so users only see it when actively reviewing an item.
+Form contents (front/back photo grid, name, category, subcategory, color, hex, pattern, texture, style tags) remain identical — just rendered inside `PopoverContent` instead of `DialogContent`.
 
-### 4. EditItemDialog
-Add a second photo slot below the existing front-photo slot:
-- Shows current `photo_back_url` if present
-- "Replace" / "Camera" / "Remove back" buttons
-- Plumbed through the existing `onSave` callback as `newBackPhotoFile?: File` and `removeBackPhoto?: boolean`
+### 4. Cleanup in Wardrobe.tsx
+- Remove `editingItem` state and the trailing `<EditItemDialog>` block.
+- Remove the `EditItemDialog` import.
+- Pass `onSave={(updates) => handleEditItem(item.id, updates)}` to each card.
+- The lightbox dialog inside `WardrobeItemCard` stays as-is (it's a brief image viewer, fine as a centered modal).
 
-Wardrobe.tsx's update handler uploads the new back photo (if provided) and updates `photo_back_url` accordingly.
-
-### 5. WardrobeItem type + mapping
-- `src/lib/wardrobe-data.ts`: add `photo_back?: string` to `WardrobeItem` interface
-- `src/hooks/useWardrobeItems.ts`: map `row.photo_back_url` → `photo_back`
-
-### 6. Display the back photo (lightweight)
-On `WardrobeItemCard`, if `photo_back` exists, show a tiny corner badge/icon (e.g. flip icon) indicating a back photo is available. Tapping the card's existing photo can flip-swap to the back view (simple onClick toggle, no fancy 3D flip needed). This is the only visual surface change — everything else uses `photo_url` as before.
-
-### 7. Styling/matching impact (intentional out of scope for v1)
-The back photo is captured and stored now, but the matcher/AI analysis still uses the front. A follow-up task can extend `analyze-clothing` to optionally accept both URLs and produce richer tags (e.g., back graphics, fit cues). Flagging as a future enhancement keeps this PR focused.
-
-## Files touched
-- **New migration**: `supabase/migrations/<ts>_add_photo_back_url.sql` — `ALTER TABLE wardrobe_items ADD COLUMN photo_back_url TEXT`
-- `src/lib/wardrobe-data.ts` — add `photo_back?: string` to type
-- `src/hooks/useWardrobeItems.ts` — map new column
-- `src/pages/AddItem.tsx` — back-photo picker + upload on save
-- `src/pages/BatchAddItems.tsx` — per-item back picker in expanded section + upload on save
-- `src/components/wardrobe/EditItemDialog.tsx` — back photo slot + plumbing
-- `src/pages/Wardrobe.tsx` — handle `newBackPhotoFile` / `removeBackPhoto` in the edit save handler
-- `src/components/wardrobe/WardrobeItemCard.tsx` — small "back available" indicator + tap-to-flip preview
-- **Memory update**: append a short note to `mem://features/wardrobe/item-metadata` documenting the optional back photo
+### 5. Files touched
+- **New**: `src/components/wardrobe/EditItemPopover.tsx` (refactored from EditItemDialog)
+- **Delete**: `src/components/wardrobe/EditItemDialog.tsx`
+- `src/components/wardrobe/WardrobeItemCard.tsx` — pencil icon becomes Popover trigger; accept `onSave` prop
+- `src/components/wardrobe/DraggableItemCard.tsx` — forward `onSave` prop
+- `src/pages/Wardrobe.tsx` — remove `editingItem` state + dialog mount; pass `onSave` to cards instead of `onEdit`
 
 ## Verification checklist
-- Add an item with both front + back photos → both URLs persist; both visible in edit dialog.
-- Add an item with front only → back column is null; UI still works (no back indicator).
-- Edit an existing item and add a back photo → saves correctly.
-- Edit an existing item and remove the back photo → column is cleared.
-- Batch add: front-only and front+back items in the same batch save correctly.
-- Tap the photo on a card with a back photo → flips to back view, tap again → back to front.
-- Existing items (no back photo) render unchanged.
+- Tap the pencil icon on an item near the **top** of the wardrobe → form opens below the card.
+- Tap the pencil icon on an item near the **bottom** of the page → form auto-flips and opens above the card; save button remains visible.
+- Tap on a card mid-list, scroll the wardrobe → popover stays anchored to the card.
+- Save changes → mutation runs, popover closes, toast shows, list updates.
+- Press Escape or tap outside → popover closes without saving.
+- On mobile width, popover width caps at `calc(100vw - 1.5rem)` and content scrolls internally if taller than 80vh.
+- Front/back photo controls, lightbox, drag-and-drop, delete, and selection all still work unchanged.
 
