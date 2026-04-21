@@ -56,6 +56,10 @@ export default function BatchAddItems() {
   const [savingAll, setSavingAll] = useState(false);
   const [analyzingAll, setAnalyzingAll] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [newlyAddedItems, setNewlyAddedItems] = useState<WardrobeItem[]>([]);
+
+  const { items: allItems } = useWardrobeItems(user?.id);
 
   if (!authLoading && !user) {
     navigate("/auth", { replace: true });
