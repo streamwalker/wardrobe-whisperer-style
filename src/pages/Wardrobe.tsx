@@ -488,6 +488,7 @@ export default function Wardrobe() {
                                 onClick={() => selection.toggle(item)}
                                 onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
+                                onMatch={() => handleMatchSingle(item)}
                               />
                             </div>
                           ));
