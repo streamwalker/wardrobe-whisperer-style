@@ -56,6 +56,19 @@ export default function AddItem() {
   const [pattern, setPattern] = useState<string>("");
   const [texture, setTexture] = useState<string>("");
 
+  // Prefill from query params (e.g. /add?category=tops&name=White%20Oxford&hint=...)
+  useEffect(() => {
+    const qpCategory = searchParams.get("category");
+    const qpName = searchParams.get("name");
+    const qpHint = searchParams.get("hint");
+    if (qpCategory && (CATEGORIES as readonly string[]).includes(qpCategory)) {
+      setCategory(qpCategory);
+    }
+    if (qpName) setName(qpName);
+    if (qpHint) setDescription((prev) => (prev ? prev : qpHint));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const analyzePhoto = useCallback(async (file: File, backFile?: File | null) => {
     if (!user) return;
     setAnalyzing(true);
