@@ -266,19 +266,52 @@ export default function OnboardingTour({ open, onClose, steps }: Props) {
           style={{ backdropFilter: "blur(2px)" }}
         />
         {spotlight && (
-          <rect
-            x={spotlight.x}
-            y={spotlight.y}
-            width={spotlight.w}
-            height={spotlight.h}
-            rx="14"
-            ry="14"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="2"
-            className="animate-pulse"
-            style={{ filter: "drop-shadow(0 0 12px hsl(var(--primary) / 0.6))" }}
-          />
+          <>
+            {/* Outer glow ring — softly pulses outward */}
+            <rect
+              x={spotlight.x}
+              y={spotlight.y}
+              width={spotlight.w}
+              height={spotlight.h}
+              rx="14"
+              ry="14"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2"
+              style={{
+                transformOrigin: `${spotlight.x + spotlight.w / 2}px ${spotlight.y + spotlight.h / 2}px`,
+                transformBox: "fill-box" as any,
+                filter: "drop-shadow(0 0 14px hsl(var(--primary) / 0.55))",
+                animation: "onboarding-spotlight-halo 2.4s ease-in-out infinite",
+              }}
+            />
+            {/* Solid inner ring — stays put for clear framing */}
+            <rect
+              x={spotlight.x}
+              y={spotlight.y}
+              width={spotlight.w}
+              height={spotlight.h}
+              rx="14"
+              ry="14"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2"
+              style={{
+                filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.45))",
+                animation: "onboarding-spotlight-pulse 2.4s ease-in-out infinite",
+              }}
+            />
+            <style>{`
+              @keyframes onboarding-spotlight-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.78; }
+              }
+              @keyframes onboarding-spotlight-halo {
+                0%, 100% { opacity: 0.55; transform: scale(1); }
+                50% { opacity: 0.15; transform: scale(1.035); }
+              }
+            `}</style>
+          </>
         )}
       </svg>
 
