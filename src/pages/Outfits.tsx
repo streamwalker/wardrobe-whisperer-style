@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
-import { Heart, Trash2, Loader2, LogIn, FileDown } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,14 @@ import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { OUTFITS_TOUR_STEPS } from "@/components/onboarding/outfits-tour-steps";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+
+interface InspireOutfit {
+  name: string;
+  item_ids: string[];
+  explanation: string;
+  mood: string;
+}
 
 const MOOD_FILTERS = [
   { value: "all", label: "All", emoji: "🎯" },
