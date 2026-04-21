@@ -151,6 +151,76 @@ export default function OnboardingTour({ open, onClose }: Props) {
       }
     : null;
 
+  // Compute curved arrow path from popover edge -> spotlight edge
+  const POPOVER_EST_H = 200;
+  const arrow = (() => {
+    if (!spotlight || placement === "center") return null;
+
+    const popLeft = pos.left;
+    const popTop = pos.top;
+    const popRight = pos.left + POPOVER_WIDTH;
+    const popBottom = pos.top + POPOVER_EST_H;
+    const popCX = popLeft + POPOVER_WIDTH / 2;
+    const popCY = popTop + POPOVER_EST_H / 2;
+
+    const spotCX = spotlight.x + spotlight.w / 2;
+    const spotCY = spotlight.y + spotlight.h / 2;
+
+    let sx = popCX;
+    let sy = popCY;
+    let ex = spotCX;
+    let ey = spotCY;
+
+    // Use the resolved arrow direction (pos.arrow may flip from original placement)
+    const dir = pos.arrow === "center" ? placement : pos.arrow;
+
+    switch (dir) {
+      case "bottom":
+        // popover is below target -> arrow leaves popover top, lands on spotlight bottom
+        sx = popCX;
+        sy = popTop;
+        ex = spotCX;
+        ey = spotlight.y + spotlight.h;
+        break;
+      case "top":
+        sx = popCX;
+        sy = popBottom;
+        ex = spotCX;
+        ey = spotlight.y;
+        break;
+      case "left":
+        sx = popRight;
+        sy = popCY;
+        ex = spotlight.x;
+        ey = spotCY;
+        break;
+      case "right":
+        sx = popLeft;
+        sy = popCY;
+        ex = spotlight.x + spotlight.w;
+        ey = spotCY;
+        break;
+    }
+
+    // Quadratic bezier control point: midpoint offset perpendicular to the line
+    const mx = (sx + ex) / 2;
+    const my = (sy + ey) / 2;
+    const dx = ex - sx;
+    const dy = ey - sy;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    // perpendicular unit vector
+    const px = -dy / len;
+    const py = dx / len;
+    const curve = Math.min(60, len * 0.25);
+    const cx = mx + px * curve;
+    const cy = my + py * curve;
+
+    const d = `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`;
+    // approximate length for dash animation
+    const pathLen = Math.round(len + curve);
+    return { d, pathLen };
+  })();
+
   const next = () => {
     if (isLast) onClose();
     else setStepIndex((i) => Math.min(i + 1, TOUR_STEPS.length - 1));
@@ -209,6 +279,54 @@ export default function OnboardingTour({ open, onClose }: Props) {
           />
         )}
       </svg>
+
+      {/* Animated arrow connecting popover to spotlight */}
+      {arrow && (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          width="100%"
+          height="100%"
+          aria-hidden="true"
+        >
+          <defs>
+            <marker
+              id="onboarding-arrowhead"
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--primary))" />
+            </marker>
+          </defs>
+          <path
+            key={`${stepIndex}-${Math.round(pos.top)}-${Math.round(pos.left)}`}
+            d={arrow.d}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            markerEnd="url(#onboarding-arrowhead)"
+            style={{
+              filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.7))",
+              strokeDasharray: arrow.pathLen,
+              strokeDashoffset: arrow.pathLen,
+              animation: `onboarding-arrow-draw 450ms ease-out forwards, onboarding-arrow-pulse 1.6s ease-in-out 450ms infinite`,
+            }}
+          />
+          <style>{`
+            @keyframes onboarding-arrow-draw {
+              to { stroke-dashoffset: 0; }
+            }
+            @keyframes onboarding-arrow-pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.65; }
+            }
+          `}</style>
+        </svg>
+      )}
 
       {/* Skip (top-right) */}
       <button
