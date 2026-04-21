@@ -16,12 +16,23 @@ function hasAnyKeyword(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+export function isShortSleeveButtonUp(item: WardrobeItem): boolean {
+  if (item.category !== "tops") return false;
+  const text = toSearchText(item);
+  const shortSleeveHints = ["short sleeve", "short-sleeve", "camp collar", "cuban collar", "resort shirt", "hawaiian shirt", "vacation shirt"];
+  const buttonUpHints = ["button-down", "button down", "button-up", "button up", "camp collar", "cuban collar", "resort shirt", "hawaiian shirt"];
+  return hasAnyKeyword(text, shortSleeveHints) && hasAnyKeyword(text, buttonUpHints);
+}
+
 export function isDressShirt(item: WardrobeItem): boolean {
   if (item.category !== "tops") return false;
   const text = toSearchText(item);
   const dressHints = ["dress shirt", "button-down", "button down", "button-up", "button up", "oxford shirt", "formal shirt", "collared shirt"];
   const nonDressHints = ["t-shirt", "tee", "hoodie", "sweater", "crewneck", "tank", "polo", "jersey"];
-  return hasAnyKeyword(text, dressHints) && !hasAnyKeyword(text, nonDressHints);
+  if (!hasAnyKeyword(text, dressHints) || hasAnyKeyword(text, nonDressHints)) return false;
+  // Short-sleeve button-ups are smart-casual, not formal dress shirts
+  if (isShortSleeveButtonUp(item)) return false;
+  return true;
 }
 
 export function isPolo(item: WardrobeItem): boolean {
