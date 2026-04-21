@@ -208,6 +208,101 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
         ))}
       </div>
 
+      {/* Add missing pieces callout */}
+      {unresolvedConceptIdxs.length > 0 && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-card-foreground">Add missing pieces</p>
+              <p className="text-xs text-muted-foreground">
+                {unresolvedConceptIdxs.length === 1
+                  ? "1 concept piece isn't in your wardrobe yet."
+                  : `${unresolvedConceptIdxs.length} concept pieces aren't in your wardrobe yet.`}{" "}
+                Upload it, or pick something similar you already own.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {unresolvedConceptIdxs.map((idx) => {
+              const piece = conceptPieces[idx];
+              const eligibleCount = eligibleReplacementsFor(idx).length;
+              const hint = `${piece.primary_color} ${piece.texture || ""} ${piece.pattern || ""}`.trim();
+              const addUrl = `/add?category=${encodeURIComponent(piece.category)}&name=${encodeURIComponent(piece.name)}${hint ? `&hint=${encodeURIComponent(hint)}` : ""}`;
+              return (
+                <div
+                  key={`missing-${idx}`}
+                  className="flex flex-col gap-2 rounded-lg border border-border/40 bg-card/60 p-2.5 sm:flex-row sm:items-center sm:gap-3"
+                >
+                  <div
+                    className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border/40"
+                    style={{ backgroundColor: piece.color_hex }}
+                  >
+                    {piece.imageUrl && (
+                      <img src={piece.imageUrl} alt={piece.name} className="h-full w-full object-cover" loading="lazy" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-card-foreground">{piece.name}</p>
+                    <p className="text-[11px] capitalize text-muted-foreground">{piece.category}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                      <Link to={addUrl}>
+                        <Upload className="h-3.5 w-3.5" /> Upload
+                      </Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 gap-1 text-xs"
+                      onClick={() => setPickerForConcept(idx)}
+                      disabled={eligibleCount === 0}
+                      title={eligibleCount === 0 ? `No ${piece.category} in your wardrobe yet` : undefined}
+                    >
+                      <Shirt className="h-3.5 w-3.5" /> Pick {eligibleCount > 0 ? `(${eligibleCount})` : ""}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Resolved replacements summary */}
+      {Object.keys(replacedConcepts).length > 0 && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+          <p className="text-xs font-semibold text-card-foreground mb-2 flex items-center gap-1.5">
+            <Check className="h-3.5 w-3.5 text-primary" />
+            Replaced with your pieces
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(replacedConcepts).map(([idxStr, item]) => {
+              const idx = Number(idxStr);
+              return (
+                <Badge
+                  key={`replaced-${idx}`}
+                  variant="secondary"
+                  className="cursor-pointer text-xs"
+                  onClick={() =>
+                    setReplacedConcepts((prev) => {
+                      const next = { ...prev };
+                      delete next[idx];
+                      return next;
+                    })
+                  }
+                  title="Click to undo"
+                >
+                  {item.name} ✕
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Stylist rationale */}
       <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 to-primary/5 p-4">
         <div className="flex items-center gap-2 mb-2">
@@ -223,9 +318,9 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
         </Button>
         <Button
           onClick={handleSave}
-          disabled={saving || saved || existingItems.length === 0}
+          disabled={saving || saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
           className="flex-1 gap-2"
-          title={existingItems.length === 0 ? "Need at least one real wardrobe piece to save" : undefined}
+          title={(existingItems.length + Object.keys(replacedConcepts).length) === 0 ? "Need at least one real wardrobe piece to save" : undefined}
         >
           {saved ? (
             <><Check className="h-4 w-4" /> Saved</>
@@ -236,6 +331,56 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
           )}
         </Button>
       </div>
+
+      {/* Replacement picker dialog */}
+      <Dialog open={pickerForConcept !== null} onOpenChange={(o) => !o && setPickerForConcept(null)}>
+        <DialogContent className="max-w-lg border-border/40 bg-card/95">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base">
+              Pick a replacement
+              {pickerForConcept !== null && conceptPieces[pickerForConcept] && (
+                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                  for "{conceptPieces[pickerForConcept].name}"
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Choose a piece from your wardrobe to use in this look instead of the concept piece.
+            </DialogDescription>
+          </DialogHeader>
+          {pickerForConcept !== null && (
+            <div className="max-h-[55vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {eligibleReplacementsFor(pickerForConcept).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setReplacedConcepts((prev) => ({ ...prev, [pickerForConcept!]: item }));
+                      setPickerForConcept(null);
+                      toast.success(`${item.name} added to the look`);
+                    }}
+                    className="group relative overflow-hidden rounded-lg border border-border/40 bg-secondary text-left transition-colors hover:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <div
+                      className="aspect-square w-full"
+                      style={{ backgroundColor: item.color_hex }}
+                    >
+                      {item.photo && (
+                        <img src={item.photo} alt={item.name} className="h-full w-full object-contain p-1.5" loading="lazy" />
+                      )}
+                    </div>
+                    <div className="px-2 py-1.5">
+                      <p className="truncate text-xs font-medium text-card-foreground">{item.name}</p>
+                      <p className="text-[10px] capitalize text-muted-foreground">{item.category}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
