@@ -151,6 +151,76 @@ export default function OnboardingTour({ open, onClose }: Props) {
       }
     : null;
 
+  // Compute curved arrow path from popover edge -> spotlight edge
+  const POPOVER_EST_H = 200;
+  const arrow = (() => {
+    if (!spotlight || placement === "center") return null;
+
+    const popLeft = pos.left;
+    const popTop = pos.top;
+    const popRight = pos.left + POPOVER_WIDTH;
+    const popBottom = pos.top + POPOVER_EST_H;
+    const popCX = popLeft + POPOVER_WIDTH / 2;
+    const popCY = popTop + POPOVER_EST_H / 2;
+
+    const spotCX = spotlight.x + spotlight.w / 2;
+    const spotCY = spotlight.y + spotlight.h / 2;
+
+    let sx = popCX;
+    let sy = popCY;
+    let ex = spotCX;
+    let ey = spotCY;
+
+    // Use the resolved arrow direction (pos.arrow may flip from original placement)
+    const dir = pos.arrow === "center" ? placement : pos.arrow;
+
+    switch (dir) {
+      case "bottom":
+        // popover is below target -> arrow leaves popover top, lands on spotlight bottom
+        sx = popCX;
+        sy = popTop;
+        ex = spotCX;
+        ey = spotlight.y + spotlight.h;
+        break;
+      case "top":
+        sx = popCX;
+        sy = popBottom;
+        ex = spotCX;
+        ey = spotlight.y;
+        break;
+      case "left":
+        sx = popRight;
+        sy = popCY;
+        ex = spotlight.x;
+        ey = spotCY;
+        break;
+      case "right":
+        sx = popLeft;
+        sy = popCY;
+        ex = spotlight.x + spotlight.w;
+        ey = spotCY;
+        break;
+    }
+
+    // Quadratic bezier control point: midpoint offset perpendicular to the line
+    const mx = (sx + ex) / 2;
+    const my = (sy + ey) / 2;
+    const dx = ex - sx;
+    const dy = ey - sy;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    // perpendicular unit vector
+    const px = -dy / len;
+    const py = dx / len;
+    const curve = Math.min(60, len * 0.25);
+    const cx = mx + px * curve;
+    const cy = my + py * curve;
+
+    const d = `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`;
+    // approximate length for dash animation
+    const pathLen = Math.round(len + curve);
+    return { d, pathLen };
+  })();
+
   const next = () => {
     if (isLast) onClose();
     else setStepIndex((i) => Math.min(i + 1, TOUR_STEPS.length - 1));
