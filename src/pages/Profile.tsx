@@ -437,8 +437,9 @@ export default function Profile() {
           size="sm"
           variant="secondary"
           className="gap-1.5"
-          onClick={() => {
-            restartOnboarding();
+          onClick={async () => {
+            if (!user?.id) return;
+            await restartOnboarding(user.id);
             toast.success("Tour reset — heading to your wardrobe");
             navigate("/wardrobe");
           }}

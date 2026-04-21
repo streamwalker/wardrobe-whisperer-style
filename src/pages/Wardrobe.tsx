@@ -90,6 +90,7 @@ export default function Wardrobe() {
 
   // --- Onboarding tour ---
   const onboarding = useOnboarding({
+    userId: user?.id,
     ready: !!user?.id,
     shouldAutoStart: !!user?.id && allItems.length === 0,
   });
