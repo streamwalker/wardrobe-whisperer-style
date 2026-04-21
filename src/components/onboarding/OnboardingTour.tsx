@@ -280,6 +280,54 @@ export default function OnboardingTour({ open, onClose }: Props) {
         )}
       </svg>
 
+      {/* Animated arrow connecting popover to spotlight */}
+      {arrow && (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          width="100%"
+          height="100%"
+          aria-hidden="true"
+        >
+          <defs>
+            <marker
+              id="onboarding-arrowhead"
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--primary))" />
+            </marker>
+          </defs>
+          <path
+            key={`${stepIndex}-${Math.round(pos.top)}-${Math.round(pos.left)}`}
+            d={arrow.d}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            markerEnd="url(#onboarding-arrowhead)"
+            style={{
+              filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.7))",
+              strokeDasharray: arrow.pathLen,
+              strokeDashoffset: arrow.pathLen,
+              animation: `onboarding-arrow-draw 450ms ease-out forwards, onboarding-arrow-pulse 1.6s ease-in-out 450ms infinite`,
+            }}
+          />
+          <style>{`
+            @keyframes onboarding-arrow-draw {
+              to { stroke-dashoffset: 0; }
+            }
+            @keyframes onboarding-arrow-pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.65; }
+            }
+          `}</style>
+        </svg>
+      )}
+
       {/* Skip (top-right) */}
       <button
         onClick={onClose}
