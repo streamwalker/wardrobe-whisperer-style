@@ -1,47 +1,62 @@
 
 
 ## Goal
-Unzip `DripSlayerClaudeEdits3.zip`, inventory its contents, and merge changes into the codebase without clobbering recent work (Stripe monetization, security RLS hardening, dialog viewport fix, dress-shirt/polo strict pairing rules, dress-shirt UI hint).
-
-## Why a plan first
-I'm in read-only/plan mode and can't run `unzip` to inspect the archive. I'll follow the same proven playbook used for `DripSlayerClaudeEdits.zip` and `…Edits2.zip`.
+Let users optionally upload/take a **back photo** of a garment alongside the front photo, so the wardrobe captures the full essence of an item (back details inform fit/style matching).
 
 ## Approach
 
-1. **Extract & inventory**
-   - Copy `user-uploads://DripSlayerClaudeEdits3.zip` → `/tmp/edits3.zip`, unzip to `/tmp/edits3/`.
-   - List every file with path + size for a clean inventory.
+### 1. Database — add `photo_back_url` column
+New migration adds an optional `photo_back_url TEXT` column to `wardrobe_items`. Nullable, no default — fully backward compatible (existing items just don't have a back photo).
 
-2. **Diff each file against current codebase**, categorize:
-   - **New file** → add as-is.
-   - **Safe upgrade** (additive, no conflict with recent work) → apply.
-   - **Conflict with recent work** → skip or surgically merge, flag in report.
-   - **Outdated** (stale snapshot of file we've since improved) → skip.
+### 2. AddItem (single-item flow)
+After the front photo is captured, reveal a small secondary "Add back photo (optional)" slot beneath it with two buttons:
+- **Camera** → opens rear camera (capture="environment")
+- **Choose** → file picker
 
-3. **Protected areas — do NOT clobber**
-   - Stripe monetization: `useSubscription`, `Pricing`, `Shop` lock, `create-checkout`, `customer-portal`, `check-subscription`.
-   - Security: token-gated RPCs for shared wardrobe; RLS policies (PERMISSIVE only).
-   - Dialog viewport fix: `src/components/ui/dialog.tsx`, `EditItemDialog.tsx` sticky footer.
-   - Outfit rules: `supabase/functions/_shared/dress-shirt-rules.ts` (strict dress-shirt + polo rules), `match-outfit/index.ts` prompts, `match-outfit/index.test.ts` (16 passing tests).
-   - Dress-shirt hint: `src/lib/dress-shirt-hint.ts`, `src/pages/Wardrobe.tsx` hint card.
-   - Auth flow: signup with EULA/GDPR consent, no anonymous signups.
-   - Auto-generated files: `src/integrations/supabase/client.ts`, `types.ts`, `.env`, `supabase/config.toml` project-level keys.
+Once captured, show a thumbnail with a small "Remove" button. Both photos upload to the `wardrobe-photos` bucket on save; the front URL goes to `photo_url`, back URL to `photo_back_url`.
 
-4. **SQL migrations in the zip**
-   - Never overwrite existing migrations.
-   - If new schema changes are present, layer with a fresh timestamp via `supabase--migration` after user approval.
-   - Validate against existing CHECK constraints (e.g., `wardrobe_items.category`).
+The front photo continues to be the one sent to `analyze-clothing` (AI auto-tagging is anchored on the front view, unchanged behavior).
 
-5. **Verify after merge**
-   - Run `tsc` (build check).
-   - Run `supabase--test_edge_functions` for `match-outfit` to confirm 16 dress-shirt/polo tests still pass.
-   - Sanity-check Stripe gating + token-gated RPCs intact.
-   - Quick visual confirmation that dialog viewport fix and dress-shirt hint still work.
+### 3. BatchAddItems (batch flow)
+Each `BatchItemCard` gets a small "Add back" affordance in its expanded details section. Tapping it opens a per-item file/camera picker. Stores `backFile` + `backPreview` per item; uploads alongside the front on save.
 
-6. **Report back**
-   - Files added / merged / skipped with reasons.
-   - Any judgment calls flagged, conflicts resolved, follow-ups recommended.
+To keep batch UX uncluttered, the back-photo control lives inside the **expanded details** panel (not the collapsed top bar), so users only see it when actively reviewing an item.
 
-## What I need from you
-Approval. Once approved I'll switch to default mode, unzip, inventory, and walk through the merge — flagging any conflict with protected areas before overriding.
+### 4. EditItemDialog
+Add a second photo slot below the existing front-photo slot:
+- Shows current `photo_back_url` if present
+- "Replace" / "Camera" / "Remove back" buttons
+- Plumbed through the existing `onSave` callback as `newBackPhotoFile?: File` and `removeBackPhoto?: boolean`
+
+Wardrobe.tsx's update handler uploads the new back photo (if provided) and updates `photo_back_url` accordingly.
+
+### 5. WardrobeItem type + mapping
+- `src/lib/wardrobe-data.ts`: add `photo_back?: string` to `WardrobeItem` interface
+- `src/hooks/useWardrobeItems.ts`: map `row.photo_back_url` → `photo_back`
+
+### 6. Display the back photo (lightweight)
+On `WardrobeItemCard`, if `photo_back` exists, show a tiny corner badge/icon (e.g. flip icon) indicating a back photo is available. Tapping the card's existing photo can flip-swap to the back view (simple onClick toggle, no fancy 3D flip needed). This is the only visual surface change — everything else uses `photo_url` as before.
+
+### 7. Styling/matching impact (intentional out of scope for v1)
+The back photo is captured and stored now, but the matcher/AI analysis still uses the front. A follow-up task can extend `analyze-clothing` to optionally accept both URLs and produce richer tags (e.g., back graphics, fit cues). Flagging as a future enhancement keeps this PR focused.
+
+## Files touched
+- **New migration**: `supabase/migrations/<ts>_add_photo_back_url.sql` — `ALTER TABLE wardrobe_items ADD COLUMN photo_back_url TEXT`
+- `src/lib/wardrobe-data.ts` — add `photo_back?: string` to type
+- `src/hooks/useWardrobeItems.ts` — map new column
+- `src/pages/AddItem.tsx` — back-photo picker + upload on save
+- `src/pages/BatchAddItems.tsx` — per-item back picker in expanded section + upload on save
+- `src/components/wardrobe/EditItemDialog.tsx` — back photo slot + plumbing
+- `src/pages/Wardrobe.tsx` — handle `newBackPhotoFile` / `removeBackPhoto` in the edit save handler
+- `src/components/wardrobe/WardrobeItemCard.tsx` — small "back available" indicator + tap-to-flip preview
+- **Memory update**: append a short note to `mem://features/wardrobe/item-metadata` documenting the optional back photo
+
+## Verification checklist
+- Add an item with both front + back photos → both URLs persist; both visible in edit dialog.
+- Add an item with front only → back column is null; UI still works (no back indicator).
+- Edit an existing item and add a back photo → saves correctly.
+- Edit an existing item and remove the back photo → column is cleared.
+- Batch add: front-only and front+back items in the same batch save correctly.
+- Tap the photo on a card with a back photo → flips to back view, tap again → back to front.
+- Existing items (no back photo) render unchanged.
 
