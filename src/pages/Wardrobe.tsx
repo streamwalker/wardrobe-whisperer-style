@@ -252,6 +252,12 @@ export default function Wardrobe() {
   const handleMatchThese = () => setDrawerOpen(true);
   const handleDrawerChange = (open: boolean) => setDrawerOpen(open);
 
+  /** Per-card "Match" action: replace selection with this single item and open the AI drawer. */
+  const handleMatchSingle = (item: WardrobeItem) => {
+    selection.setOnly(item);
+    setDrawerOpen(true);
+  };
+
   const filtered =
     activeCategory === "all"
       ? filters.applyFilters(wardrobeWithPhotos)
@@ -482,6 +488,7 @@ export default function Wardrobe() {
                                 onClick={() => selection.toggle(item)}
                                 onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
+                                onMatch={() => handleMatchSingle(item)}
                               />
                             </div>
                           ));
@@ -500,6 +507,7 @@ export default function Wardrobe() {
                                 onClick={() => selection.toggle(item)}
                                 onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
+                                onMatch={() => handleMatchSingle(item)}
                               />
                             </div>
                           ));
@@ -515,6 +523,7 @@ export default function Wardrobe() {
                             onClick={() => selection.toggle(item)}
                             onDelete={() => handleDeleteItem(item.id)}
                             onSave={(updates) => handleEditItem(item.id, updates)}
+                            onMatch={() => handleMatchSingle(item)}
                           />
                         </div>
                       ))
@@ -543,6 +552,7 @@ export default function Wardrobe() {
               onClick={() => selection.toggle(item)}
               onDelete={() => handleDeleteItem(item.id)}
               onSave={(updates) => handleEditItem(item.id, updates)}
+              onMatch={() => handleMatchSingle(item)}
             />
           ))}
         </div>

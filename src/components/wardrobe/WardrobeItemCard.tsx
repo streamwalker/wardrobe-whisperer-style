@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon } from "lucide-react";
+import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import EditItemPopover, { type EditItemSaveUpdates } from "./EditItemPopover";
 import DeleteItemPopover from "./DeleteItemPopover";
@@ -16,9 +16,11 @@ interface Props {
   onDelete?: () => Promise<void> | void;
   /** Receives form updates and persists them. When provided, the pencil icon opens an inline popover anchored to the card. */
   onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
+  /** Called when the user taps the sparkles "Match" action — should select this item and open the AI outfit drawer. */
+  onMatch?: () => void;
 }
 
-export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
+export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave, onMatch }: Props) {
   const [showBack, setShowBack] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         )}
 
         {/* Action buttons for user-added items — always visible on touch, hover on desktop */}
-        {(onDelete || onSave) && !selected && (
+        {(onDelete || onSave || onMatch) && !selected && (
           <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             {onSave && (
               <EditItemPopover
@@ -71,6 +73,21 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
                   <Pencil className="h-3 w-3 text-foreground" />
                 </div>
               </EditItemPopover>
+            )}
+            {onMatch && (
+              <div
+                className="h-6 w-6 rounded-full neon-gradient-cyan-pink flex items-center justify-center shadow-neon cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMatch();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                role="button"
+                aria-label={`Generate outfits with ${item.name}`}
+                title="Generate outfits with this item"
+              >
+                <Sparkles className="h-3 w-3 text-white" />
+              </div>
             )}
             {onDelete && (
               <DeleteItemPopover
