@@ -61,7 +61,10 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     : items.map((i) => i.id).sort().join(",");
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setCompletingOutfit(null);
+      return;
+    }
     if (hasLoaded === itemsKey) return;
 
     // Inspire / prefetched mode: use the supplied outfits directly, no fetch.
@@ -289,6 +292,15 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       <Badge variant="secondary" className="text-xs">
                         {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Generate complete look"
+                        onClick={() => setCompletingOutfit(outfit)}
+                      >
+                        <Wand2 className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
