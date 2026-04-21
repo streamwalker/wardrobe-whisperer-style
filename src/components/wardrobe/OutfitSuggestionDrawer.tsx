@@ -312,7 +312,25 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       .filter((id) => outfit.item_ids.includes(id));
                     return (
                       <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
-                        <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                        {isInspireMode ? (
+                          <div className="flex flex-col gap-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Inspiration
+                            </p>
+                            <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
+                              <div className="h-[260px] w-full overflow-hidden rounded-xl sm:h-[300px]">
+                                <img
+                                  src={inspirationImageUrl}
+                                  alt="Inspiration"
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                        )}
                         <div className="flex items-center justify-center text-muted-foreground">
                           <ArrowDown className="h-5 w-5 sm:hidden" />
                           <ArrowRight className="hidden h-5 w-5 sm:block" />
