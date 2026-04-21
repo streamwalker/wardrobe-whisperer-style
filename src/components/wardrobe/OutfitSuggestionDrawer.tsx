@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2 } from "lucide-react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import OutfitPreviewBoard from "./OutfitPreviewBoard";
+import CompleteLookView from "./CompleteLookView";
 
 interface OutfitSuggestion {
   name: string;
@@ -51,6 +52,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
+  const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
   const { user } = useAuth();
 
   const isInspireMode = !!inspirationImageUrl;
@@ -59,7 +61,10 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     : items.map((i) => i.id).sort().join(",");
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setCompletingOutfit(null);
+      return;
+    }
     if (hasLoaded === itemsKey) return;
 
     // Inspire / prefetched mode: use the supplied outfits directly, no fetch.
@@ -198,7 +203,19 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           )}
         </SheetHeader>
 
-        {loading && (
+        {completingOutfit && (
+          <CompleteLookView
+            outfit={completingOutfit}
+            existingItems={completingOutfit.item_ids
+              .map((id) => allWardrobeItems.find((i) => i.id === id))
+              .filter((i): i is WardrobeItem => !!i)}
+            allWardrobeItems={allWardrobeItems}
+            inspirationImageUrl={inspirationImageUrl}
+            onBack={() => setCompletingOutfit(null)}
+          />
+        )}
+
+        {!completingOutfit && loading && (
           <div className="flex flex-col items-center gap-3 py-12">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
             <p className="text-sm text-muted-foreground">Analyzing colors & styles…</p>
@@ -206,7 +223,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         )}
 
         {/* Incompatibility alert */}
-        {!loading && incompatible && (
+        {!completingOutfit && !loading && incompatible && (
           <div className="space-y-4 pb-6">
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
               <div className="flex items-start gap-3">
@@ -265,7 +282,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </div>
         )}
 
-        {!loading && !incompatible && outfits.length === 0 && hasLoaded && (
+        {!completingOutfit && !loading && !incompatible && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {isInspireMode
               ? "No matches found. Try a different inspiration photo."
@@ -273,7 +290,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </p>
         )}
 
-        {!incompatible && (
+        {!completingOutfit && !incompatible && (
           <div className="space-y-5 pb-6">
             {outfits.map((outfit, idx) => {
               const isSaved = savedIds.has(outfitKey(outfit));
@@ -287,6 +304,15 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       <Badge variant="secondary" className="text-xs">
                         {moodEmoji[outfit.mood] || "👔"} {outfit.mood}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Generate complete look"
+                        onClick={() => setCompletingOutfit(outfit)}
+                      >
+                        <Wand2 className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
