@@ -111,9 +111,36 @@ function EmptySlot({ zone }: { zone: Zone }) {
   );
 }
 
-export default function OutfitPreviewBoard({ items, highlightSharedIds = [], label }: Props) {
+export default function OutfitPreviewBoard({
+  items,
+  highlightSharedIds = [],
+  label,
+  density: densityProp,
+  showDensityToggle = true,
+  onDensityChange,
+}: Props) {
   const sharedSet = new Set(highlightSharedIds);
   const [zoomItem, setZoomItem] = useState<WardrobeItem | null>(null);
+
+  // Uncontrolled density w/ localStorage persistence; controlled when prop is provided.
+  const [internalDensity, setInternalDensity] = useState<BoardDensity>(() => {
+    if (typeof window === "undefined") return "full";
+    const stored = window.localStorage.getItem("outfit-board-density");
+    return stored === "compact" ? "compact" : "full";
+  });
+  const density = densityProp ?? internalDensity;
+
+  useEffect(() => {
+    if (densityProp || typeof window === "undefined") return;
+    window.localStorage.setItem("outfit-board-density", internalDensity);
+  }, [internalDensity, densityProp]);
+
+  const handleDensityChange = (next: BoardDensity) => {
+    if (!densityProp) setInternalDensity(next);
+    onDensityChange?.(next);
+  };
+
+  const heightClass = density === "compact" ? "h-[240px] sm:h-[280px]" : "h-[360px] sm:h-[420px]";
 
   // Group by zone (multiple items per zone allowed; e.g. 2 accessories)
   const byZone: Record<Zone, WardrobeItem[]> = {
@@ -146,13 +173,38 @@ export default function OutfitPreviewBoard({ items, highlightSharedIds = [], lab
 
   return (
     <div className="flex flex-col gap-2">
-      {label && (
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </p>
+      {(label || showDensityToggle) && (
+        <div className="flex items-center justify-between gap-2">
+          {label ? (
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {label}
+            </p>
+          ) : (
+            <span />
+          )}
+          {showDensityToggle && (
+            <ToggleGroup
+              type="single"
+              size="sm"
+              value={density}
+              onValueChange={(v) => v && handleDensityChange(v as BoardDensity)}
+              className="h-7"
+              aria-label="Preview density"
+            >
+              <ToggleGroupItem value="compact" className="h-7 gap-1 px-2 text-[10px]" aria-label="Compact preview">
+                <Rows3 className="h-3 w-3" />
+                Compact
+              </ToggleGroupItem>
+              <ToggleGroupItem value="full" className="h-7 gap-1 px-2 text-[10px]" aria-label="Full preview">
+                <LayoutGrid className="h-3 w-3" />
+                Full
+              </ToggleGroupItem>
+            </ToggleGroup>
+          )}
+        </div>
       )}
       <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-        <div className="grid h-[360px] grid-cols-2 grid-rows-3 gap-2 sm:h-[420px]">
+        <div className={cn("grid grid-cols-2 grid-rows-3 gap-2", heightClass)}>
           {/* Row 1: Outerwear + Top */}
           <div className="row-span-1">{renderZone("outerwear")}</div>
           <div className="row-span-1">{renderZone("top")}</div>
