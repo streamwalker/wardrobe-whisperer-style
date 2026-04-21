@@ -495,6 +495,17 @@ export default function AddItem() {
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save to Wardrobe
       </Button>
+
+      {newlyAddedItem && (
+        <OutfitSuggestionDrawer
+          open={suggestionOpen}
+          onOpenChange={handleSuggestionClose}
+          items={[newlyAddedItem]}
+          allWardrobeItems={[...allItems, newlyAddedItem]}
+          headline="Fresh addition to your wardrobe ✨"
+          subheadline={`Here's how ${newlyAddedItem.name} works with what you already own.`}
+        />
+      )}
     </div>
   );
 }
