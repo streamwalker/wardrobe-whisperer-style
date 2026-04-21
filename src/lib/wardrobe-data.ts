@@ -22,6 +22,7 @@ export interface WardrobeItem {
   is_new: boolean;
   is_featured: boolean;
   photo?: string;
+  photo_back?: string;
 }
 
 export const SHOE_SUBCATEGORIES: { value: ShoeSubcategory; label: string }[] = [
