@@ -156,7 +156,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-2xl font-semibold text-foreground">Style Profile</h2>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
