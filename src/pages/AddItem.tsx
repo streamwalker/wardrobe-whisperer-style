@@ -18,6 +18,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+import { useWardrobeItems } from "@/hooks/useWardrobeItems";
+import type { WardrobeItem } from "@/lib/wardrobe-data";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
@@ -37,6 +40,10 @@ export default function AddItem() {
   const [backPhotoPreview, setBackPhotoPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [newlyAddedItem, setNewlyAddedItem] = useState<WardrobeItem | null>(null);
+
+  const { items: allItems } = useWardrobeItems(user?.id);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -149,32 +156,71 @@ export default function AddItem() {
       if (photoFile) photoUrl = await uploadPhoto(photoFile);
       if (backPhotoFile) photoBackUrl = await uploadPhoto(backPhotoFile, "-back");
 
-      const { error: insertError } = await supabase.from("wardrobe_items").insert({
-        user_id: user!.id,
-        name,
-        description: description || null,
-        category,
-        subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : null,
-        primary_color: primaryColor,
-        color_hex: colorHex,
-        style_tags: styleTags,
-        pattern: pattern || null,
-        texture: texture || null,
-        photo_url: photoUrl,
-        photo_back_url: photoBackUrl,
-        is_new: true,
-      } as any);
+      const { data: inserted, error: insertError } = await supabase
+        .from("wardrobe_items")
+        .insert({
+          user_id: user!.id,
+          name,
+          description: description || null,
+          category,
+          subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : null,
+          primary_color: primaryColor,
+          color_hex: colorHex,
+          style_tags: styleTags,
+          pattern: pattern || null,
+          texture: texture || null,
+          photo_url: photoUrl,
+          photo_back_url: photoBackUrl,
+          is_new: true,
+        } as any)
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
       toast({ title: "Item added!", description: `${name} saved to your wardrobe.` });
       queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
-      navigate("/wardrobe");
+
+      // Auto-open outfit suggestions if there are enough other items to pair with
+      if (inserted && allItems.length >= 2) {
+        const newItem: WardrobeItem = {
+          id: (inserted as any).id,
+          name: (inserted as any).name,
+          category: (inserted as any).category,
+          subcategory: (inserted as any).subcategory || undefined,
+          primary_color: (inserted as any).primary_color,
+          color_hex: (inserted as any).color_hex || "#888888",
+          style_tags: ((inserted as any).style_tags || []) as WardrobeItem["style_tags"],
+          pattern: (inserted as any).pattern || undefined,
+          texture: (inserted as any).texture || undefined,
+          is_new: true,
+          is_featured: false,
+          photo: (inserted as any).photo_url || undefined,
+          photo_back: (inserted as any).photo_back_url || undefined,
+        };
+        setNewlyAddedItem(newItem);
+        setSuggestionOpen(true);
+      } else {
+        if (inserted) {
+          toast({
+            title: "Add a few more items",
+            description: "Build up your wardrobe to start getting outfit ideas.",
+          });
+        }
+        navigate("/wardrobe");
+      }
     } catch (err: any) {
       console.error("Save error:", err);
       toast({ title: "Save failed", description: err.message || "Could not save item", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSuggestionClose = (open: boolean) => {
+    setSuggestionOpen(open);
+    if (!open) {
+      navigate("/wardrobe");
     }
   };
 
