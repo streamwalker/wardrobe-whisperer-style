@@ -400,7 +400,9 @@ export default function Outfits() {
         </Button>
       </div>
 
-      <div data-tour="outfits-mood-filter" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {renderInspireCta}
+
+
         {MOOD_FILTERS.map((f) => (
           <button
             key={f.value}
