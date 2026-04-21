@@ -98,8 +98,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
                 e.stopPropagation();
                 setLightboxOpen(true);
               }}
-              className="absolute top-1.5 right-1.5 z-10 flex items-center justify-center h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 text-foreground shadow-sm cursor-pointer hover:bg-neon-cyan/10 hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100"
-              style={{ opacity: undefined }}
+              className="absolute top-1.5 right-1.5 z-10 flex items-center justify-center h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 text-foreground shadow-sm cursor-pointer hover:bg-neon-cyan/10 hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
             >
               <Maximize2 className="h-3 w-3" />
             </div>
