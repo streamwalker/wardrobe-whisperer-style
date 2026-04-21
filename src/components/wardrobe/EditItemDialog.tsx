@@ -116,12 +116,12 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle>Edit Item</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 space-y-4">
           {/* Photo preview with replace button */}
           <div className="flex flex-col items-center gap-2">
             <div
@@ -267,7 +267,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 pb-2">
             <Label className="text-xs">Style Tags</Label>
             <div className="flex flex-wrap gap-1.5">
               {STYLE_TAGS.map((tag) => (
@@ -287,7 +287,9 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               ))}
             </div>
           </div>
+        </div>
 
+        <div className="shrink-0 px-6 py-4 border-t border-border/40 bg-background/80 backdrop-blur-sm rounded-b-lg">
           <Button
             onClick={handleSave}
             disabled={saving || !name.trim() || !primaryColor.trim()}
