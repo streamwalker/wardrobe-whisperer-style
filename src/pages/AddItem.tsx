@@ -443,7 +443,7 @@ export default function AddItem() {
         </div>
       </div>
 
-      <Button onClick={handleSave} disabled={saving || analyzing} className="w-full mb-[env(safe-area-inset-bottom,0px)]" size="lg">
+      <Button onClick={handleSave} disabled={saving || analyzing} className="w-full mb-[calc(5rem+env(safe-area-inset-bottom,0px))]" size="lg">
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save to Wardrobe
       </Button>
