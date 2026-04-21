@@ -328,6 +328,10 @@ export default function Wardrobe() {
         </div>
       </div>
 
+      {wardrobeWithPhotos.length > 0 && (
+        <WardrobeMatchTip shouldHide={selection.selectedItems.length > 0 || drawerOpen} />
+      )}
+
       {imageGen.generating && (
         <Progress
           value={(imageGen.genProgress.current / imageGen.genProgress.total) * 100}
