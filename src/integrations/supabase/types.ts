@@ -23,6 +23,7 @@ export type Database = {
           height: string | null
           id: string
           inseam: string | null
+          onboarding_completed_at: string | null
           shoe_size: string | null
           shoulder: string | null
           skin_tone: string | null
@@ -42,6 +43,7 @@ export type Database = {
           height?: string | null
           id?: string
           inseam?: string | null
+          onboarding_completed_at?: string | null
           shoe_size?: string | null
           shoulder?: string | null
           skin_tone?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           height?: string | null
           id?: string
           inseam?: string | null
+          onboarding_completed_at?: string | null
           shoe_size?: string | null
           shoulder?: string | null
           skin_tone?: string | null
