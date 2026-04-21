@@ -159,11 +159,7 @@ export function isValidOutfitPairing(items: WardrobeItem[]): boolean {
   // 4. Hoodies: no suits (covered above), no dress shoes
   if (hasHoodies && hasDressShoes) return false;
 
-  // 5. Polos: smart-casual / business-casual lane only.
-  //    - Never with a suit (too informal under tailoring)
-  //    - Never with formal dress shoes (jarring formality mismatch)
-  //    - Never with joggers, sweatpants, or hoodies (too casual/sporty)
-  // 5. Polos: smart-casual / business-casual lane (now allowed under suits as modern smart tailoring).
+  // 5. Polos: smart-casual lane (allowed under suits as modern smart tailoring).
   //    - Never with formal dress shoes (jarring formality mismatch)
   //    - Never with joggers, sweatpants, or hoodies (too casual/sporty)
   if (hasPolo && hasDressShoes) return false;
