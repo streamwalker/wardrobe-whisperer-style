@@ -1,27 +1,38 @@
 
-## Goal
-Tighten the dress-shirt (button-down) pairing rule so button-downs **only pair with suits**. No business-casual mixing, no sporty/casual mixing.
+## Problem
+The Edit Item dialog renders taller than the viewport, and the **Save Changes** button (plus lower fields) get pushed off-screen with no way to scroll. Root cause: the shared `DialogContent` in `src/components/ui/dialog.tsx` has no `max-height` or internal scrolling — it's centered with `translate(-50%, -50%)` and overflows the screen.
 
-## Changes
+This affects every long dialog in the app, not just the editor.
 
-### 1. `supabase/functions/_shared/dress-shirt-rules.ts`
-Replace `isValidDressShirtPairing` with a stricter rule:
-- If any item is a dress shirt (button-down/button-up/oxford/formal/collared), the outfit **must** include a `suits` item.
-- Drop the "business casual" branch (chinos + blazer + loafers) entirely — that combo no longer satisfies the rule for dress shirts.
-- Keep the existing requirement that suit + dress-shirt outfits include formal shoes and a tie/accessory.
-- `isValidOutfitPairing` stays as the master validator and continues to call the updated `isValidDressShirtPairing` first.
+## Fix
 
-### 2. `supabase/functions/match-outfit/index.ts`
-Update the prompt rules in **both** `checkCompatibility` system prompt and the `styleRules` block used by suggestion generation:
-- Replace the "TWO valid contexts" wording with a single rule: *"Dress shirts (button-downs, button-ups, oxfords, formal/collared shirts) MUST be paired with a suit, dress shoes, and a tie. Never pair a dress shirt with chinos-only outfits, joggers, hoodies, sneakers, athletic wear, graphic tees, or any casual/sporty pieces."*
-- Remove the "BUSINESS CASUAL" sub-bullet for dress shirts.
+### 1. `src/components/ui/dialog.tsx` — make all dialogs viewport-safe
+Update `DialogContent` to:
+- Cap height at `max-h-[90vh]` (and `max-h-[85dvh]` on mobile for browser chrome safety)
+- Make the content area scroll internally with `overflow-y-auto`
+- Keep horizontal centering, add safe horizontal inset on small screens (`w-[calc(100%-2rem)]`)
 
-### 3. No DB or UI changes needed
-The validator in `match-outfit` already filters out outfits failing `isValidOutfitPairing`, so tightening the rule automatically excludes any AI suggestion that pairs a button-down with non-suit items. Compatibility check (multi-select) will also flag such manual selections as incompatible and offer swaps.
+This is a one-line className change and benefits every dialog (Edit, Transfer/Redeem, Outfit drawers using Dialog, etc.).
+
+### 2. `src/components/wardrobe/EditItemDialog.tsx` — sticky save button
+Restructure so the dialog body becomes a flex column:
+- Header: fixed at top
+- Form fields: scrollable middle section
+- **Save Changes** button: sticky at the bottom inside the dialog so it's always reachable, even mid-scroll
+
+This guarantees the primary action is always visible regardless of viewport height or zoom level.
+
+### 3. Quick audit of other long dialogs
+Verify the same pattern works for `TransferRedeemDialogs.tsx`, `OccasionOutfitDrawer.tsx`, `OutfitSuggestionDrawer.tsx`. The drawer components use `Sheet`/`Drawer` (already viewport-aware), so only Dialog-based ones need the sticky-footer treatment if their primary action sits at the bottom.
 
 ## Files touched
-- `supabase/functions/_shared/dress-shirt-rules.ts` — strict rule rewrite
-- `supabase/functions/match-outfit/index.ts` — prompt updates (2 spots)
+- `src/components/ui/dialog.tsx` — add `max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)]`
+- `src/components/wardrobe/EditItemDialog.tsx` — flex layout + sticky footer for Save button
+- (If needed) `src/components/wardrobe/TransferRedeemDialogs.tsx` — same sticky-footer treatment
 
-## Memory update
-Update `mem://features/outfits/hard-style-rules` to reflect: button-downs are suit-only; no business-casual dress-shirt context.
+## Verification
+After changes, the Edit dialog will:
+- Never exceed 90% of viewport height
+- Scroll its body when content is tall
+- Keep the Save button anchored at the bottom edge of the dialog
+- Work at all viewport sizes (mobile, tablet, desktop, visionOS)
