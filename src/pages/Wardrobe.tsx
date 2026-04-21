@@ -252,6 +252,12 @@ export default function Wardrobe() {
   const handleMatchThese = () => setDrawerOpen(true);
   const handleDrawerChange = (open: boolean) => setDrawerOpen(open);
 
+  /** Per-card "Match" action: replace selection with this single item and open the AI drawer. */
+  const handleMatchSingle = (item: WardrobeItem) => {
+    selection.setOnly(item);
+    setDrawerOpen(true);
+  };
+
   const filtered =
     activeCategory === "all"
       ? filters.applyFilters(wardrobeWithPhotos)
