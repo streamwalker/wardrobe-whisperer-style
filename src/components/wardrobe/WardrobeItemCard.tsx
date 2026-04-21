@@ -16,6 +16,8 @@ interface Props {
   onDelete?: () => Promise<void> | void;
   /** Receives form updates and persists them. When provided, the pencil icon opens an inline popover anchored to the card. */
   onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
+  /** Called when the user taps the sparkles "Match" action — should select this item and open the AI outfit drawer. */
+  onMatch?: () => void;
 }
 
 export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
