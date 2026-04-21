@@ -133,6 +133,7 @@ export function isValidOutfitPairing(items: WardrobeItem[]): boolean {
   const hasHoodies = items.some((i) => isHoodie(i));
   const hasDressShirt = items.some((i) => isDressShirt(i));
   const hasDressShoes = items.some((i) => i.category === "dress-shoes");
+  const hasPolo = items.some((i) => isPolo(i));
 
   // 2. Suits: no sneakers, no boots, no hoodies
   if (hasSuit && hasSneakers) return false;
@@ -146,6 +147,15 @@ export function isValidOutfitPairing(items: WardrobeItem[]): boolean {
 
   // 4. Hoodies: no suits (covered above), no dress shoes
   if (hasHoodies && hasDressShoes) return false;
+
+  // 5. Polos: smart-casual / business-casual lane only.
+  //    - Never with a suit (too informal under tailoring)
+  //    - Never with formal dress shoes (jarring formality mismatch)
+  //    - Never with joggers, sweatpants, or hoodies (too casual/sporty)
+  if (hasPolo && hasSuit) return false;
+  if (hasPolo && hasDressShoes) return false;
+  if (hasPolo && hasJoggers) return false;
+  if (hasPolo && hasHoodies) return false;
 
   return true;
 }
