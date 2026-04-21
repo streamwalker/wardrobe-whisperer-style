@@ -1,94 +1,108 @@
 
 
 ## Goal
-Let the user **snap a live photo or upload a screenshot** (e.g. an outfit they saw on Instagram, a celeb on the red carpet, a magazine spread) on the **Outfits page**, then have the app instantly generate **3 outfit ideas built from items the user already owns** that recreate the vibe of the uploaded image.
+After a user uploads an inspiration photo on the **Outfits page** (the "Recreate a Look" flow we just shipped), let them tap a new **"Generate Complete Look"** button on any AI suggestion to:
 
-This is a new entry point distinct from:
-- The existing **Add Item** flow (analyzes a single garment and saves it to the wardrobe).
-- The existing **tap-an-item** flow (anchors suggestions on a known wardrobe piece).
-- The existing **occasion** flow (text-based prompt).
+1. Take that suggested outfit (a mix of pieces from their wardrobe — and conceptually inspired by something they don't yet own).
+2. **Auto-generate 1–2 missing "hero" pieces** that would complete the look but aren't in their wardrobe (e.g. *"a cream oversized cable knit"* the inspiration had but they're missing).
+3. Show the **full composed look**: existing wardrobe pieces + newly generated concept pieces, side-by-side, with a **short stylist rationale** explaining why the combination works.
 
-The new flow is **inspiration-driven**: the user shows the AI a *look they want*, and the AI maps it to *what they own*.
+This bridges the gap between "here's a look from what you own" and "here's what you'd need to truly recreate it" — a natural extension of the inspire flow that keeps users engaged with their gaps in a positive, generative way.
 
 ---
 
 ## Approach
 
-### 1. New "Inspire Me" entry on the Outfits page
-Add a new card/button to `src/pages/Outfits.tsx`, sitting next to the existing occasion suggestion CTA:
+### 1. New edge function: `complete-look`
+Create `supabase/functions/complete-look/index.ts`. It:
 
-- Label: **"Recreate a Look"** with a `Camera` + `Sparkles` icon and a one-line subtitle ("Snap or upload an inspiration photo").
-- Tapping it opens a **bottom sheet** (`Sheet`) with three options, mirroring the AddItem pattern:
-  - **Take Photo** (`capture="environment"`) — visionOS/iOS will route to camera.
-  - **Choose Photo** — picks from gallery / screenshots folder.
-  - **Cancel**.
+1. Accepts `{ outfit: { name, item_ids, explanation, mood }, wardrobeItems: WardrobeItemLite[], inspirationImageUrl?: string }`.
+2. Calls Lovable AI Gateway (`google/gemini-2.5-flash`, structured tool-calling) to:
+   - Examine the outfit's existing items + (optional) inspiration image.
+   - Identify **0–2 missing categories** that would make the look truly complete (e.g. outerwear if it's a cold-weather vibe, accessories to elevate it). Hard cap at 2 to keep things tasteful.
+   - For each missing piece, return a structured "concept piece": `{ category, name, primary_color, color_hex, style_tags, pattern, texture, description, image_prompt }`.
+   - Also returns a refined `rationale` (2–3 sentences) explaining how the existing + concept pieces work together (volume, color, formality), reusing the `styling-principles` memory.
+3. For each concept piece, calls Lovable AI **image generation** (`google/gemini-2.5-flash-image`) with the `image_prompt` + a fixed style suffix ("clean studio shot, neutral background, e-commerce style, no model") to produce a single garment image.
+4. Returns `{ rationale, conceptPieces: [{ ...metadata, imageUrl: dataUrlOrStoredUrl }] }`. Images come back as base64 data URLs from the gateway — we return them directly to keep the function stateless (no storage upload needed for ephemeral previews).
+5. CORS, Zod validation, 402/429 mapping — same pattern as the other functions.
+6. Enforces hard style rules from `_shared/dress-shirt-rules.ts` so the AI can't propose, e.g., suit shoes for a casual sneaker look.
+7. `verify_jwt` stays at the project default — no `config.toml` change.
 
-We reuse the existing dual hidden-input pattern from `AddItem.tsx` so visionOS PWA compatibility is preserved (per the visionOS memory rule about separate capture/library triggers).
+### 2. New component: `CompleteLookView.tsx`
+`src/components/wardrobe/CompleteLookView.tsx` — a presentational sub-view rendered inside the existing `OutfitSuggestionDrawer` when the user taps "Generate Complete Look" on a suggestion card.
 
-### 2. New edge function: `inspire-outfit`
-Create `supabase/functions/inspire-outfit/index.ts`. It:
+Layout:
+- Header: outfit name + mood badge.
+- **Composed look strip**: a horizontal scroll of all pieces (existing wardrobe items first with their photos; concept pieces second with a small **"Concept"** chip overlay on each tile).
+- **Stylist rationale** card below: gradient border, italic body copy, ~3 sentences.
+- Two CTAs at the bottom:
+  - **Save this look** — saves only the wardrobe portion to `saved_outfits` (concept pieces aren't real items, so they're skipped) with the rationale captured in `explanation`.
+  - **Back** — returns to the suggestions list within the drawer.
 
-1. Accepts `{ imageUrl: string, wardrobeItems: WardrobeItemLite[] }` (photo-stripped, like the existing `match-outfit` payload).
-2. Uses **Lovable AI Gateway** with a vision-capable model (`google/gemini-2.5-flash`) to:
-   - First **analyze the inspiration image**: extract a structured "look brief" (vibe, dominant colors, silhouette, formality level, key garment categories visible — e.g. *"oversized cream knit, dark wash straight-leg denim, white sneakers, casual elevated, neutral palette"*).
-   - Then, given the wardrobe catalog, return **3 outfits** reusing the same JSON shape the existing drawer already consumes: `{ outfits: [{ name, item_ids, explanation, mood }] }`.
-3. Reuses the same hard-style rules and styling principles already enforced in `match-outfit` (import from `_shared/dress-shirt-rules.ts` / inline the prohibitions block) so the inspire endpoint can't violate the prohibitions memory rule (no suits with sneakers, etc.).
-4. CORS via `corsHeaders` from `@supabase/supabase-js/cors`, returns 402 / 429 mapping for credit/rate errors using the same pattern as the other edge functions.
-5. Validates body with Zod (imageUrl URL, wardrobeItems array non-empty).
-6. `verify_jwt` stays at the project default — no `config.toml` change needed.
+We do **not** auto-add concept pieces to the wardrobe (they're aspirational). A small "Want this piece? Add it from Shop" hint on each concept tile points users to the existing Shop flow as a soft upsell.
 
-### 3. Photo upload pipeline (client side)
-On file pick:
+### 3. Drawer integration (`OutfitSuggestionDrawer.tsx`)
+- Add a `Sparkles` "Generate Complete Look" button to each suggestion card's footer (next to the existing "Save" button).
+- Local drawer state `completingOutfit: OutfitSuggestion | null`. When set, the drawer body swaps from the suggestions list to `<CompleteLookView outfit={completingOutfit} ... />`.
+- While the edge function runs: show an in-card spinner with "Composing your complete look…" — image generation can take ~5–10s for two pieces.
+- "Back" clears `completingOutfit` and restores the list view.
+- Available in **all three drawer modes** (anchor item, occasion, inspiration) — no mode gating; the feature is universally useful.
 
-1. Show a small in-sheet preview + spinner ("Analyzing your inspiration…").
-2. Upload the file to the existing `wardrobe-photos` storage bucket under a dedicated `${user.id}/inspiration/` prefix to keep things tidy. (No new bucket / no migration — the bucket and RLS policies already exist.)
-3. Get the public URL.
-4. Strip photos from the wardrobe array (same pattern as `OutfitSuggestionDrawer.fetchSuggestions`).
-5. Invoke `inspire-outfit` with `{ imageUrl, wardrobeItems }`.
-6. Close the option sheet, open the existing **`OutfitSuggestionDrawer`** with:
-   - `items={[]}` (no anchor pieces — the inspiration *is* the anchor).
-   - `allWardrobeItems={items}`.
-   - New optional prop `prefetchedOutfits` so the drawer skips its internal `match-outfit` call and renders the AI-returned outfits directly.
-   - `headline="Looks inspired by your photo ✨"`.
-   - `subheadline="Built from your wardrobe — save the ones you love."`.
-   - We also pass `inspirationImageUrl` so the drawer can render a **small "inspiration" thumbnail** at the top of each suggestion card's left preview slot (in place of the empty "your pick" board).
+### 4. Concept piece data model (client-side only)
+Add a lightweight `ConceptPiece` type in `src/lib/wardrobe-data.ts`:
+```ts
+export interface ConceptPiece {
+  category: WardrobeCategory;
+  name: string;
+  primary_color: string;
+  color_hex: string;
+  style_tags: StyleTag[];
+  pattern?: string;
+  texture?: string;
+  description: string;
+  imageUrl: string; // base64 data URL from gateway
+  isConcept: true;
+}
+```
+This stays out of the DB — concept pieces are render-only, never persisted.
 
-### 4. Drawer changes (`OutfitSuggestionDrawer.tsx`)
-Two small additions:
+### 5. Save behavior
+When the user hits "Save this look" from `CompleteLookView`:
+- Insert into `saved_outfits` with `item_ids` = only the existing wardrobe item ids (concept pieces excluded), `name` = outfit name, `mood` = outfit mood, `explanation` = the new AI-generated `rationale` (richer than the original).
+- Toast: "Saved! Concept pieces aren't saved — explore them in Shop."
+- Do **not** close the drawer — let the user keep exploring other suggestions.
 
-- New optional prop `prefetchedOutfits?: OutfitSuggestion[]` — when present, the drawer initializes `outfits` from it on open and **skips its initial `fetchSuggestions` call**. "Load More" remains hidden in this mode (no anchor items to feed back to `match-outfit` for follow-ups). We surface a small "Try another photo" hint at the bottom instead.
-- New optional prop `inspirationImageUrl?: string` — when set, the left side of each comparison row shows a single tile with the inspiration image (rounded, with a small "Inspiration" label) instead of the existing `OutfitPreviewBoard items={items}` (which would be empty in this mode).
+### 6. Files touched
 
-This keeps a single drawer component handling all three modes (anchor item, occasion, inspiration) — no duplication.
-
-### 5. Files touched
-
-- **New:** `supabase/functions/inspire-outfit/index.ts` — vision analysis + outfit matching against catalog.
-- **Edit:** `src/pages/Outfits.tsx` — add the "Recreate a Look" card, the option sheet, the file inputs, the upload + invocation flow, drawer wiring with prefetched outfits.
-- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — accept `prefetchedOutfits` and `inspirationImageUrl`; render inspiration thumb in place of the empty left board; suppress Load More in inspire mode.
+- **New:** `supabase/functions/complete-look/index.ts` — outfit completion + image generation.
+- **New:** `src/components/wardrobe/CompleteLookView.tsx` — composed look view + rationale + save.
+- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — "Generate Complete Look" button per card; conditional render of `CompleteLookView`.
+- **Edit:** `src/lib/wardrobe-data.ts` — add `ConceptPiece` type.
 - No DB migration. No new bucket. No new dependencies. No `config.toml` edits.
 
-### 6. Failure / edge cases
-- Wardrobe with <3 items → toast "Add a few more items first" and abort before uploading.
-- Non-image file → toast "Please choose an image".
-- Upload error → toast + close sheet.
-- Edge function returns 402 (credits exhausted) → toast surfaces the message; sheet stays open so user can retry later.
-- Edge function returns no outfits → drawer shows the existing empty state ("No suggestions found, try a different photo").
-- Free-tier AI cap → handled by existing edge function error mapping (same as match-outfit).
+### 7. Failure / edge cases
+- AI returns 0 missing pieces → show the rationale + just the wardrobe pieces (still a valid composed view; rationale is the value-add).
+- Image generation fails for one piece → render that tile as a styled placeholder card with the description text + small "image unavailable" note; the rest of the look still shows.
+- 402 (credits exhausted) → toast surfaces the message; user is returned to the suggestions list.
+- 429 (rate limit) → toast "Too many requests, try again in a moment".
+- Hard rule violation in AI output → server-side validator drops the offending concept piece before returning.
+- Save with all concept pieces and no real items → button disabled with tooltip "Need at least one real wardrobe piece to save".
 
-### 7. Privacy / cleanup
-Inspiration uploads land in `wardrobe-photos/${user.id}/inspiration/` and persist (same storage policy as item photos). We do **not** auto-delete because the user may want to revisit. Future enhancement (out of scope): a "clear inspirations" button in Profile.
+### 8. Performance / cost notes
+- We cap concept pieces at 2 to bound image-gen latency (~5–10s total) and Lovable AI credit usage.
+- Image generation runs sequentially server-side (Gemini image model handles one at a time) but we kick off the text rationale call in parallel with the first image to shave a beat off perceived latency.
+- No caching layer in v1 — each "Generate Complete Look" tap is a fresh call. If users complain about repeat costs we can add an in-memory per-session cache later.
 
 ---
 
 ## Verification checklist
 
-- New "Recreate a Look" card appears on `/outfits` between the existing actions; tap opens the option sheet.
-- Take Photo on visionOS / iOS opens the camera; Choose Photo opens the gallery (separate inputs preserved).
-- After upload, drawer opens with celebratory headline, the inspiration thumb on the left of each suggestion, and the AI-built look on the right (full `OutfitPreviewBoard`).
-- All `item_ids` returned by `inspire-outfit` exist in the user's wardrobe — no phantom items render.
-- Saving an outfit from this flow persists to `saved_outfits` and shows up on the Outfits list.
-- Hard style prohibitions hold (no suits + sneakers, etc.).
-- Closing the drawer returns the user cleanly to `/outfits`; no nav side effects.
-- Existing tap-an-item, occasion, and just-added flows are unchanged.
+- "Generate Complete Look" button appears on every AI suggestion card across all three drawer modes (anchor, occasion, inspiration).
+- Tapping it shows the loading state, then renders the composed look + rationale within ~10s.
+- Existing wardrobe pieces show their real photos; concept pieces show generated images with a clear "Concept" chip.
+- Rationale reads naturally and references concrete styling principles (volume, color, formality).
+- "Save this look" stores only real items into `saved_outfits` and the new outfit appears on `/outfits` with the richer rationale as `explanation`.
+- "Back" returns cleanly to the suggestions list; closing the drawer doesn't leak loading state.
+- Hard style prohibitions hold (no suits + sneakers, no concept dress shoes paired with athletic looks, etc.).
+- Free-tier AI cap (402) and rate limits (429) surface friendly toasts; the drawer stays usable.
 
