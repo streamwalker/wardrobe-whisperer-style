@@ -68,15 +68,30 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are a fashion item analyzer and identifier. Given a photo of a clothing item, identify:
+    const systemPrompt = `You are a fashion item analyzer and identifier. Given one or two photos of a clothing item (front view always, optional back view), identify:
 - A short descriptive name (2-3 words, e.g. "Navy Chinos", "White Sneakers")
 - A detailed description: try to identify the brand, collection, model name, material, and any distinguishing features. Write a concise 1-2 sentence description. Example: "Ralph Lauren 2025 spring collection 'Joffrey' green sports jacket in lightweight cotton twill." If you cannot identify specific brand details, describe the item's style, material, and notable features.
 - The category: shoes, pants, tops, outerwear, suits, or accessories
 - The dominant/primary color name (e.g. "Navy", "Cream", "Olive")
 - The hex code of that color
 - 1-3 style tags from: casual, neutral, bold, luxury, minimal, sporty
-- The pattern: solid, striped, plaid, checkered, floral, camo, graphic, herringbone, pinstripe, houndstooth. Use "solid" if no visible pattern.
-- The texture/fabric: cotton, linen, wool, silk, denim, corduroy, suede, leather, knit, fleece, tweed, canvas, poplin, flannel, chambray, velvet. Pick the closest match based on visual appearance.`;
+- The pattern: solid, striped, plaid, checkered, floral, camo, graphic, herringbone, pinstripe, houndstooth. Use "solid" if no visible pattern. If the back has a distinctive graphic that defines the garment (e.g. concert tee back print), pattern should be "graphic".
+- The texture/fabric: cotton, linen, wool, silk, denim, corduroy, suede, leather, knit, fleece, tweed, canvas, poplin, flannel, chambray, velvet. Pick the closest match based on visual appearance.
+
+When a back-view photo is provided:
+- Use it to refine the description with back-side details (graphics/prints, hood, vents, pleats, drape, fit cues, length, contrast panels).
+- Append the most useful back-view detail to the description in a natural way.
+- Provide a short "back_details" string (under 140 chars) summarizing back-only features. Empty string if no back image was provided.`;
+
+    const userContent: any[] = [
+      { type: "image_url", image_url: { url: imageUrl } },
+    ];
+    if (validBackUrl) {
+      userContent.push({ type: "image_url", image_url: { url: validBackUrl } });
+      userContent.push({ type: "text", text: "First image is the FRONT view, second image is the BACK view of the same garment. Analyze them together." });
+    } else {
+      userContent.push({ type: "text", text: "Analyze this clothing item (front view only)." });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -88,13 +103,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "image_url", image_url: { url: imageUrl } },
-              { type: "text", text: "Analyze this clothing item." },
-            ],
-          },
+          { role: "user", content: userContent },
         ],
         tools: [
           {
