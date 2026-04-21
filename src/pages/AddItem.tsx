@@ -317,9 +317,9 @@ export default function AddItem() {
 
       {/* Re-analyze button */}
       {photoPreview && !analyzing && (
-        <Button onClick={() => photoFile && analyzePhoto(photoFile)} variant="neon" className="w-full">
+        <Button onClick={() => photoFile && analyzePhoto(photoFile, backPhotoFile)} variant="neon" className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
-          Re-analyze
+          {backPhotoFile ? "Re-analyze with back photo" : "Re-analyze"}
         </Button>
       )}
 
