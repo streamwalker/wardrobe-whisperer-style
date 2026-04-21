@@ -86,6 +86,7 @@ Be reasonably flexible — most neutral + bold combinations work. Only flag trul
 
 HARD STYLE RULES (always flag as incompatible):
 - Dress shirts (button-downs, button-ups, oxfords, formal/collared shirts) MUST be paired with a suit, dress shoes, and a tie. Never pair a dress shirt with chinos-only outfits, joggers, hoodies, sneakers, athletic wear, graphic tees, or any casual/sporty pieces.
+- POLOS live strictly in the smart-casual / business-casual lane. Pair polos with chinos, trousers, jeans, shorts, loafers, chelsea boots, clean minimal sneakers, or an unstructured blazer. NEVER pair a polo with a suit, formal dress shoes (oxfords/derbies), joggers, sweatpants, or hoodies.
 - SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
 - SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
 - JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
@@ -244,6 +245,7 @@ This means each outfit should have 4-5 items total. Use ALL available categories
     const styleRules = `
 HARD STYLE RULES:
 - Dress shirts (button-downs, button-ups, oxfords, formal/collared shirts) MUST be paired with a suit, dress shoes, and a tie. Never pair a dress shirt with chinos-only outfits, joggers, hoodies, sneakers, athletic wear, graphic tees, or any casual/sporty pieces.
+- POLOS live strictly in the smart-casual / business-casual lane. Pair polos with chinos, trousers, jeans, shorts, loafers, chelsea boots, clean minimal sneakers, or an unstructured blazer. NEVER pair a polo with a suit, formal dress shoes (oxfords/derbies), joggers, sweatpants, or hoodies.
 - SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
 - SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
 - JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
