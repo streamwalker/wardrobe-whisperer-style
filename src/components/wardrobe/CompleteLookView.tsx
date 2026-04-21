@@ -1,8 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff } from "lucide-react";
-import { type WardrobeItem, type ConceptPiece } from "@/lib/wardrobe-data";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff, Upload, Shirt, AlertCircle } from "lucide-react";
+import { type WardrobeItem, type ConceptPiece, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
