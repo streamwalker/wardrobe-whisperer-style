@@ -74,8 +74,10 @@ export default function Profile() {
     mutationFn: async (updates: Record<string, unknown>) => {
       const { error } = await supabase
         .from("profiles")
-        .update(updates)
-        .eq("user_id", user!.id);
+        .upsert(
+          { user_id: user!.id, ...updates },
+          { onConflict: "user_id" }
+        );
       if (error) throw error;
     },
     onSuccess: () => {
@@ -84,7 +86,10 @@ export default function Profile() {
       setEditingSection(null);
       setEditingName(false);
     },
-    onError: () => toast.error("Failed to update profile"),
+    onError: (err: any) => {
+      console.error("Profile update failed:", err);
+      toast.error(err?.message || "Failed to update profile");
+    },
   });
 
   const startEditingSection = (section: string) => {
