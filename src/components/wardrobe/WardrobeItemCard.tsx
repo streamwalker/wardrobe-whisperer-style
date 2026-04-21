@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, Trash2, Pencil } from "lucide-react";
+import { Star, Check, Trash2, Pencil, RotateCw } from "lucide-react";
 
 interface Props {
   item: WardrobeItem;
@@ -13,6 +14,15 @@ interface Props {
 }
 
 export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
+  const [showBack, setShowBack] = useState(false);
+  const hasBack = !!item.photo_back;
+
+  // Reset when the item or its back photo changes
+  useEffect(() => {
+    setShowBack(false);
+  }, [item.id, item.photo_back]);
+
+  const activePhoto = showBack && hasBack ? item.photo_back : item.photo;
   return (
     <button
       onClick={onClick}
