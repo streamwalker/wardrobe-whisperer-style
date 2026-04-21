@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import OutfitPreviewBoard from "./OutfitPreviewBoard";
+import OutfitCompareView from "./OutfitCompareView";
 import CompleteLookView from "./CompleteLookView";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface OutfitSuggestion {
   name: string;
@@ -339,36 +341,56 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       .map((i) => i.id)
                       .filter((id) => outfit.item_ids.includes(id));
                     return (
-                      <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
-                        {isInspireMode ? (
-                          <div className="flex flex-col gap-2">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                              Inspiration
-                            </p>
-                            <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-                              <div className="h-[360px] w-full overflow-hidden rounded-xl sm:h-[420px]">
-                                <img
-                                  src={inspirationImageUrl}
-                                  alt="Inspiration"
-                                  className="h-full w-full object-cover"
-                                  loading="lazy"
-                                />
+                      <Tabs defaultValue="board" className="w-full">
+                        <TabsList className="h-8">
+                          <TabsTrigger value="board" className="text-xs">Board</TabsTrigger>
+                          <TabsTrigger value="compare" className="text-xs" disabled={isInspireMode}>
+                            Compare
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="board" className="mt-3">
+                          <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
+                            {isInspireMode ? (
+                              <div className="flex flex-col gap-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  Inspiration
+                                </p>
+                                <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
+                                  <div className="h-[360px] w-full overflow-hidden rounded-xl sm:h-[420px]">
+                                    <img
+                                      src={inspirationImageUrl}
+                                      alt="Inspiration"
+                                      className="h-full w-full object-cover"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                </div>
                               </div>
+                            ) : (
+                              <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                            )}
+                            <div className="flex items-center justify-center text-muted-foreground">
+                              <ArrowDown className="h-5 w-5 sm:hidden" />
+                              <ArrowRight className="hidden h-5 w-5 sm:block" />
                             </div>
+                            <OutfitPreviewBoard
+                              items={suggestedItems}
+                              highlightSharedIds={sharedIds}
+                              label="Suggested look"
+                            />
                           </div>
-                        ) : (
-                          <OutfitPreviewBoard items={items} label="Your pick(s)" />
-                        )}
-                        <div className="flex items-center justify-center text-muted-foreground">
-                          <ArrowDown className="h-5 w-5 sm:hidden" />
-                          <ArrowRight className="hidden h-5 w-5 sm:block" />
-                        </div>
-                        <OutfitPreviewBoard
-                          items={suggestedItems}
-                          highlightSharedIds={sharedIds}
-                          label="Suggested look"
-                        />
-                      </div>
+                        </TabsContent>
+
+                        <TabsContent value="compare" className="mt-3">
+                          <OutfitCompareView
+                            seedItems={items}
+                            recommendedItems={suggestedItems}
+                            seedLabel="Your pick(s)"
+                            recommendedLabel="Recommended outfit"
+                          />
+                        </TabsContent>
+                      </Tabs>
                     );
                   })()}
 
