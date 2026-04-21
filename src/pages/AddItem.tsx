@@ -48,25 +48,25 @@ export default function AddItem() {
   const [pattern, setPattern] = useState<string>("");
   const [texture, setTexture] = useState<string>("");
 
-  const analyzePhoto = useCallback(async (file: File) => {
+  const analyzePhoto = useCallback(async (file: File, backFile?: File | null) => {
     if (!user) return;
     setAnalyzing(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const filePath = `${user.id}/${Date.now()}.${ext}`;
+      const uploadOne = async (f: File, suffix = "") => {
+        const ext = f.name.split(".").pop() || "jpg";
+        const filePath = `${user.id}/${Date.now()}${suffix}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("wardrobe-photos")
+          .upload(filePath, f);
+        if (uploadError) throw uploadError;
+        return supabase.storage.from("wardrobe-photos").getPublicUrl(filePath).data.publicUrl;
+      };
 
-      const { error: uploadError } = await supabase.storage
-        .from("wardrobe-photos")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("wardrobe-photos")
-        .getPublicUrl(filePath);
+      const frontUrl = await uploadOne(file);
+      const backUrl = backFile ? await uploadOne(backFile, "-back-analyze") : null;
 
       const { data, error } = await supabase.functions.invoke("analyze-clothing", {
-        body: { imageUrl: urlData.publicUrl },
+        body: { imageUrl: frontUrl, backImageUrl: backUrl ?? undefined },
       });
 
       if (error) throw error;
@@ -75,7 +75,9 @@ export default function AddItem() {
         toast({ title: "Analysis failed", description: data.error, variant: "destructive" });
       } else {
         setName(data.name || "");
-        setDescription(data.description || "");
+        const baseDesc = data.description || "";
+        const back = (data.back_details || "").trim();
+        setDescription(back ? `${baseDesc}${baseDesc ? " " : ""}Back: ${back}` : baseDesc);
         setCategory(data.category || "");
         setPrimaryColor(data.primary_color || "");
         setColorHex(data.color_hex || "#000000");
@@ -315,9 +317,9 @@ export default function AddItem() {
 
       {/* Re-analyze button */}
       {photoPreview && !analyzing && (
-        <Button onClick={() => photoFile && analyzePhoto(photoFile)} variant="neon" className="w-full">
+        <Button onClick={() => photoFile && analyzePhoto(photoFile, backPhotoFile)} variant="neon" className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
-          Re-analyze
+          {backPhotoFile ? "Re-analyze with back photo" : "Re-analyze"}
         </Button>
       )}
 
