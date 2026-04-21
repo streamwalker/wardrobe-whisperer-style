@@ -69,8 +69,13 @@ Deno.test("Hoodie + Sneakers + Joggers = valid (all casual)", () => {
   assertEquals(result, true);
 });
 
-// --- Dress shirt business casual (existing rules) ---
-Deno.test("Dress Shirt + Chinos + Loafers + Blazer = valid business casual", () => {
+// --- Dress shirt strict suit-only rule ---
+Deno.test("Dress Shirt + Chinos + Loafers + Blazer (no suit) = invalid", () => {
   const result = isValidOutfitPairing([dressShirt, chinos, loafers, blazer]);
-  assertEquals(result, true);
+  assertEquals(result, false);
+});
+
+Deno.test("Dress Shirt without Suit = invalid", () => {
+  const result = isValidOutfitPairing([dressShirt, chinos, dressShoes, tie]);
+  assertEquals(result, false);
 });
