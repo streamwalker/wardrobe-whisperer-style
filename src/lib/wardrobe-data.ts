@@ -25,6 +25,19 @@ export interface WardrobeItem {
   photo_back?: string;
 }
 
+export interface ConceptPiece {
+  category: WardrobeCategory;
+  name: string;
+  primary_color: string;
+  color_hex: string;
+  style_tags: StyleTag[];
+  pattern?: string;
+  texture?: string;
+  description: string;
+  imageUrl: string;
+  isConcept: true;
+}
+
 export const SHOE_SUBCATEGORIES: { value: ShoeSubcategory; label: string }[] = [
   { value: 'hi-tops', label: '👟 Hi-Tops' },
   { value: 'boots', label: '🥾 Boots' },
