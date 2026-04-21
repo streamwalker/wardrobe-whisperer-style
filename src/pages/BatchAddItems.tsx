@@ -476,6 +476,21 @@ export default function BatchAddItems() {
           </div>
         </div>
       )}
+
+      {newlyAddedItems.length > 0 && (
+        <OutfitSuggestionDrawer
+          open={suggestionOpen}
+          onOpenChange={handleSuggestionClose}
+          items={newlyAddedItems}
+          allWardrobeItems={[...allItems, ...newlyAddedItems]}
+          headline="Fresh additions to your wardrobe ✨"
+          subheadline={
+            newlyAddedItems.length === 1
+              ? `Here's how ${newlyAddedItems[0].name} works with what you already own.`
+              : `Here's how your ${newlyAddedItems.length} new pieces work with what you already own.`
+          }
+        />
+      )}
     </div>
   );
 }
