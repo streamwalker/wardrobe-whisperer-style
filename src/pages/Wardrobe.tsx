@@ -64,6 +64,7 @@ import {
 import { Input } from "@/components/ui/input";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import WardrobeMatchTip from "@/components/wardrobe/WardrobeMatchTip";
 
 export default function Wardrobe() {
   const { user } = useAuth();
@@ -326,6 +327,10 @@ export default function Wardrobe() {
           {user && <ExportImportButtons userId={user.id} allItems={wardrobeWithPhotos} />}
         </div>
       </div>
+
+      {wardrobeWithPhotos.length > 0 && (
+        <WardrobeMatchTip shouldHide={selection.selectedItems.length > 0 || drawerOpen} />
+      )}
 
       {imageGen.generating && (
         <Progress
