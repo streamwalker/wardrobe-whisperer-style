@@ -31,7 +31,7 @@ serve(async (req) => {
     await authenticateUser(req);
 
     const body = await req.json();
-    const { imageUrl } = body;
+    const { imageUrl, backImageUrl } = body;
 
     // Input validation
     if (!imageUrl || typeof imageUrl !== "string") {
@@ -44,11 +44,25 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    // Validate URL format
     try { new URL(imageUrl); } catch {
       return new Response(JSON.stringify({ error: "imageUrl must be a valid URL" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Optional back image validation
+    let validBackUrl: string | null = null;
+    if (backImageUrl !== undefined && backImageUrl !== null && backImageUrl !== "") {
+      if (typeof backImageUrl !== "string" || backImageUrl.length > 2048) {
+        return new Response(JSON.stringify({ error: "backImageUrl must be a string under 2048 chars" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try { new URL(backImageUrl); validBackUrl = backImageUrl; } catch {
+        return new Response(JSON.stringify({ error: "backImageUrl must be a valid URL" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
