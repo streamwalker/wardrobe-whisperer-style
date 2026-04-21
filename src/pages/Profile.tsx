@@ -74,10 +74,8 @@ export default function Profile() {
     mutationFn: async (updates: Record<string, unknown>) => {
       const { error } = await supabase
         .from("profiles")
-        .upsert(
-          { user_id: user!.id, ...updates },
-          { onConflict: "user_id" }
-        );
+        .update(updates)
+        .eq("user_id", user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
