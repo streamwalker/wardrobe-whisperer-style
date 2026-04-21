@@ -507,6 +507,8 @@ export default function Outfits() {
         onClose={onboarding.finish}
         steps={OUTFITS_TOUR_STEPS}
       />
+
+      {inspireSheetAndDrawer}
     </div>
   );
 }
