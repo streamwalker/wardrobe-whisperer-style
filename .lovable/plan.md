@@ -1,73 +1,66 @@
 
 
 ## Goal
-Add a contextual mini-tour that fires the first time a user lands on `/outfits`, explaining how the page works (mood filters, favorites, PDF export) and where to actually generate AI outfits (Wardrobe → tap an item).
+When the AI suggests an outfit in the `OutfitSuggestionDrawer`, render a **live visual preview** that composes the suggested pieces into a single "look" image alongside the user's currently selected wardrobe pieces — so users immediately see how the outfit visually comes together instead of just reading a list of thumbnails.
+
+## Current state
+`OutfitSuggestionDrawer` already renders each suggested outfit as a horizontal scroll of small ~80px tiles plus a text explanation. Selected items aren't shown next to the suggestion — the user has to mentally connect the AI's pick back to what they tapped.
 
 ## Approach
 
-### 1. Generalize the existing tour engine
-Make `OnboardingTour` and `useOnboarding` reusable across multiple tours instead of being hardcoded to one journey + one DB column.
+### 1. New `OutfitPreviewBoard` component
+A flat-lay style visual composition that arranges items in a fashion-app layout (top-row outerwear/tops, mid-row bottoms, bottom-row shoes/accessories). Pure CSS grid + image tiles — no canvas, no extra deps.
 
-- **`OnboardingTour.tsx`** — accept an optional `steps` prop. Default to the existing `TOUR_STEPS` so the Wardrobe call site keeps working unchanged.
-  ```ts
-  interface Props { open: boolean; onClose: () => void; steps?: TourStep[]; }
-  ```
-- **`useOnboarding.ts`** — accept an optional `tourKey: "wardrobe" | "outfits"` (default `"wardrobe"`) that maps to a column name. Same hook, same shape, just parameterized.
-
-### 2. Database — add a second completion flag
-New migration: add `outfits_tour_completed_at timestamptz` to `public.profiles` (nullable, no backfill — same pattern as the existing `onboarding_completed_at`).
-
-The hook reads/writes whichever column matches `tourKey`. Existing RLS already covers it.
-
-### 3. Outfits mini-tour steps
-New file `src/components/onboarding/outfits-tour-steps.ts` with 4 short steps:
-
-1. **Welcome (centered)** — "Your Saved Outfits 🎉 — here's how this page works."
-2. **Mood filters** (`outfits-mood-filter`, `bottom`) — "Filter saved outfits by mood: casual, elevated, bold…"
-3. **Export PDF** (`outfits-export`, `bottom`) — "Download all filtered outfits as a styled lookbook PDF."
-4. **Generate more** (`nav-wardrobe`, `top`) — "To create new outfits, head back to Wardrobe and tap any item — the AI will build a complete look around it." (closing CTA: "Got it")
-
-Empty-state and signed-out users should not trigger the tour (it'd have no anchors).
-
-### 4. Add `data-tour` anchors
-Edits in `src/pages/Outfits.tsx`:
-- Wrap the mood filter row with `data-tour="outfits-mood-filter"`.
-- Add `data-tour="outfits-export"` to the Export PDF button.
-
-Edit in `src/components/layout/AppLayout.tsx`:
-- Extend the existing `tourId` resolver to also tag `/wardrobe` as `nav-wardrobe` (currently only `/outfits` and `/profile` are tagged).
-
-### 5. Wire the tour into Outfits
-In `src/pages/Outfits.tsx`:
-```ts
-const onboarding = useOnboarding({
-  userId: user?.id,
-  tourKey: "outfits",
-  ready: !!user?.id && outfits.length > 0, // wait until anchors render
-  shouldAutoStart: !!user?.id && outfits.length > 0,
-});
+**Layout zones** (driven by `category`):
+```text
+┌─────────────────────────────┐
+│   [Outerwear]  [Top]        │  ← row 1
+│                             │
+│        [Bottom]             │  ← row 2 (centered, larger)
+│                             │
+│   [Shoes]   [Accessory]     │  ← row 3
+└─────────────────────────────┘
 ```
-Render `<OnboardingTour open={onboarding.isOpen} onClose={onboarding.finish} steps={OUTFITS_TOUR_STEPS} />` at the bottom of the component (only when authenticated, after data loads).
+- Each tile = item photo on its color-tinted background (reuses existing `color_hex` fallback pattern).
+- Empty zones collapse gracefully — outfits without outerwear just don't render that slot.
+- Aspect-square container, ~280px tall on mobile, scales on desktop via `sm:` breakpoint.
+- Subtle neon ring around the whole board (`shadow-neon` token already in the project) to match brand.
 
-Guard: do NOT auto-start if the user has zero saved outfits — they'd see the empty state instead, and the tour anchors wouldn't exist. They'll get the tour the first time they actually have something to look at.
+### 2. Side-by-side comparison view
+Inside each suggestion card in `OutfitSuggestionDrawer`, replace the current single horizontal thumb strip with a **two-column comparison** when there are user-selected anchor items:
 
-### 6. Replay from Profile
-Extend the existing "Replay tour" handler in `Profile.tsx` to clear **both** flags so users get both tours again (or split into two buttons — going with a single "Replay tours" for simplicity since they target different pages anyway).
+```text
+┌──────────────────┬──────────────────┐
+│  YOUR PICK(S)    │  SUGGESTED LOOK  │
+│   [board]        │    [board]       │
+└──────────────────┴──────────────────┘
+```
 
-### 7. Files touched
-- **New migration** — `ALTER TABLE public.profiles ADD COLUMN outfits_tour_completed_at timestamptz;`
-- **New:** `src/components/onboarding/outfits-tour-steps.ts`
-- **Edit:** `src/components/onboarding/OnboardingTour.tsx` — accept optional `steps` prop
-- **Edit:** `src/hooks/useOnboarding.ts` — parameterize by `tourKey`; update `restartOnboarding` to clear both columns
-- **Edit:** `src/pages/Outfits.tsx` — anchors + mount tour
-- **Edit:** `src/components/layout/AppLayout.tsx` — add `nav-wardrobe` tour id
-- **Edit:** `src/pages/Profile.tsx` — replay clears both tours (no UI change)
+- Left board = the `items` prop (what the user tapped).
+- Right board = the full suggested outfit (`outfit.item_ids` mapped through `allWardrobeItems`).
+- Items shared between both sides get a small "✓ kept" badge on the right board so users see what was preserved vs. what the AI added.
+- On mobile (<640px) the two boards stack vertically with a small "↓" divider; on desktop they sit side-by-side with a vertical divider.
+- The existing tiny thumbnail strip is removed (redundant with the new boards).
+
+### 3. Files touched
+- **New:** `src/components/wardrobe/OutfitPreviewBoard.tsx` — the flat-lay composition component. Props: `items: WardrobeItem[]`, `highlightSharedIds?: string[]`, `label?: string`.
+- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx`
+  - Import the new board.
+  - Inside the outfit card render loop, replace the small thumb strip with the two-column comparison (`YOUR PICK(S)` vs `SUGGESTED LOOK`).
+  - Compute `sharedIds = items.map(i => i.id).filter(id => outfit.item_ids.includes(id))` per outfit and pass to the right board for the "kept" badge.
+- No changes to the edge function, hooks, DB, or anchors.
+
+### 4. Visual polish
+- Both boards share the same fixed height so they line up.
+- Item tiles use `rounded-xl`, `border border-white/10`, hover lift via `transition-transform hover:scale-[1.03]` (desktop only).
+- "Kept" badge: small green-cyan pill in the top-right of the tile using existing `Badge` with `variant="secondary"` + custom class.
+- Empty zone placeholders show a faint dashed outline with the zone label ("Top", "Bottom", "Shoes") in muted text — keeps the grid balanced visually even if a slot is empty.
 
 ## Verification checklist
-- New user on `/outfits` with at least one saved outfit → mini-tour auto-starts with spotlight on mood filter, then export button, then bottom Wardrobe nav.
-- Skip or finish → reload `/outfits` → tour does NOT reappear.
-- Same user on Wardrobe → original onboarding tour still works independently.
-- User with zero saved outfits → no tour fires (empty state shown).
-- Profile → Replay tour → both Wardrobe and Outfits tours re-arm.
-- RLS unaffected; only the user's own profile row is read/written.
+- Tap a single item → drawer opens → each suggestion shows the user's pick on the left and the full suggested look on the right; shared items carry a "Kept" badge.
+- Tap multiple items → left board renders all picks correctly across zones.
+- Outfit without outerwear → that zone collapses or shows the dashed placeholder, no broken layout.
+- Mobile width → boards stack vertically with the divider; desktop → side-by-side.
+- Incompatibility branch (`incompatible !== null`) is unchanged — still shows the existing replacement-suggestion UI.
+- Save / Load More / Skip flows still work; performance stays smooth (images are already lazy-loaded).
 
