@@ -24,6 +24,8 @@ interface BatchItem {
   id: string;
   file: File;
   preview: string;
+  backFile: File | null;
+  backPreview: string | null;
   name: string;
   category: string;
   primaryColor: string;
