@@ -105,6 +105,7 @@ function EmptySlot({ zone }: { zone: Zone }) {
 
 export default function OutfitPreviewBoard({ items, highlightSharedIds = [], label }: Props) {
   const sharedSet = new Set(highlightSharedIds);
+  const [zoomItem, setZoomItem] = useState<WardrobeItem | null>(null);
 
   // Group by zone (multiple items per zone allowed; e.g. 2 accessories)
   const byZone: Record<Zone, WardrobeItem[]> = {
@@ -122,13 +123,13 @@ export default function OutfitPreviewBoard({ items, highlightSharedIds = [], lab
     const zItems = byZone[zone];
     if (zItems.length === 0) return <EmptySlot zone={zone} />;
     if (zItems.length === 1) {
-      return <ItemTile item={zItems[0]} shared={sharedSet.has(zItems[0].id)} />;
+      return <ItemTile item={zItems[0]} shared={sharedSet.has(zItems[0].id)} onZoom={setZoomItem} />;
     }
     return (
       <div className="flex h-full w-full gap-1">
         {zItems.map((it) => (
           <div key={it.id} className="h-full flex-1 min-w-0">
-            <ItemTile item={it} shared={sharedSet.has(it.id)} />
+            <ItemTile item={it} shared={sharedSet.has(it.id)} onZoom={setZoomItem} />
           </div>
         ))}
       </div>
@@ -154,6 +155,24 @@ export default function OutfitPreviewBoard({ items, highlightSharedIds = [], lab
           <div className="row-span-1">{renderZone("accessory")}</div>
         </div>
       </div>
+
+      <Dialog open={!!zoomItem} onOpenChange={(o) => !o && setZoomItem(null)}>
+        <DialogContent className="max-w-3xl border-border/40 bg-card/95 p-3 sm:p-4">
+          <DialogTitle className="font-display text-base">{zoomItem?.name ?? "Preview"}</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Pinch, scroll, or double-tap to zoom. Drag to pan.
+          </DialogDescription>
+          {zoomItem?.photo && (
+            <div className="mt-2 h-[60vh] w-full overflow-hidden rounded-xl border border-border/40">
+              <ZoomableImage
+                src={zoomItem.photo}
+                alt={zoomItem.name}
+                backgroundColor={zoomItem.color_hex || undefined}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
