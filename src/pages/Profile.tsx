@@ -15,10 +15,11 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2, Crown } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2, Crown, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { restartOnboarding } from "@/hooks/useOnboarding";
 
 const STYLE_MOODS = ["neutral", "bold", "luxury", "streetwear", "classic", "minimalist"];
 const SKIN_TONES = ["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Dark"];

@@ -634,6 +634,7 @@ export default function Wardrobe() {
         />
       )}
 
+      <OnboardingTour open={onboarding.isOpen} onClose={onboarding.finish} />
     </div>
   );
 }
