@@ -108,22 +108,25 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
       toast.error("Sign in to save outfits");
       return;
     }
-    if (existingItems.length === 0) return;
+    const replacedItems = Object.values(replacedConcepts);
+    const allRealItems = [...existingItems, ...replacedItems];
+    if (allRealItems.length === 0) return;
     setSaving(true);
     try {
       const { error } = await supabase.from("saved_outfits").insert({
         user_id: user.id,
         name: outfit.name,
-        item_ids: existingItems.map((i) => i.id),
+        item_ids: allRealItems.map((i) => i.id),
         mood: outfit.mood,
         explanation: rationale,
       });
       if (error) throw error;
       setSaved(true);
+      const remainingConcepts = unresolvedConceptIdxs.length;
       toast.success(
-        conceptPieces.length > 0
-          ? "Saved! Concept pieces aren't saved — explore them in Shop."
-          : "Outfit saved!"
+        remainingConcepts > 0
+          ? `Saved! ${remainingConcepts} concept piece${remainingConcepts > 1 ? "s" : ""} still missing — add them anytime.`
+          : "Outfit saved with all real pieces!"
       );
     } catch (e: any) {
       toast.error(e?.message || "Failed to save");
