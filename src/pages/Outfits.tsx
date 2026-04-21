@@ -129,7 +129,77 @@ export default function Outfits() {
     },
   });
 
-  const filteredOutfits = useMemo(
+  const handleInspireFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    if (allItems.length < 3) {
+      toast.error("Add a few more items first to get inspired matches");
+      return;
+    }
+
+    setInspirePreview(URL.createObjectURL(file));
+    setInspireUploading(true);
+
+    try {
+      // Upload to wardrobe-photos bucket under inspiration prefix
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/inspiration/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("wardrobe-photos")
+        .upload(filePath, file);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("wardrobe-photos").getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl;
+
+      // Strip photos from wardrobe payload
+      const stripped = allItems.map(({ photo, photo_back, ...rest }) => rest);
+
+      const { data, error } = await supabase.functions.invoke("inspire-outfit", {
+        body: { imageUrl: publicUrl, wardrobeItems: stripped },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const outfits: InspireOutfit[] = data?.outfits ?? [];
+
+      setInspireImageUrl(publicUrl);
+      setInspireOutfits(outfits);
+      setInspireSheetOpen(false);
+      setInspireDrawerOpen(true);
+
+      if (outfits.length === 0) {
+        toast("No matches found — try a different photo", { description: "Pick something with clearer outfit details." });
+      }
+    } catch (err: any) {
+      console.error("inspire error:", err);
+      toast.error(err?.message || "Failed to analyze inspiration photo");
+    } finally {
+      setInspireUploading(false);
+    }
+  };
+
+  const closeInspireDrawer = (open: boolean) => {
+    setInspireDrawerOpen(open);
+    if (!open) {
+      setInspirePreview(null);
+      setInspireImageUrl(null);
+      setInspireOutfits(null);
+    }
+  };
+
+  const closeInspireSheet = (open: boolean) => {
+    if (inspireUploading) return; // prevent close during upload
+    setInspireSheetOpen(open);
+    if (!open && !inspireDrawerOpen) {
+      setInspirePreview(null);
+    }
+  };
+
     () => activeMood === "all" ? outfits : outfits.filter((o) => o.mood === activeMood),
     [outfits, activeMood]
   );
