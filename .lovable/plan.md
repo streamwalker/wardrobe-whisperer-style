@@ -1,59 +1,60 @@
 
 
 ## Goal
-Auto-create a `profiles` row whenever a new user signs up, eliminating the need for `upsert` bootstrapping in `Profile.tsx`.
-
-## Current state
-- `public.handle_new_user()` already exists as a `SECURITY DEFINER` function that inserts `(user_id, display_name = email prefix)` into `profiles`.
-- **No trigger is wired to it** — confirmed via `pg_trigger` lookup. So new signups never trigger a profile insert today.
-- `Profile.tsx` currently compensates with `.upsert(..., { onConflict: "user_id" })`.
+Give first-time users an interactive guided tour with spotlight overlays, arrows, and step-by-step popovers that explains how to use Drip Slayer before they start building their wardrobe.
 
 ## Approach
 
-### 1. Migration: attach the trigger to `auth.users`
-Create a migration that adds:
+### 1. Lightweight, dependency-free tour component
+Build a custom `<OnboardingTour />` (no heavy library — keeps bundle small, matches Neon Sleek aesthetic). It will:
+- Accept an ordered array of steps: `{ targetId, title, body, placement }`.
+- For each step, query the DOM for `[data-tour="{targetId}"]` and:
+  - Render a full-screen dark backdrop with a transparent **spotlight cutout** around the target's bounding rect (using SVG mask).
+  - Render a glassmorphic popover card next to the target with title, body, **Back / Next / Skip** buttons and a step counter ("2 of 7").
+  - Render an animated **arrow** pointing from the popover toward the spotlight.
+- Recompute on `resize`/`scroll`; auto-scroll target into view; animate with `animate-fade-in` + `animate-scale-in`.
 
-```sql
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+### 2. Tour steps (Wardrobe-first journey)
+1. **Welcome** — centered modal: "Welcome to Drip Slayer 👋"
+2. **Add an item** — points at "Add Item" button.
+3. **Batch upload** — points at batch upload entry.
+4. **Category sidebar** — "Browse and drag items between categories."
+5. **Filters** — "Filter by color, pattern, texture, or tags."
+6. **Outfits nav** — "Generate AI outfits once you've added items."
+7. **Profile nav** — "Add your sizes for better suggestions."
+8. **Done** — centered card with CTA to close.
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-```
+### 3. Trigger & persistence
+- Auto-show on `/wardrobe` when: authenticated AND `localStorage.ds_onboarding_completed !== "true"` AND wardrobe is empty (avoids interrupting returning users).
+- On finish/skip: set the flag.
+- Add a **"Replay tour"** button on Profile so users can rerun anytime.
 
-The function is already `SECURITY DEFINER` with a locked `search_path`, so no function changes are required.
+### 4. Add `data-tour` anchors
+Add unobtrusive `data-tour="..."` attributes to existing elements (no visual changes):
+- `src/pages/Wardrobe.tsx` — add-item, batch upload, filter bar
+- `src/components/layout/CategorySidebar.tsx` — sidebar root
+- `src/components/layout/AppLayout.tsx` — Outfits + Profile nav links
 
-### 2. Backfill any existing users missing a profile row
-Same migration, idempotent insert so existing accounts (including the user's own) get rows immediately:
+### 5. Files touched / created
+- **New:** `src/components/onboarding/OnboardingTour.tsx` — engine, spotlight overlay, popover, arrow
+- **New:** `src/components/onboarding/tour-steps.ts` — step definitions
+- **New:** `src/hooks/useOnboarding.ts` — should-show logic + localStorage + restart()
+- **Edit:** `src/pages/Wardrobe.tsx` — mount tour + anchors
+- **Edit:** `src/components/layout/AppLayout.tsx` — nav anchors
+- **Edit:** `src/components/layout/CategorySidebar.tsx` — sidebar anchor
+- **Edit:** `src/pages/Profile.tsx` — "Replay tour" button
 
-```sql
-INSERT INTO public.profiles (user_id, display_name)
-SELECT u.id, split_part(u.email, '@', 1)
-FROM auth.users u
-LEFT JOIN public.profiles p ON p.user_id = u.id
-WHERE p.id IS NULL;
-```
-
-### 3. Revert `Profile.tsx` to a clean `.update()`
-With the trigger guaranteeing the row exists, switch the `updateProfile` mutation back from `.upsert(...)` to:
-
-```ts
-const { error } = await supabase
-  .from("profiles")
-  .update(updates)
-  .eq("user_id", user!.id);
-```
-
-Keeps the code intent explicit ("I'm editing my profile") and avoids the `onConflict` ceremony.
-
-## Files touched
-- New migration file under `supabase/migrations/` — trigger + backfill.
-- `src/pages/Profile.tsx` — swap upsert back to update.
+### 6. Styling
+- Backdrop: `bg-background/80 backdrop-blur-sm` with SVG spotlight cutout.
+- Popover: glass card (`bg-card/90 backdrop-blur-xl border border-border/50` + elegant shadow), neon primary accent on counter & Next button.
+- Arrow: animated primary-colored SVG with subtle pulse.
+- Fully responsive; popover repositions to fit viewport on mobile.
 
 ## Verification checklist
-- Create a brand-new account → check `profiles` table has a row with `display_name = email prefix` immediately, before visiting `/profile`.
-- Edit and save profile fields on the new account → values persist after reload.
-- Existing accounts (including current user) still load and save normally.
-- Deleting a user from `auth.users` cascades cleanly (no change to delete behavior — trigger only fires on INSERT).
+- New account with empty wardrobe → tour auto-starts on `/wardrobe`.
+- Click **Next** through all steps → spotlight + arrow follow each target on desktop + mobile.
+- Click **Skip** → tour closes, doesn't reappear on reload.
+- Resize mid-tour → overlay & popover reposition.
+- Add an item, log out, log back in → tour does NOT re-trigger.
+- Profile → **Replay tour** → starts again from step 1.
 
