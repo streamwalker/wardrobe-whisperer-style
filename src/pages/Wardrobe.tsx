@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import TransferRedeemDialogs from "@/components/wardrobe/TransferRedeemDialogs";
 import ExportImportButtons from "@/components/wardrobe/ExportImportButtons";
+import { getDressShirtHint } from "@/lib/dress-shirt-hint";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import {
