@@ -52,7 +52,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         )}
 
         {/* Action buttons for user-added items — always visible on touch, hover on desktop */}
-        {(onDelete || onSave) && !selected && (
+        {(onDelete || onSave || onMatch) && !selected && (
           <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             {onSave && (
               <EditItemPopover
@@ -73,6 +73,21 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
                   <Pencil className="h-3 w-3 text-foreground" />
                 </div>
               </EditItemPopover>
+            )}
+            {onMatch && (
+              <div
+                className="h-6 w-6 rounded-full neon-gradient-cyan-pink flex items-center justify-center shadow-neon cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMatch();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                role="button"
+                aria-label={`Generate outfits with ${item.name}`}
+                title="Generate outfits with this item"
+              >
+                <Sparkles className="h-3 w-3 text-white" />
+              </div>
             )}
             {onDelete && (
               <DeleteItemPopover
