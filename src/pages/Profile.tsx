@@ -427,6 +427,27 @@ export default function Profile() {
       {/* Wardrobe Sharing */}
       <ShareSection userId={user?.id} />
 
+      {/* Help & Onboarding */}
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Help</p>
+        <p className="text-sm text-muted-foreground">
+          Need a refresher? Replay the welcome tour to see how everything works.
+        </p>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="gap-1.5"
+          onClick={() => {
+            restartOnboarding();
+            toast.success("Tour reset — heading to your wardrobe");
+            navigate("/wardrobe");
+          }}
+        >
+          <PlayCircle className="h-3.5 w-3.5" />
+          Replay tour
+        </Button>
+      </div>
+
       {/* GDPR: Data Export & Account Deletion */}
       <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
         <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Data & Privacy</p>
