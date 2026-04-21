@@ -49,7 +49,7 @@ function ItemTile({
   return (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden rounded-xl border border-border/40 bg-secondary transition-transform sm:hover:scale-[1.03]",
+        "group relative h-full w-full overflow-hidden rounded-xl border border-border/40 bg-secondary transition-transform sm:hover:scale-[1.03]",
         className,
       )}
       style={{ backgroundColor: item.color_hex }}
@@ -58,7 +58,7 @@ function ItemTile({
         <img
           src={item.photo}
           alt={item.name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-1.5"
           loading="lazy"
         />
       )}
