@@ -346,7 +346,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                               Inspiration
                             </p>
                             <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-                              <div className="h-[260px] w-full overflow-hidden rounded-xl sm:h-[300px]">
+                              <div className="h-[360px] w-full overflow-hidden rounded-xl sm:h-[420px]">
                                 <img
                                   src={inspirationImageUrl}
                                   alt="Inspiration"

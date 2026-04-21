@@ -49,7 +49,7 @@ function ItemTile({
   return (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden rounded-xl border border-border/40 bg-secondary transition-transform sm:hover:scale-[1.03]",
+        "group relative h-full w-full overflow-hidden rounded-xl border border-border/40 bg-secondary transition-transform sm:hover:scale-[1.03]",
         className,
       )}
       style={{ backgroundColor: item.color_hex }}
@@ -58,7 +58,7 @@ function ItemTile({
         <img
           src={item.photo}
           alt={item.name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-1.5"
           loading="lazy"
         />
       )}
@@ -107,9 +107,11 @@ export default function OutfitPreviewBoard({ items, highlightSharedIds = [], lab
       return <ItemTile item={zItems[0]} shared={sharedSet.has(zItems[0].id)} />;
     }
     return (
-      <div className="grid h-full w-full grid-cols-2 gap-1">
-        {zItems.slice(0, 4).map((it) => (
-          <ItemTile key={it.id} item={it} shared={sharedSet.has(it.id)} />
+      <div className="flex h-full w-full gap-1">
+        {zItems.map((it) => (
+          <div key={it.id} className="h-full flex-1 min-w-0">
+            <ItemTile item={it} shared={sharedSet.has(it.id)} />
+          </div>
         ))}
       </div>
     );
@@ -123,7 +125,7 @@ export default function OutfitPreviewBoard({ items, highlightSharedIds = [], lab
         </p>
       )}
       <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-        <div className="grid h-[260px] grid-cols-2 grid-rows-3 gap-2 sm:h-[300px]">
+        <div className="grid h-[360px] grid-cols-2 grid-rows-3 gap-2 sm:h-[420px]">
           {/* Row 1: Outerwear + Top */}
           <div className="row-span-1">{renderZone("outerwear")}</div>
           <div className="row-span-1">{renderZone("top")}</div>
