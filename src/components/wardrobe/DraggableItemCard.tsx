@@ -8,7 +8,7 @@ interface Props {
   selected?: boolean;
   highlighted?: boolean;
   onClick?: () => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void> | void;
   onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
 }
 
