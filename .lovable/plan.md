@@ -1,51 +1,73 @@
 
 
 ## Goal
-Add an animated arrow that visually connects each tour popover to its spotlighted element, making it instantly clear which UI element the current step is describing.
+Add a contextual mini-tour that fires the first time a user lands on `/outfits`, explaining how the page works (mood filters, favorites, PDF export) and where to actually generate AI outfits (Wardrobe → tap an item).
 
 ## Approach
 
-### 1. Compute arrow geometry inside `OnboardingTour.tsx`
-We already know both rectangles per step:
-- **Popover rect**: derived from `pos.top`, `pos.left`, fixed `POPOVER_WIDTH`, and an estimated height.
-- **Spotlight rect**: the existing `spotlight` object (target bounding rect + padding).
+### 1. Generalize the existing tour engine
+Make `OnboardingTour` and `useOnboarding` reusable across multiple tours instead of being hardcoded to one journey + one DB column.
 
-For each step where a target exists (i.e. not `placement: "center"`), pick:
-- **Arrow start** = the edge of the popover facing the target (e.g. for `placement: "bottom"` the arrow leaves from the popover's top-center).
-- **Arrow end** = the closest edge midpoint of the spotlight rect facing the popover.
+- **`OnboardingTour.tsx`** — accept an optional `steps` prop. Default to the existing `TOUR_STEPS` so the Wardrobe call site keeps working unchanged.
+  ```ts
+  interface Props { open: boolean; onClose: () => void; steps?: TourStep[]; }
+  ```
+- **`useOnboarding.ts`** — accept an optional `tourKey: "wardrobe" | "outfits"` (default `"wardrobe"`) that maps to a column name. Same hook, same shape, just parameterized.
 
-Skip rendering the arrow when `placement === "center"` (welcome / done steps have no target).
+### 2. Database — add a second completion flag
+New migration: add `outfits_tour_completed_at timestamptz` to `public.profiles` (nullable, no backfill — same pattern as the existing `onboarding_completed_at`).
 
-### 2. Render a curved SVG arrow
-Add a second full-screen `<svg>` layer (above the spotlight backdrop, below the popover) containing:
-- A quadratic Bézier `<path>` from start → end with a control point offset perpendicular to the line (gives a soft curve, not a straight stab).
-- An `<defs><marker>` arrowhead at the end, filled with `hsl(var(--primary))`.
-- Stroke uses `hsl(var(--primary))`, width `2.5`, with `filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.7))` for the neon glow that matches the spotlight ring.
+The hook reads/writes whichever column matches `tourKey`. Existing RLS already covers it.
 
-### 3. Animations (Tailwind + inline keyframes)
-Two layered effects, both purely CSS so we don't need new tailwind config:
-- **Draw-in on step change**: animate `stroke-dashoffset` from the path's total length down to 0 over ~450ms with `ease-out`. Reset on every step by keying the `<path>` with `step.id` so React remounts it.
-- **Continuous pulse**: a subtle `animate-pulse` on the path (or a custom inline `@keyframes` that oscillates `opacity` between 0.7 and 1 every 1.6s) so the arrow keeps drawing the eye without being distracting.
+### 3. Outfits mini-tour steps
+New file `src/components/onboarding/outfits-tour-steps.ts` with 4 short steps:
 
-Arrowhead marker gets a tiny inline `transform: scale()` pulse via the same keyframe (optional — only if it reads well; otherwise leave the head static).
+1. **Welcome (centered)** — "Your Saved Outfits 🎉 — here's how this page works."
+2. **Mood filters** (`outfits-mood-filter`, `bottom`) — "Filter saved outfits by mood: casual, elevated, bold…"
+3. **Export PDF** (`outfits-export`, `bottom`) — "Download all filtered outfits as a styled lookbook PDF."
+4. **Generate more** (`nav-wardrobe`, `top`) — "To create new outfits, head back to Wardrobe and tap any item — the AI will build a complete look around it." (closing CTA: "Got it")
 
-### 4. Pointer-events & z-index
-- The arrow `<svg>` uses `pointer-events: none` so it never blocks clicks on Skip / Next / the popover.
-- Z-index sits between the backdrop SVG and the popover (existing `z-10` on the popover stays the topmost interactive layer).
+Empty-state and signed-out users should not trigger the tour (it'd have no anchors).
 
-### 5. Files touched
-- **Edit only:** `src/components/onboarding/OnboardingTour.tsx`
-  - Add `computeArrowPath(popoverRect, spotlight, placement)` helper.
-  - Render new `<svg>` layer with `<defs><marker></defs>` and animated `<path>`.
-  - Add a small inline `<style>` block (or reuse `animate-pulse`) for the dash-draw keyframe.
+### 4. Add `data-tour` anchors
+Edits in `src/pages/Outfits.tsx`:
+- Wrap the mood filter row with `data-tour="outfits-mood-filter"`.
+- Add `data-tour="outfits-export"` to the Export PDF button.
 
-No new files, no config changes, no changes to `tour-steps.ts`, hooks, or anchors.
+Edit in `src/components/layout/AppLayout.tsx`:
+- Extend the existing `tourId` resolver to also tag `/wardrobe` as `nav-wardrobe` (currently only `/outfits` and `/profile` are tagged).
+
+### 5. Wire the tour into Outfits
+In `src/pages/Outfits.tsx`:
+```ts
+const onboarding = useOnboarding({
+  userId: user?.id,
+  tourKey: "outfits",
+  ready: !!user?.id && outfits.length > 0, // wait until anchors render
+  shouldAutoStart: !!user?.id && outfits.length > 0,
+});
+```
+Render `<OnboardingTour open={onboarding.isOpen} onClose={onboarding.finish} steps={OUTFITS_TOUR_STEPS} />` at the bottom of the component (only when authenticated, after data loads).
+
+Guard: do NOT auto-start if the user has zero saved outfits — they'd see the empty state instead, and the tour anchors wouldn't exist. They'll get the tour the first time they actually have something to look at.
+
+### 6. Replay from Profile
+Extend the existing "Replay tour" handler in `Profile.tsx` to clear **both** flags so users get both tours again (or split into two buttons — going with a single "Replay tours" for simplicity since they target different pages anyway).
+
+### 7. Files touched
+- **New migration** — `ALTER TABLE public.profiles ADD COLUMN outfits_tour_completed_at timestamptz;`
+- **New:** `src/components/onboarding/outfits-tour-steps.ts`
+- **Edit:** `src/components/onboarding/OnboardingTour.tsx` — accept optional `steps` prop
+- **Edit:** `src/hooks/useOnboarding.ts` — parameterize by `tourKey`; update `restartOnboarding` to clear both columns
+- **Edit:** `src/pages/Outfits.tsx` — anchors + mount tour
+- **Edit:** `src/components/layout/AppLayout.tsx` — add `nav-wardrobe` tour id
+- **Edit:** `src/pages/Profile.tsx` — replay clears both tours (no UI change)
 
 ## Verification checklist
-- Steps 2–7 (with targets) show a glowing curved arrow from the popover edge to the spotlight ring.
-- Steps 1 & 8 (centered welcome / done) render with no arrow.
-- Advancing Next/Back re-draws the arrow from scratch each time.
-- Resizing the window keeps the arrow attached to both endpoints.
-- Arrow never intercepts clicks on Skip, Next, Back, or the highlighted element.
-- Visual style matches the existing primary/neon palette and spotlight glow.
+- New user on `/outfits` with at least one saved outfit → mini-tour auto-starts with spotlight on mood filter, then export button, then bottom Wardrobe nav.
+- Skip or finish → reload `/outfits` → tour does NOT reappear.
+- Same user on Wardrobe → original onboarding tour still works independently.
+- User with zero saved outfits → no tour fires (empty state shown).
+- Profile → Replay tour → both Wardrobe and Outfits tours re-arm.
+- RLS unaffected; only the user's own profile row is read/written.
 
