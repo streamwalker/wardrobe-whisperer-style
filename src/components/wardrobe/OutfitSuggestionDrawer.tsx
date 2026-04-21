@@ -57,6 +57,16 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
+  const [density, setDensity] = useState<BoardDensity>(() => {
+    if (typeof window === "undefined") return "full";
+    const stored = window.localStorage.getItem("outfit-board-density");
+    return stored === "compact" ? "compact" : "full";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("outfit-board-density", density);
+    }
+  }, [density]);
   const { user } = useAuth();
 
   const isInspireMode = !!inspirationImageUrl;
