@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon, X } from "lucide-react";
+import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { supabase } from "@/integrations/supabase/client";
