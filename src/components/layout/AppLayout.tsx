@@ -96,7 +96,13 @@ export default function AppLayout() {
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
             const tourId =
-              path === "/outfits" ? "nav-outfits" : path === "/profile" ? "nav-profile" : undefined;
+              path === "/outfits"
+                ? "nav-outfits"
+                : path === "/profile"
+                  ? "nav-profile"
+                  : path === "/wardrobe"
+                    ? "nav-wardrobe"
+                    : undefined;
             return (
               <button
                 key={path}

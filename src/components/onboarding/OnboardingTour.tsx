@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { TOUR_STEPS, type TourPlacement } from "./tour-steps";
+import { TOUR_STEPS, type TourPlacement, type TourStep } from "./tour-steps";
 import { X, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
 
 type Rect = { top: number; left: number; width: number; height: number };
@@ -71,15 +71,17 @@ function computePopoverPosition(
 interface Props {
   open: boolean;
   onClose: () => void;
+  steps?: TourStep[];
 }
 
-export default function OnboardingTour({ open, onClose }: Props) {
+export default function OnboardingTour({ open, onClose, steps }: Props) {
+  const tourSteps = steps ?? TOUR_STEPS;
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
 
-  const step = TOUR_STEPS[stepIndex];
-  const isLast = stepIndex === TOUR_STEPS.length - 1;
+  const step = tourSteps[stepIndex];
+  const isLast = stepIndex === tourSteps.length - 1;
   const isFirst = stepIndex === 0;
 
   // Reset to step 0 each time tour opens
@@ -223,7 +225,7 @@ export default function OnboardingTour({ open, onClose }: Props) {
 
   const next = () => {
     if (isLast) onClose();
-    else setStepIndex((i) => Math.min(i + 1, TOUR_STEPS.length - 1));
+    else setStepIndex((i) => Math.min(i + 1, tourSteps.length - 1));
   };
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
 
@@ -357,7 +359,7 @@ export default function OnboardingTour({ open, onClose }: Props) {
             <Sparkles className="h-3.5 w-3.5 text-white" />
           </div>
           <span className="text-[10px] font-semibold uppercase tracking-wider text-neon-cyan">
-            Step {stepIndex + 1} of {TOUR_STEPS.length}
+            Step {stepIndex + 1} of {tourSteps.length}
           </span>
         </div>
 
@@ -368,7 +370,7 @@ export default function OnboardingTour({ open, onClose }: Props) {
 
         {/* Progress dots */}
         <div className="flex gap-1 mb-4">
-          {TOUR_STEPS.map((_, i) => (
+          {tourSteps.map((_, i) => (
             <div
               key={i}
               className={cn(
