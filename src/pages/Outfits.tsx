@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { OUTFITS_TOUR_STEPS } from "@/components/onboarding/outfits-tour-steps";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 const MOOD_FILTERS = [
   { value: "all", label: "All", emoji: "🎯" },
@@ -112,6 +115,14 @@ export default function Outfits() {
     [outfits, activeMood]
   );
 
+  const onboardingReady = !!user?.id && !isLoading && outfits.length > 0;
+  const onboarding = useOnboarding({
+    userId: user?.id,
+    tourKey: "outfits",
+    ready: onboardingReady,
+    shouldAutoStart: onboardingReady,
+  });
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -181,13 +192,14 @@ export default function Outfits() {
           onClick={handleExportPdf}
           disabled={exporting || filteredOutfits.length === 0}
           className="shadow-neon"
+          data-tour="outfits-export"
         >
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
           Export PDF
         </Button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div data-tour="outfits-mood-filter" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {MOOD_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -286,6 +298,12 @@ export default function Outfits() {
           )}
         </div>
       ))}
+
+      <OnboardingTour
+        open={onboarding.isOpen}
+        onClose={onboarding.finish}
+        steps={OUTFITS_TOUR_STEPS}
+      />
     </div>
   );
 }
