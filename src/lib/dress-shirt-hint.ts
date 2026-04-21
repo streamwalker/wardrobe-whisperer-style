@@ -11,6 +11,7 @@ const DRESS_HINTS = [
   "collared shirt",
 ];
 const NON_DRESS_HINTS = ["t-shirt", "tee", "hoodie", "sweater", "crewneck", "tank", "polo", "jersey"];
+const SHORT_SLEEVE_HINTS = ["short sleeve", "short-sleeve", "camp collar", "cuban collar", "resort shirt", "hawaiian shirt", "vacation shirt"];
 
 function searchText(item: WardrobeItem): string {
   const tags = Array.isArray(item.style_tags) ? item.style_tags.join(" ") : "";
@@ -20,7 +21,11 @@ function searchText(item: WardrobeItem): string {
 export function isDressShirt(item: WardrobeItem): boolean {
   if (item.category !== "tops") return false;
   const text = searchText(item);
-  return DRESS_HINTS.some((k) => text.includes(k)) && !NON_DRESS_HINTS.some((k) => text.includes(k));
+  if (!DRESS_HINTS.some((k) => text.includes(k))) return false;
+  if (NON_DRESS_HINTS.some((k) => text.includes(k))) return false;
+  // Short-sleeve button-ups are smart-casual, not formal dress shirts
+  if (SHORT_SLEEVE_HINTS.some((k) => text.includes(k))) return false;
+  return true;
 }
 
 /**
