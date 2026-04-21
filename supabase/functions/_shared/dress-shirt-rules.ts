@@ -24,6 +24,14 @@ export function isDressShirt(item: WardrobeItem): boolean {
   return hasAnyKeyword(text, dressHints) && !hasAnyKeyword(text, nonDressHints);
 }
 
+export function isPolo(item: WardrobeItem): boolean {
+  if (item.category !== "tops") return false;
+  const text = toSearchText(item);
+  // Exclude graphic/athletic-jersey polos that read as performance wear
+  if (hasAnyKeyword(text, ["jersey", "performance", "rugby"])) return false;
+  return hasAnyKeyword(text, ["polo", "polo shirt"]);
+}
+
 export function isSportyItem(item: WardrobeItem): boolean {
   const text = toSearchText(item);
   return hasAnyKeyword(text, ["sporty", "athletic", "jogger", "sweatpant", "hoodie", "sneaker", "running", "runner", "training", "gym", "yeezy", "air force", "air max", "boost"]);
