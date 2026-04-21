@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import DraggableItemCard from "@/components/wardrobe/DraggableItemCard";
 import DroppableCategoryColumn from "@/components/wardrobe/DroppableCategoryColumn";
-import EditItemDialog from "@/components/wardrobe/EditItemDialog";
+
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import OccasionOutfitDrawer from "@/components/wardrobe/OccasionOutfitDrawer";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,7 @@ export default function Wardrobe() {
   // --- Local UI state that remains inline ---
   const [draggingItem, setDraggingItem] = useState<WardrobeItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
+  
   const [occasionDrawerOpen, setOccasionDrawerOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);

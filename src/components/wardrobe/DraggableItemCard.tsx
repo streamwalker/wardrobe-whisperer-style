@@ -1,7 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import WardrobeItemCard from "./WardrobeItemCard";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
+import type { EditItemSaveUpdates } from "./EditItemPopover";
 
 interface Props {
   item: WardrobeItem;
@@ -9,10 +9,10 @@ interface Props {
   highlighted?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  onEdit?: () => void;
+  onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
 }
 
-export default function DraggableItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
+export default function DraggableItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     data: { item },
@@ -33,7 +33,7 @@ export default function DraggableItemCard({ item, selected, highlighted, onClick
         highlighted={highlighted}
         onClick={onClick}
         onDelete={onDelete}
-        onEdit={onEdit}
+        onSave={onSave}
       />
     </div>
   );
