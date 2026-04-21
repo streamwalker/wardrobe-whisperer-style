@@ -203,7 +203,19 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           )}
         </SheetHeader>
 
-        {loading && (
+        {completingOutfit && (
+          <CompleteLookView
+            outfit={completingOutfit}
+            existingItems={completingOutfit.item_ids
+              .map((id) => allWardrobeItems.find((i) => i.id === id))
+              .filter((i): i is WardrobeItem => !!i)}
+            allWardrobeItems={allWardrobeItems}
+            inspirationImageUrl={inspirationImageUrl}
+            onBack={() => setCompletingOutfit(null)}
+          />
+        )}
+
+        {!completingOutfit && loading && (
           <div className="flex flex-col items-center gap-3 py-12">
             <Loader2 className="h-8 w-8 animate-spin text-accent" />
             <p className="text-sm text-muted-foreground">Analyzing colors & styles…</p>
