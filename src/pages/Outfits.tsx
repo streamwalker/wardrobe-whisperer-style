@@ -251,23 +251,133 @@ export default function Outfits() {
     );
   }
 
-  if (outfits.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="empty-state-blob">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
-            <Heart className="h-8 w-8 text-muted-foreground" />
-          </div>
+  const renderInspireCta = (
+    <button
+      onClick={() => setInspireSheetOpen(true)}
+      className="group relative w-full overflow-hidden rounded-2xl glass-card gradient-border p-4 text-left transition-all hover:shadow-neon"
+      data-tour="outfits-inspire"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl neon-gradient-cyan-pink shadow-neon">
+          <Camera className="h-5 w-5 text-white" />
         </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Tap any wardrobe item to get AI outfit suggestions, then save your favorites here.
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-display text-sm font-semibold text-foreground">Recreate a Look</h3>
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Snap or upload an inspiration photo — we'll match it to your wardrobe.
           </p>
         </div>
-        <Button variant="secondary" asChild>
-          <Link to="/wardrobe">Browse Wardrobe</Link>
-        </Button>
+      </div>
+    </button>
+  );
+
+  const inspireSheetAndDrawer = (
+    <>
+      <input
+        ref={inspireCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleInspireFile}
+      />
+      <input
+        ref={inspireGalleryRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleInspireFile}
+      />
+
+      <Sheet open={inspireSheetOpen} onOpenChange={closeInspireSheet}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]"
+        >
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-accent" />
+              Recreate a Look
+            </SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              Show us an outfit you love — we'll style it from what you already own.
+            </p>
+          </SheetHeader>
+
+          {inspireUploading ? (
+            <div className="flex flex-col items-center gap-3 py-10">
+              {inspirePreview && (
+                <img
+                  src={inspirePreview}
+                  alt="Inspiration preview"
+                  className="h-32 w-32 rounded-xl object-cover shadow-neon"
+                />
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing your inspiration…
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full gap-3 pb-4">
+              <button
+                onClick={() => inspireCameraRef.current?.click()}
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
+              >
+                <Camera className="h-7 w-7 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Take Photo</span>
+              </button>
+              <button
+                onClick={() => inspireGalleryRef.current?.click()}
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
+              >
+                <ImageIcon className="h-7 w-7 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Choose Photo</span>
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {inspireImageUrl && inspireOutfits && (
+        <OutfitSuggestionDrawer
+          items={[]}
+          allWardrobeItems={allItems}
+          open={inspireDrawerOpen}
+          onOpenChange={closeInspireDrawer}
+          headline="Looks inspired by your photo ✨"
+          subheadline="Built from your wardrobe — save the ones you love."
+          prefetchedOutfits={inspireOutfits}
+          inspirationImageUrl={inspireImageUrl}
+        />
+      )}
+    </>
+  );
+
+  if (outfits.length === 0) {
+    return (
+      <div className="space-y-6">
+        {renderInspireCta}
+        <div className="flex flex-col items-center justify-center gap-6 py-12 text-center">
+          <div className="empty-state-blob">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+              <Heart className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </div>
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              Tap any wardrobe item to get AI outfit suggestions, or recreate a look above.
+            </p>
+          </div>
+          <Button variant="secondary" asChild>
+            <Link to="/wardrobe">Browse Wardrobe</Link>
+          </Button>
+        </div>
+        {inspireSheetAndDrawer}
       </div>
     );
   }
