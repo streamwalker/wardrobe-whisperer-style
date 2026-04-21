@@ -626,26 +626,6 @@ export default function Wardrobe() {
         />
       )}
 
-      <AlertDialog
-        open={!!deleteItemId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteItemId(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The item will be permanently removed from your
-              wardrobe.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteItem}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
