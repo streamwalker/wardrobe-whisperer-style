@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
-import { Check } from "lucide-react";
+import { Check, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   items: WardrobeItem[];
@@ -41,37 +44,52 @@ function ItemTile({
   item,
   shared,
   className,
+  onZoom,
 }: {
   item: WardrobeItem;
   shared?: boolean;
   className?: string;
+  onZoom?: (item: WardrobeItem) => void;
 }) {
+  const hasPhoto = !!item.photo;
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => hasPhoto && onZoom?.(item)}
+      disabled={!hasPhoto}
+      aria-label={hasPhoto ? `Zoom ${item.name}` : item.name}
       className={cn(
         "group relative h-full w-full overflow-hidden rounded-xl border border-border/40 bg-secondary transition-transform sm:hover:scale-[1.03]",
+        hasPhoto && "cursor-zoom-in",
         className,
       )}
       style={{ backgroundColor: item.color_hex }}
     >
-      {item.photo && (
+      {hasPhoto && (
         <img
           src={item.photo}
           alt={item.name}
           className="h-full w-full object-contain p-1.5"
           loading="lazy"
+          draggable={false}
         />
       )}
+      {hasPhoto && (
+        <div className="pointer-events-none absolute right-1 top-1 flex items-center gap-0.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-medium text-foreground/80 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          <ZoomIn className="h-2.5 w-2.5" />
+          Zoom
+        </div>
+      )}
       {shared && (
-        <div className="absolute right-1 top-1 flex items-center gap-0.5 rounded-full bg-primary/90 px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
+        <div className="absolute left-1 top-1 flex items-center gap-0.5 rounded-full bg-primary/90 px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground shadow-sm backdrop-blur-sm">
           <Check className="h-2.5 w-2.5" />
           Kept
         </div>
       )}
-      <div className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-[10px] font-medium text-white">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-left text-[10px] font-medium text-white">
         {item.name}
       </div>
-    </div>
+    </button>
   );
 }
 
