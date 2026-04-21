@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
-import { Check, ZoomIn } from "lucide-react";
+import { Check, ZoomIn, LayoutGrid, Rows3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ZoomableImage from "./ZoomableImage";
+
+export type BoardDensity = "compact" | "full";
 
 interface Props {
   items: WardrobeItem[];
   highlightSharedIds?: string[];
   label?: string;
+  /** Controlled density (omit for uncontrolled w/ localStorage persistence). */
+  density?: BoardDensity;
+  /** Hide the inline density toggle (e.g. when a parent renders a single shared toggle). */
+  showDensityToggle?: boolean;
+  onDensityChange?: (d: BoardDensity) => void;
 }
 
 type Zone = "outerwear" | "top" | "bottom" | "shoes" | "accessory";
