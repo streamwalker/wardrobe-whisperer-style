@@ -56,6 +56,16 @@ export default function Outfits() {
   const [activeMood, setActiveMood] = useState("all");
   const [exporting, setExporting] = useState(false);
 
+  // Inspire-mode state
+  const [inspireSheetOpen, setInspireSheetOpen] = useState(false);
+  const [inspireUploading, setInspireUploading] = useState(false);
+  const [inspirePreview, setInspirePreview] = useState<string | null>(null);
+  const [inspireImageUrl, setInspireImageUrl] = useState<string | null>(null);
+  const [inspireOutfits, setInspireOutfits] = useState<InspireOutfit[] | null>(null);
+  const [inspireDrawerOpen, setInspireDrawerOpen] = useState(false);
+  const inspireCameraRef = useRef<HTMLInputElement>(null);
+  const inspireGalleryRef = useRef<HTMLInputElement>(null);
+
   const handleExportPdf = async () => {
     if (filteredOutfits.length === 0) return;
     setExporting(true);
