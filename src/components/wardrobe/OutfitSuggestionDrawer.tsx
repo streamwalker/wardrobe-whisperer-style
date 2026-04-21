@@ -7,10 +7,12 @@ import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import OutfitPreviewBoard from "./OutfitPreviewBoard";
+import OutfitPreviewBoard, { type BoardDensity } from "./OutfitPreviewBoard";
 import OutfitCompareView from "./OutfitCompareView";
 import CompleteLookView from "./CompleteLookView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LayoutGrid, Rows3 } from "lucide-react";
 
 interface OutfitSuggestion {
   name: string;
@@ -55,6 +57,16 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
+  const [density, setDensity] = useState<BoardDensity>(() => {
+    if (typeof window === "undefined") return "full";
+    const stored = window.localStorage.getItem("outfit-board-density");
+    return stored === "compact" ? "compact" : "full";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("outfit-board-density", density);
+    }
+  }, [density]);
   const { user } = useAuth();
 
   const isInspireMode = !!inspirationImageUrl;
@@ -196,10 +208,31 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
         <SheetHeader className="pb-2">
-          <SheetTitle className="flex items-center gap-2 font-display text-lg">
-            <Sparkles className="h-5 w-5 text-accent" />
-            {headline ?? drawerTitle}
-          </SheetTitle>
+          <div className="flex items-start justify-between gap-3">
+            <SheetTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-accent" />
+              {headline ?? drawerTitle}
+            </SheetTitle>
+            {!completingOutfit && !incompatible && outfits.length > 0 && (
+              <ToggleGroup
+                type="single"
+                size="sm"
+                value={density}
+                onValueChange={(v) => v && setDensity(v as BoardDensity)}
+                className="h-7 shrink-0"
+                aria-label="Preview density"
+              >
+                <ToggleGroupItem value="compact" className="h-7 gap-1 px-2 text-[10px]" aria-label="Compact preview">
+                  <Rows3 className="h-3 w-3" />
+                  Compact
+                </ToggleGroupItem>
+                <ToggleGroupItem value="full" className="h-7 gap-1 px-2 text-[10px]" aria-label="Full preview">
+                  <LayoutGrid className="h-3 w-3" />
+                  Full
+                </ToggleGroupItem>
+              </ToggleGroup>
+            )}
+          </div>
           {subheadline && (
             <p className="text-sm text-muted-foreground leading-relaxed">{subheadline}</p>
           )}
@@ -357,7 +390,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                                   Inspiration
                                 </p>
                                 <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-                                  <div className="h-[360px] w-full overflow-hidden rounded-xl sm:h-[420px]">
+                                  <div className={`w-full overflow-hidden rounded-xl ${density === "compact" ? "h-[240px] sm:h-[280px]" : "h-[360px] sm:h-[420px]"}`}>
                                     <img
                                       src={inspirationImageUrl}
                                       alt="Inspiration"
@@ -368,7 +401,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                                 </div>
                               </div>
                             ) : (
-                              <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                              <OutfitPreviewBoard items={items} label="Your pick(s)" density={density} showDensityToggle={false} />
                             )}
                             <div className="flex items-center justify-center text-muted-foreground">
                               <ArrowDown className="h-5 w-5 sm:hidden" />
@@ -378,6 +411,8 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                               items={suggestedItems}
                               highlightSharedIds={sharedIds}
                               label="Suggested look"
+                              density={density}
+                              showDensityToggle={false}
                             />
                           </div>
                         </TabsContent>
