@@ -351,7 +351,13 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
               );
             })}
 
-            {!loading && outfits.length > 0 && (
+            {!loading && outfits.length > 0 && isInspireMode && (
+              <p className="pt-2 text-center text-xs text-muted-foreground">
+                Want different ideas? Close and try another photo.
+              </p>
+            )}
+
+            {!loading && outfits.length > 0 && !isInspireMode && (
               <div className="flex justify-center pt-2">
                 {hasMore ? (
                   <Button
