@@ -1,59 +1,94 @@
 
 
 ## Goal
-When a user adds a new wardrobe item (single or batch), automatically generate AI outfit suggestions built around that item and surface them in a celebratory drawer with a full visual look, mood badge, and styling rationale — so users immediately see how their new piece fits into their existing wardrobe.
+Let the user **snap a live photo or upload a screenshot** (e.g. an outfit they saw on Instagram, a celeb on the red carpet, a magazine spread) on the **Outfits page**, then have the app instantly generate **3 outfit ideas built from items the user already owns** that recreate the vibe of the uploaded image.
+
+This is a new entry point distinct from:
+- The existing **Add Item** flow (analyzes a single garment and saves it to the wardrobe).
+- The existing **tap-an-item** flow (anchors suggestions on a known wardrobe piece).
+- The existing **occasion** flow (text-based prompt).
+
+The new flow is **inspiration-driven**: the user shows the AI a *look they want*, and the AI maps it to *what they own*.
+
+---
 
 ## Approach
 
-### 1. Reuse the existing match engine
-The `match-outfit` edge function and `OutfitSuggestionDrawer` already do exactly what we need: take an anchor item + the rest of the wardrobe and return styled outfits with explanations and mood tags. No backend or AI changes required.
+### 1. New "Inspire Me" entry on the Outfits page
+Add a new card/button to `src/pages/Outfits.tsx`, sitting next to the existing occasion suggestion CTA:
 
-### 2. Trigger after a successful add
+- Label: **"Recreate a Look"** with a `Camera` + `Sparkles` icon and a one-line subtitle ("Snap or upload an inspiration photo").
+- Tapping it opens a **bottom sheet** (`Sheet`) with three options, mirroring the AddItem pattern:
+  - **Take Photo** (`capture="environment"`) — visionOS/iOS will route to camera.
+  - **Choose Photo** — picks from gallery / screenshots folder.
+  - **Cancel**.
 
-**Single add (`src/pages/AddItem.tsx`)**
-After the `wardrobe_items` insert succeeds, instead of immediately navigating back to `/wardrobe`:
-- Refetch the user's wardrobe (or read from the cached `useWardrobeItems`).
-- Find the newly inserted item by id.
-- Open `OutfitSuggestionDrawer` inline with `items={[newItem]}` and `allWardrobeItems={items}`.
-- The drawer's existing `useEffect` auto-fires `match-outfit` on mount → user immediately sees 3 looks featuring their new piece.
-- Drawer close → navigate back to `/wardrobe`.
+We reuse the existing dual hidden-input pattern from `AddItem.tsx` so visionOS PWA compatibility is preserved (per the visionOS memory rule about separate capture/library triggers).
 
-Guard: only fire if the user has ≥2 other items in the wardrobe (otherwise there's nothing to pair with — show a small toast "Add a few more items to start getting outfit ideas" and navigate back).
+### 2. New edge function: `inspire-outfit`
+Create `supabase/functions/inspire-outfit/index.ts`. It:
 
-**Batch add (`src/pages/BatchAddItems.tsx`)**
-After the batch insert succeeds:
-- If exactly one item was added → behave like single add.
-- If multiple items added → open the drawer with `items` = the newly added items (the matcher already handles multi-anchor; existing Outfits page uses the same pattern). Header copy adjusts to "Outfits with your new pieces".
+1. Accepts `{ imageUrl: string, wardrobeItems: WardrobeItemLite[] }` (photo-stripped, like the existing `match-outfit` payload).
+2. Uses **Lovable AI Gateway** with a vision-capable model (`google/gemini-2.5-flash`) to:
+   - First **analyze the inspiration image**: extract a structured "look brief" (vibe, dominant colors, silhouette, formality level, key garment categories visible — e.g. *"oversized cream knit, dark wash straight-leg denim, white sneakers, casual elevated, neutral palette"*).
+   - Then, given the wardrobe catalog, return **3 outfits** reusing the same JSON shape the existing drawer already consumes: `{ outfits: [{ name, item_ids, explanation, mood }] }`.
+3. Reuses the same hard-style rules and styling principles already enforced in `match-outfit` (import from `_shared/dress-shirt-rules.ts` / inline the prohibitions block) so the inspire endpoint can't violate the prohibitions memory rule (no suits with sneakers, etc.).
+4. CORS via `corsHeaders` from `@supabase/supabase-js/cors`, returns 402 / 429 mapping for credit/rate errors using the same pattern as the other edge functions.
+5. Validates body with Zod (imageUrl URL, wardrobeItems array non-empty).
+6. `verify_jwt` stays at the project default — no `config.toml` change needed.
 
-### 3. New "just added" header on the drawer
-Add a small optional prop `headline?: string` to `OutfitSuggestionDrawer` (default unchanged). When provided, replace the existing "Outfit Ideas" title with a celebratory header:
-- ✨ icon + "Fresh additions to your wardrobe"
-- Subtitle: "Here's how [item name] (or "your new pieces") works with what you already own."
+### 3. Photo upload pipeline (client side)
+On file pick:
 
-This keeps the post-add surface visually distinct from the regular tap-an-item flow without forking the component.
+1. Show a small in-sheet preview + spinner ("Analyzing your inspiration…").
+2. Upload the file to the existing `wardrobe-photos` storage bucket under a dedicated `${user.id}/inspiration/` prefix to keep things tidy. (No new bucket / no migration — the bucket and RLS policies already exist.)
+3. Get the public URL.
+4. Strip photos from the wardrobe array (same pattern as `OutfitSuggestionDrawer.fetchSuggestions`).
+5. Invoke `inspire-outfit` with `{ imageUrl, wardrobeItems }`.
+6. Close the option sheet, open the existing **`OutfitSuggestionDrawer`** with:
+   - `items={[]}` (no anchor pieces — the inspiration *is* the anchor).
+   - `allWardrobeItems={items}`.
+   - New optional prop `prefetchedOutfits` so the drawer skips its internal `match-outfit` call and renders the AI-returned outfits directly.
+   - `headline="Looks inspired by your photo ✨"`.
+   - `subheadline="Built from your wardrobe — save the ones you love."`.
+   - We also pass `inspirationImageUrl` so the drawer can render a **small "inspiration" thumbnail** at the top of each suggestion card's left preview slot (in place of the empty "your pick" board).
 
-### 4. Bookmark / dismiss behavior
-- "Save Outfit" button already persists to `saved_outfits` — no change.
-- Drawer close button → navigates user to `/wardrobe` (single add) or stays on `/wardrobe` (batch was already navigated there).
-- "Load More" / "Skip This" continue to work as-is.
+### 4. Drawer changes (`OutfitSuggestionDrawer.tsx`)
+Two small additions:
 
-### 5. Empty / error states
-- If `match-outfit` returns no outfits or fails, drawer already shows the existing empty/error state — user can dismiss and continue. We add a one-line fallback toast "Item added — try tapping it from your wardrobe to see outfit ideas."
-- Free-tier users hitting the AI limit: existing edge function error handling surfaces the message in the drawer, unchanged.
+- New optional prop `prefetchedOutfits?: OutfitSuggestion[]` — when present, the drawer initializes `outfits` from it on open and **skips its initial `fetchSuggestions` call**. "Load More" remains hidden in this mode (no anchor items to feed back to `match-outfit` for follow-ups). We surface a small "Try another photo" hint at the bottom instead.
+- New optional prop `inspirationImageUrl?: string` — when set, the left side of each comparison row shows a single tile with the inspiration image (rounded, with a small "Inspiration" label) instead of the existing `OutfitPreviewBoard items={items}` (which would be empty in this mode).
 
-### 6. Files touched
-- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — accept optional `headline` + `subheadline` props; render them when provided in place of the default title.
-- **Edit:** `src/pages/AddItem.tsx` — after insert, fetch the new item, open the drawer with the celebratory headline; navigate to `/wardrobe` on close.
-- **Edit:** `src/pages/BatchAddItems.tsx` — after batch insert, open the drawer with all newly-added items as anchors and a "your new pieces" headline; navigate to `/wardrobe` on close.
+This keeps a single drawer component handling all three modes (anchor item, occasion, inspiration) — no duplication.
 
-No new tables, no new edge functions, no schema changes, no new dependencies.
+### 5. Files touched
+
+- **New:** `supabase/functions/inspire-outfit/index.ts` — vision analysis + outfit matching against catalog.
+- **Edit:** `src/pages/Outfits.tsx` — add the "Recreate a Look" card, the option sheet, the file inputs, the upload + invocation flow, drawer wiring with prefetched outfits.
+- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — accept `prefetchedOutfits` and `inspirationImageUrl`; render inspiration thumb in place of the empty left board; suppress Load More in inspire mode.
+- No DB migration. No new bucket. No new dependencies. No `config.toml` edits.
+
+### 6. Failure / edge cases
+- Wardrobe with <3 items → toast "Add a few more items first" and abort before uploading.
+- Non-image file → toast "Please choose an image".
+- Upload error → toast + close sheet.
+- Edge function returns 402 (credits exhausted) → toast surfaces the message; sheet stays open so user can retry later.
+- Edge function returns no outfits → drawer shows the existing empty state ("No suggestions found, try a different photo").
+- Free-tier AI cap → handled by existing edge function error mapping (same as match-outfit).
+
+### 7. Privacy / cleanup
+Inspiration uploads land in `wardrobe-photos/${user.id}/inspiration/` and persist (same storage policy as item photos). We do **not** auto-delete because the user may want to revisit. Future enhancement (out of scope): a "clear inspirations" button in Profile.
+
+---
 
 ## Verification checklist
-- Add a single item → drawer opens automatically with 3 outfit ideas built around that item, each with the new `OutfitPreviewBoard` comparison and rationale.
-- Add a batch of 3 items → drawer opens with looks anchored on all 3; headline reads "Fresh additions to your wardrobe".
-- Wardrobe with <2 other items → no drawer, friendly toast instead, navigate back normally.
-- Save an outfit from the drawer → appears in `/outfits` as expected.
-- Close drawer → returns to `/wardrobe`.
-- Existing tap-an-item flow on `/wardrobe` still works exactly as before (no headline override).
-- Free-tier AI cap or network error → existing error UI handles it gracefully.
+
+- New "Recreate a Look" card appears on `/outfits` between the existing actions; tap opens the option sheet.
+- Take Photo on visionOS / iOS opens the camera; Choose Photo opens the gallery (separate inputs preserved).
+- After upload, drawer opens with celebratory headline, the inspiration thumb on the left of each suggestion, and the AI-built look on the right (full `OutfitPreviewBoard`).
+- All `item_ids` returned by `inspire-outfit` exist in the user's wardrobe — no phantom items render.
+- Saving an outfit from this flow persists to `saved_outfits` and shows up on the Outfits list.
+- Hard style prohibitions hold (no suits + sneakers, etc.).
+- Closing the drawer returns the user cleanly to `/outfits`; no nav side effects.
+- Existing tap-an-item, occasion, and just-added flows are unchanged.
 
