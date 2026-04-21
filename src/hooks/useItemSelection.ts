@@ -42,5 +42,10 @@ export function useItemSelection() {
     setSelectedItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
-  return { selectedItems, selectedIds, toggle, swap, clear, removeById };
+  /** Replace the entire selection with a single item — used by per-card "Match" actions. */
+  const setOnly = useCallback((item: WardrobeItem) => {
+    setSelectedItems([item]);
+  }, []);
+
+  return { selectedItems, selectedIds, toggle, swap, clear, removeById, setOnly };
 }
