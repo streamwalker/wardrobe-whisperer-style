@@ -139,8 +139,12 @@ When a back-view photo is provided:
                     enum: ["cotton", "linen", "wool", "silk", "denim", "corduroy", "suede", "leather", "knit", "fleece", "tweed", "canvas", "poplin", "flannel", "chambray", "velvet"],
                     description: "The fabric/texture of the item",
                   },
+                  back_details: {
+                    type: "string",
+                    description: "Short summary (under 140 chars) of distinctive back-view features (graphic, hood, vents, pleats, fit cues). Empty string if no back image was provided or no notable back features.",
+                  },
                 },
-                required: ["name", "description", "category", "primary_color", "color_hex", "style_tags", "pattern", "texture"],
+                required: ["name", "description", "category", "primary_color", "color_hex", "style_tags", "pattern", "texture", "back_details"],
                 additionalProperties: false,
               },
             },
