@@ -36,9 +36,13 @@ interface Props {
   onSwapItem?: (oldItemId: string, newItemId: string) => void;
   headline?: string;
   subheadline?: string;
+  /** When provided, drawer skips its internal match-outfit call and renders these instead. */
+  prefetchedOutfits?: OutfitSuggestion[];
+  /** When set, replaces the empty "your pick(s)" board with the inspiration thumbnail. */
+  inspirationImageUrl?: string;
 }
 
-export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline }: Props) {
+export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline, prefetchedOutfits, inspirationImageUrl }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -49,17 +53,33 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const { user } = useAuth();
 
-  const itemsKey = items.map((i) => i.id).sort().join(",");
+  const isInspireMode = !!inspirationImageUrl;
+  const itemsKey = isInspireMode
+    ? `inspire::${inspirationImageUrl}`
+    : items.map((i) => i.id).sort().join(",");
 
   useEffect(() => {
-    if (open && items.length > 0 && hasLoaded !== itemsKey) {
+    if (!open) return;
+    if (hasLoaded === itemsKey) return;
+
+    // Inspire / prefetched mode: use the supplied outfits directly, no fetch.
+    if (prefetchedOutfits) {
+      setOutfits(prefetchedOutfits);
+      setHasMore(false);
+      setSavedIds(new Set());
+      setIncompatible(null);
+      setHasLoaded(itemsKey);
+      return;
+    }
+
+    if (items.length > 0) {
       setOutfits([]);
       setHasMore(true);
       setSavedIds(new Set());
       setIncompatible(null);
       fetchSuggestions(items, []);
     }
-  }, [open, itemsKey]);
+  }, [open, itemsKey, prefetchedOutfits]);
 
   const fetchSuggestions = async (selectedItems: WardrobeItem[], excludeOutfits: string[][]) => {
     const isInitial = excludeOutfits.length === 0;
@@ -247,7 +267,9 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
 
         {!loading && !incompatible && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No suggestions found. Try different items!
+            {isInspireMode
+              ? "No matches found. Try a different inspiration photo."
+              : "No suggestions found. Try different items!"}
           </p>
         )}
 
@@ -292,7 +314,25 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       .filter((id) => outfit.item_ids.includes(id));
                     return (
                       <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
-                        <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                        {isInspireMode ? (
+                          <div className="flex flex-col gap-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Inspiration
+                            </p>
+                            <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
+                              <div className="h-[260px] w-full overflow-hidden rounded-xl sm:h-[300px]">
+                                <img
+                                  src={inspirationImageUrl}
+                                  alt="Inspiration"
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                        )}
                         <div className="flex items-center justify-center text-muted-foreground">
                           <ArrowDown className="h-5 w-5 sm:hidden" />
                           <ArrowRight className="hidden h-5 w-5 sm:block" />
@@ -313,7 +353,13 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
               );
             })}
 
-            {!loading && outfits.length > 0 && (
+            {!loading && outfits.length > 0 && isInspireMode && (
+              <p className="pt-2 text-center text-xs text-muted-foreground">
+                Want different ideas? Close and try another photo.
+              </p>
+            )}
+
+            {!loading && outfits.length > 0 && !isInspireMode && (
               <div className="flex justify-center pt-2">
                 {hasMore ? (
                   <Button

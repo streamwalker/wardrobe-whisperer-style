@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
-import { Heart, Trash2, Loader2, LogIn, FileDown } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,14 @@ import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { OUTFITS_TOUR_STEPS } from "@/components/onboarding/outfits-tour-steps";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+
+interface InspireOutfit {
+  name: string;
+  item_ids: string[];
+  explanation: string;
+  mood: string;
+}
 
 const MOOD_FILTERS = [
   { value: "all", label: "All", emoji: "🎯" },
@@ -46,6 +55,16 @@ export default function Outfits() {
   const queryClient = useQueryClient();
   const [activeMood, setActiveMood] = useState("all");
   const [exporting, setExporting] = useState(false);
+
+  // Inspire-mode state
+  const [inspireSheetOpen, setInspireSheetOpen] = useState(false);
+  const [inspireUploading, setInspireUploading] = useState(false);
+  const [inspirePreview, setInspirePreview] = useState<string | null>(null);
+  const [inspireImageUrl, setInspireImageUrl] = useState<string | null>(null);
+  const [inspireOutfits, setInspireOutfits] = useState<InspireOutfit[] | null>(null);
+  const [inspireDrawerOpen, setInspireDrawerOpen] = useState(false);
+  const inspireCameraRef = useRef<HTMLInputElement>(null);
+  const inspireGalleryRef = useRef<HTMLInputElement>(null);
 
   const handleExportPdf = async () => {
     if (filteredOutfits.length === 0) return;
@@ -110,10 +129,82 @@ export default function Outfits() {
     },
   });
 
+  const handleInspireFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    if (allItems.length < 3) {
+      toast.error("Add a few more items first to get inspired matches");
+      return;
+    }
+
+    setInspirePreview(URL.createObjectURL(file));
+    setInspireUploading(true);
+
+    try {
+      // Upload to wardrobe-photos bucket under inspiration prefix
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/inspiration/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("wardrobe-photos")
+        .upload(filePath, file);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("wardrobe-photos").getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl;
+
+      // Strip photos from wardrobe payload
+      const stripped = allItems.map(({ photo, photo_back, ...rest }) => rest);
+
+      const { data, error } = await supabase.functions.invoke("inspire-outfit", {
+        body: { imageUrl: publicUrl, wardrobeItems: stripped },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const outfits: InspireOutfit[] = data?.outfits ?? [];
+
+      setInspireImageUrl(publicUrl);
+      setInspireOutfits(outfits);
+      setInspireSheetOpen(false);
+      setInspireDrawerOpen(true);
+
+      if (outfits.length === 0) {
+        toast("No matches found — try a different photo", { description: "Pick something with clearer outfit details." });
+      }
+    } catch (err: any) {
+      console.error("inspire error:", err);
+      toast.error(err?.message || "Failed to analyze inspiration photo");
+    } finally {
+      setInspireUploading(false);
+    }
+  };
+
+  const closeInspireDrawer = (open: boolean) => {
+    setInspireDrawerOpen(open);
+    if (!open) {
+      setInspirePreview(null);
+      setInspireImageUrl(null);
+      setInspireOutfits(null);
+    }
+  };
+
+  const closeInspireSheet = (open: boolean) => {
+    if (inspireUploading) return; // prevent close during upload
+    setInspireSheetOpen(open);
+    if (!open && !inspireDrawerOpen) {
+      setInspirePreview(null);
+    }
+  };
+
   const filteredOutfits = useMemo(
     () => activeMood === "all" ? outfits : outfits.filter((o) => o.mood === activeMood),
     [outfits, activeMood]
   );
+
 
   const onboardingReady = !!user?.id && !isLoading && outfits.length > 0;
   const onboarding = useOnboarding({
@@ -160,23 +251,133 @@ export default function Outfits() {
     );
   }
 
-  if (outfits.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="empty-state-blob">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
-            <Heart className="h-8 w-8 text-muted-foreground" />
-          </div>
+  const renderInspireCta = (
+    <button
+      onClick={() => setInspireSheetOpen(true)}
+      className="group relative w-full overflow-hidden rounded-2xl glass-card gradient-border p-4 text-left transition-all hover:shadow-neon"
+      data-tour="outfits-inspire"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl neon-gradient-cyan-pink shadow-neon">
+          <Camera className="h-5 w-5 text-white" />
         </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Tap any wardrobe item to get AI outfit suggestions, then save your favorites here.
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-display text-sm font-semibold text-foreground">Recreate a Look</h3>
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Snap or upload an inspiration photo — we'll match it to your wardrobe.
           </p>
         </div>
-        <Button variant="secondary" asChild>
-          <Link to="/wardrobe">Browse Wardrobe</Link>
-        </Button>
+      </div>
+    </button>
+  );
+
+  const inspireSheetAndDrawer = (
+    <>
+      <input
+        ref={inspireCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleInspireFile}
+      />
+      <input
+        ref={inspireGalleryRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleInspireFile}
+      />
+
+      <Sheet open={inspireSheetOpen} onOpenChange={closeInspireSheet}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]"
+        >
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-accent" />
+              Recreate a Look
+            </SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              Show us an outfit you love — we'll style it from what you already own.
+            </p>
+          </SheetHeader>
+
+          {inspireUploading ? (
+            <div className="flex flex-col items-center gap-3 py-10">
+              {inspirePreview && (
+                <img
+                  src={inspirePreview}
+                  alt="Inspiration preview"
+                  className="h-32 w-32 rounded-xl object-cover shadow-neon"
+                />
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing your inspiration…
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full gap-3 pb-4">
+              <button
+                onClick={() => inspireCameraRef.current?.click()}
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
+              >
+                <Camera className="h-7 w-7 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Take Photo</span>
+              </button>
+              <button
+                onClick={() => inspireGalleryRef.current?.click()}
+                className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl glass-card p-6 transition-all hover:shadow-neon"
+              >
+                <ImageIcon className="h-7 w-7 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Choose Photo</span>
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {inspireImageUrl && inspireOutfits && (
+        <OutfitSuggestionDrawer
+          items={[]}
+          allWardrobeItems={allItems}
+          open={inspireDrawerOpen}
+          onOpenChange={closeInspireDrawer}
+          headline="Looks inspired by your photo ✨"
+          subheadline="Built from your wardrobe — save the ones you love."
+          prefetchedOutfits={inspireOutfits}
+          inspirationImageUrl={inspireImageUrl}
+        />
+      )}
+    </>
+  );
+
+  if (outfits.length === 0) {
+    return (
+      <div className="space-y-6">
+        {renderInspireCta}
+        <div className="flex flex-col items-center justify-center gap-6 py-12 text-center">
+          <div className="empty-state-blob">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+              <Heart className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </div>
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              Tap any wardrobe item to get AI outfit suggestions, or recreate a look above.
+            </p>
+          </div>
+          <Button variant="secondary" asChild>
+            <Link to="/wardrobe">Browse Wardrobe</Link>
+          </Button>
+        </div>
+        {inspireSheetAndDrawer}
       </div>
     );
   }
@@ -198,6 +399,8 @@ export default function Outfits() {
           Export PDF
         </Button>
       </div>
+
+      {renderInspireCta}
 
       <div data-tour="outfits-mood-filter" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {MOOD_FILTERS.map((f) => (
@@ -304,6 +507,8 @@ export default function Outfits() {
         onClose={onboarding.finish}
         steps={OUTFITS_TOUR_STEPS}
       />
+
+      {inspireSheetAndDrawer}
     </div>
   );
 }
