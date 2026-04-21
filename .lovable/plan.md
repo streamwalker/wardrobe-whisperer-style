@@ -1,47 +1,59 @@
 
 
 ## Goal
-Block the rule engine from ever pairing a **tie** with a **polo** shirt. The screenshot shows "Tropical Nightfall" generating a polo + floral silk tie combination, which is sartorially invalid (polos have no collar stand or button placket designed for a tie).
+Auto-create a `profiles` row whenever a new user signs up, eliminating the need for `upsert` bootstrapping in `Profile.tsx`.
+
+## Current state
+- `public.handle_new_user()` already exists as a `SECURITY DEFINER` function that inserts `(user_id, display_name = email prefix)` into `profiles`.
+- **No trigger is wired to it** — confirmed via `pg_trigger` lookup. So new signups never trigger a profile insert today.
+- `Profile.tsx` currently compensates with `.upsert(..., { onConflict: "user_id" })`.
 
 ## Approach
 
-### 1. Detect ties as a distinct accessory
-In `supabase/functions/_shared/dress-shirt-rules.ts`, add a helper:
+### 1. Migration: attach the trigger to `auth.users`
+Create a migration that adds:
 
-```ts
-export function isTie(item: WardrobeItem): boolean {
-  if (item.category !== "accessories") return false;
-  const text = toSearchText(item);
-  return hasAnyKeyword(text, ["tie", "necktie", "bow tie", "bowtie", "silk tie"]);
-}
+```sql
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
 ```
 
-### 2. Add a polo-vs-tie prohibition in `isValidOutfitPairing`
-Right alongside the existing polo restrictions (no dress shoes, no joggers, no hoodies), add:
+The function is already `SECURITY DEFINER` with a locked `search_path`, so no function changes are required.
 
-```ts
-const hasTie = items.some((i) => isTie(i));
-if (hasPolo && hasTie) return false;
+### 2. Backfill any existing users missing a profile row
+Same migration, idempotent insert so existing accounts (including the user's own) get rows immediately:
+
+```sql
+INSERT INTO public.profiles (user_id, display_name)
+SELECT u.id, split_part(u.email, '@', 1)
+FROM auth.users u
+LEFT JOIN public.profiles p ON p.user_id = u.id
+WHERE p.id IS NULL;
 ```
 
-This guarantees the post-generation validator rejects any AI suggestion that combines a polo with any tie variant (necktie, bow tie, silk tie).
+### 3. Revert `Profile.tsx` to a clean `.update()`
+With the trigger guaranteeing the row exists, switch the `updateProfile` mutation back from `.upsert(...)` to:
 
-### 3. Reinforce in the AI prompt
-In `supabase/functions/match-outfit/index.ts` (and `suggest-occasion-outfit/index.ts` if it has its own prompt), add an explicit rule line to the styling guidelines passed to the model:
-> "Never pair a polo shirt with a tie of any kind — polos have no collar stand for a tie."
+```ts
+const { error } = await supabase
+  .from("profiles")
+  .update(updates)
+  .eq("user_id", user!.id);
+```
 
-This reduces wasted retries by steering the model away from the combo upfront, while the validator above is the hard guarantee.
+Keeps the code intent explicit ("I'm editing my profile") and avoids the `onConflict` ceremony.
 
-### 4. Files touched
-- `supabase/functions/_shared/dress-shirt-rules.ts` — add `isTie` helper, add polo+tie prohibition to `isValidOutfitPairing`.
-- `supabase/functions/match-outfit/index.ts` — add the rule to the system prompt.
-- `supabase/functions/suggest-occasion-outfit/index.ts` — same prompt addition if it generates outfits independently.
-
-No DB or UI changes — purely rule-engine + prompt logic.
+## Files touched
+- New migration file under `supabase/migrations/` — trigger + backfill.
+- `src/pages/Profile.tsx` — swap upsert back to update.
 
 ## Verification checklist
-- Generate outfits including a polo in the wardrobe → no result includes a tie.
-- Manually select polo + suit + tie → outfit fails validation.
-- Long-sleeve dress shirt + suit + tie → still validates (unchanged).
-- Polo + suit + dress shoes (no tie) → still validates (smart-casual lane preserved).
+- Create a brand-new account → check `profiles` table has a row with `display_name = email prefix` immediately, before visiting `/profile`.
+- Edit and save profile fields on the new account → values persist after reload.
+- Existing accounts (including current user) still load and save normally.
+- Deleting a user from `auth.users` cascades cleanly (no change to delete behavior — trigger only fires on INSERT).
 
