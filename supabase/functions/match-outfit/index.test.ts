@@ -79,3 +79,31 @@ Deno.test("Dress Shirt without Suit = invalid", () => {
   const result = isValidOutfitPairing([dressShirt, chinos, dressShoes, tie]);
   assertEquals(result, false);
 });
+
+// --- Polo rules ---
+const polo = { id: "polo-1", category: "tops", name: "Navy Polo Shirt", description: "Classic pique polo", subcategory: "polo", style_tags: ["smart casual"] };
+
+Deno.test("Polo + Chinos + Loafers = valid (smart casual)", () => {
+  const result = isValidOutfitPairing([polo, chinos, loafers]);
+  assertEquals(result, true);
+});
+
+Deno.test("Polo + Suit = invalid", () => {
+  const result = isValidOutfitPairing([polo, suit, dressShoes]);
+  assertEquals(result, false);
+});
+
+Deno.test("Polo + Dress Shoes = invalid", () => {
+  const result = isValidOutfitPairing([polo, chinos, dressShoes]);
+  assertEquals(result, false);
+});
+
+Deno.test("Polo + Joggers = invalid", () => {
+  const result = isValidOutfitPairing([polo, joggers, sneakers]);
+  assertEquals(result, false);
+});
+
+Deno.test("Polo + Hoodie = invalid", () => {
+  const result = isValidOutfitPairing([polo, hoodie, chinos, sneakers]);
+  assertEquals(result, false);
+});
