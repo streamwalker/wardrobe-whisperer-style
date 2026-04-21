@@ -55,7 +55,10 @@ export default function AppLayout() {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95">
+                <button
+                  data-tour="add-item"
+                  className="flex h-10 w-10 items-center justify-center rounded-full neon-gradient-cyan-pink text-white text-lg leading-none shadow-neon transition-transform hover:scale-105 active:scale-95"
+                >
                   <Plus className="h-5 w-5" />
                 </button>
               </DropdownMenuTrigger>
@@ -64,7 +67,11 @@ export default function AppLayout() {
                   <Plus className="h-4 w-4" />
                   Add Single Item
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/wardrobe/batch")} className="gap-2">
+                <DropdownMenuItem
+                  data-tour="batch-upload"
+                  onClick={() => navigate("/wardrobe/batch")}
+                  className="gap-2"
+                >
                   <Layers className="h-4 w-4" />
                   Batch Upload
                 </DropdownMenuItem>
@@ -88,9 +95,12 @@ export default function AppLayout() {
         <div className="container flex h-14 sm:h-16 items-center justify-around">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname.startsWith(path);
+            const tourId =
+              path === "/outfits" ? "nav-outfits" : path === "/profile" ? "nav-profile" : undefined;
             return (
               <button
                 key={path}
+                data-tour={tourId}
                 onClick={() => navigate(path)}
                 className={cn(
                   "relative flex flex-col items-center gap-1 px-3 py-1 transition-all active:scale-95",
