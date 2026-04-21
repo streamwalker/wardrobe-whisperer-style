@@ -62,6 +62,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export default function Wardrobe() {
   const { user } = useAuth();
@@ -85,6 +87,12 @@ export default function Wardrobe() {
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  // --- Onboarding tour ---
+  const onboarding = useOnboarding({
+    ready: !!user?.id,
+    shouldAutoStart: !!user?.id && allItems.length === 0,
+  });
 
   // Handle Stripe checkout success redirect (one-time on mount)
   useEffect(() => {
@@ -355,7 +363,7 @@ export default function Wardrobe() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
+      <div data-tour="filter-bar" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
         <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0">
           Tone
         </span>
@@ -626,6 +634,7 @@ export default function Wardrobe() {
         />
       )}
 
+      <OnboardingTour open={onboarding.isOpen} onClose={onboarding.finish} />
     </div>
   );
 }

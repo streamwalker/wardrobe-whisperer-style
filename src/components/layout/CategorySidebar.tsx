@@ -19,7 +19,10 @@ export default function CategorySidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 glass-panel border-r-0 rounded-none sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all">
+    <aside
+      data-tour="category-sidebar"
+      className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 glass-panel border-r-0 rounded-none sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all"
+    >
       <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-neon-cyan/20 via-neon-pink/10 to-transparent" />
       <nav className="flex flex-col gap-0.5 p-2 pt-3">
         {/* All */}

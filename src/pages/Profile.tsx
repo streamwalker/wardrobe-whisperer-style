@@ -15,10 +15,11 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2, Crown } from "lucide-react";
+import { Pencil, Check, X, Loader2, LogOut, Save, Link2, Link2Off, Copy, ExternalLink, Download, Trash2, Crown, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { restartOnboarding } from "@/hooks/useOnboarding";
 
 const STYLE_MOODS = ["neutral", "bold", "luxury", "streetwear", "classic", "minimalist"];
 const SKIN_TONES = ["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Dark"];
@@ -425,6 +426,27 @@ export default function Profile() {
 
       {/* Wardrobe Sharing */}
       <ShareSection userId={user?.id} />
+
+      {/* Help & Onboarding */}
+      <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Help</p>
+        <p className="text-sm text-muted-foreground">
+          Need a refresher? Replay the welcome tour to see how everything works.
+        </p>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="gap-1.5"
+          onClick={() => {
+            restartOnboarding();
+            toast.success("Tour reset — heading to your wardrobe");
+            navigate("/wardrobe");
+          }}
+        >
+          <PlayCircle className="h-3.5 w-3.5" />
+          Replay tour
+        </Button>
+      </div>
 
       {/* GDPR: Data Export & Account Deletion */}
       <div className="glass-card gradient-border rounded-2xl p-5 space-y-4">
