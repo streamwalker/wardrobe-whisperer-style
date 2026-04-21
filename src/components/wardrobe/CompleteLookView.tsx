@@ -45,6 +45,28 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
   const [conceptPieces, setConceptPieces] = useState<ConceptPiece[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  /** Picked replacements by concept index (chosen from existing wardrobe). */
+  const [replacedConcepts, setReplacedConcepts] = useState<Record<number, WardrobeItem>>({});
+  const [pickerForConcept, setPickerForConcept] = useState<number | null>(null);
+
+  /** Concept indices that have NOT been replaced yet — drives the "Add missing pieces" callout. */
+  const unresolvedConceptIdxs = useMemo(
+    () => conceptPieces.map((_, i) => i).filter((i) => !replacedConcepts[i]),
+    [conceptPieces, replacedConcepts],
+  );
+
+  /** Items eligible to replace a given concept piece: same category, not already in the look. */
+  const eligibleReplacementsFor = (conceptIdx: number): WardrobeItem[] => {
+    const concept = conceptPieces[conceptIdx];
+    if (!concept) return [];
+    const usedIds = new Set([
+      ...existingItems.map((i) => i.id),
+      ...Object.values(replacedConcepts).map((i) => i.id),
+    ]);
+    return allWardrobeItems.filter(
+      (i) => i.category === concept.category && !usedIds.has(i.id),
+    );
+  };
 
   useEffect(() => {
     let cancelled = false;
