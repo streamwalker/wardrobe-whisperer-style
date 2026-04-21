@@ -10,9 +10,10 @@ interface Props {
   onClick?: () => void;
   onDelete?: () => Promise<void> | void;
   onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
+  onMatch?: () => void;
 }
 
-export default function DraggableItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
+export default function DraggableItemCard({ item, selected, highlighted, onClick, onDelete, onSave, onMatch }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     data: { item },
@@ -34,6 +35,7 @@ export default function DraggableItemCard({ item, selected, highlighted, onClick
         onClick={onClick}
         onDelete={onDelete}
         onSave={onSave}
+        onMatch={onMatch}
       />
     </div>
   );
