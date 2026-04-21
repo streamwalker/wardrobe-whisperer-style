@@ -16,6 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+import { useWardrobeItems } from "@/hooks/useWardrobeItems";
+import type { WardrobeItem } from "@/lib/wardrobe-data";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
