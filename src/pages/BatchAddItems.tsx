@@ -581,6 +581,70 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
               ))}
             </div>
           </div>
+
+          {/* Back photo (optional) */}
+          <div className="space-y-1">
+            <Label className="text-xs">Back photo (optional)</Label>
+            {item.backPreview ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={item.backPreview}
+                  alt="Back preview"
+                  className="h-12 w-12 rounded-md object-cover border"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => backInputRef.current?.click()}
+                >
+                  Replace
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                  onClick={removeBack}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => backCameraRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-md border border-dashed border-border py-1.5 text-[11px] text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+                >
+                  <Camera className="h-3 w-3" />
+                  Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => backInputRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-md border border-dashed border-border py-1.5 text-[11px] text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+                >
+                  <ImageIcon className="h-3 w-3" />
+                  Choose
+                </button>
+              </div>
+            )}
+            <input
+              ref={backInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBackSelect}
+            />
+            <input
+              ref={backCameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleBackSelect}
+            />
+          </div>
         </div>
       )}
     </div>
