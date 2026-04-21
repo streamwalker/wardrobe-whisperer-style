@@ -1,11 +1,6 @@
 import { useState, useRef } from "react";
 import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES } from "@/lib/wardrobe-data";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,26 +19,29 @@ import { PATTERN_OPTIONS, TEXTURE_OPTIONS, type WardrobeItem } from "@/lib/wardr
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
 
+export interface EditItemSaveUpdates {
+  name: string;
+  category: string;
+  subcategory?: string;
+  primary_color: string;
+  color_hex: string;
+  style_tags: string[];
+  pattern?: string;
+  texture?: string;
+  newPhotoFile?: File;
+  newBackPhotoFile?: File;
+  removeBackPhoto?: boolean;
+}
+
 interface Props {
   item: WardrobeItem;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (updates: {
-    name: string;
-    category: string;
-    subcategory?: string;
-    primary_color: string;
-    color_hex: string;
-    style_tags: string[];
-    pattern?: string;
-    texture?: string;
-    newPhotoFile?: File;
-    newBackPhotoFile?: File;
-    removeBackPhoto?: boolean;
-  }) => Promise<void>;
+  onSave: (updates: EditItemSaveUpdates) => Promise<void>;
+  children: React.ReactNode;
 }
 
-export default function EditItemDialog({ item, open, onOpenChange, onSave }: Props) {
+export default function EditItemPopover({ item, open, onOpenChange, onSave, children }: Props) {
   const [name, setName] = useState(item.name);
   const [category, setCategory] = useState<string>(item.category);
   const [subcategory, setSubcategory] = useState<string>(item.subcategory || "");
@@ -64,16 +62,13 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const backCameraInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTag = (tag: string) => {
-    setStyleTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setStyleTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setNewPhotoFile(file);
-    // Revoke previous preview to avoid memory leak
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(URL.createObjectURL(file));
     e.target.value = "";
@@ -96,7 +91,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       await onSave({
         name: name.trim(),
         category,
-        subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : undefined,
+        subcategory:
+          (category === "shoes" || category === "accessories") && subcategory ? subcategory : undefined,
         primary_color: primaryColor.trim(),
         color_hex: colorHex,
         style_tags: styleTags,
@@ -139,18 +135,26 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const displayBackPhoto = backPhotoPreview || (removeBackPhoto ? null : item.photo_back);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-          <DialogTitle>Edit Item</DialogTitle>
-        </DialogHeader>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        align="start"
+        side="bottom"
+        sideOffset={8}
+        collisionPadding={12}
+        className="w-[22rem] max-w-[calc(100vw-1.5rem)] p-0 flex flex-col max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-4 pt-4 pb-2 shrink-0 border-b border-border/40">
+          <h3 className="text-base font-semibold">Edit Item</h3>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-6 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {/* Side-by-side front/back photos */}
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-3">
               {/* FRONT */}
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <p className="text-[11px] font-medium text-muted-foreground">Front</p>
                 <div
                   className="relative w-full aspect-square rounded-lg overflow-hidden border"
@@ -164,7 +168,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -185,7 +189,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               </div>
 
               {/* BACK */}
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <p className="text-[11px] font-medium text-muted-foreground">Back (optional)</p>
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden border bg-muted/30">
                   {displayBackPhoto ? (
@@ -196,7 +200,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => backFileInputRef.current?.click()}
@@ -231,13 +235,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               </div>
             </div>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoSelect}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
             <input
               ref={cameraInputRef}
               type="file"
@@ -270,7 +268,13 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
 
           <div className="space-y-1.5">
             <Label className="text-xs">Category</Label>
-            <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes" && val !== "accessories") setSubcategory(""); }}>
+            <Select
+              value={category}
+              onValueChange={(val) => {
+                setCategory(val);
+                if (val !== "shoes" && val !== "accessories") setSubcategory("");
+              }}
+            >
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
@@ -339,7 +343,9 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                 </SelectTrigger>
                 <SelectContent>
                   {PATTERN_OPTIONS.map((p) => (
-                    <SelectItem key={p} value={p} className="capitalize text-sm">{p}</SelectItem>
+                    <SelectItem key={p} value={p} className="capitalize text-sm">
+                      {p}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -352,14 +358,16 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                 </SelectTrigger>
                 <SelectContent>
                   {TEXTURE_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t} className="capitalize text-sm">{t}</SelectItem>
+                    <SelectItem key={t} value={t} className="capitalize text-sm">
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="space-y-1.5 pb-2">
+          <div className="space-y-1.5">
             <Label className="text-xs">Style Tags</Label>
             <div className="flex flex-wrap gap-1.5">
               {STYLE_TAGS.map((tag) => (
@@ -371,7 +379,7 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
                     "rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize transition-colors",
                     styleTags.includes(tag)
                       ? "bg-accent text-accent-foreground"
-                      : "bg-secondary text-secondary-foreground"
+                      : "bg-secondary text-secondary-foreground",
                   )}
                 >
                   {tag}
@@ -381,17 +389,18 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
           </div>
         </div>
 
-        <div className="shrink-0 px-6 py-4 border-t border-border/40 bg-background/80 backdrop-blur-sm rounded-b-lg">
+        <div className="shrink-0 px-4 py-3 border-t border-border/40 bg-background/80 backdrop-blur-sm">
           <Button
             onClick={handleSave}
             disabled={saving || !name.trim() || !primaryColor.trim()}
             className="w-full"
+            size="sm"
           >
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Changes
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }

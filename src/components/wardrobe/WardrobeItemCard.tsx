@@ -4,6 +4,7 @@ import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
 import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import EditItemPopover, { type EditItemSaveUpdates } from "./EditItemPopover";
 
 interface Props {
   item: WardrobeItem;
@@ -11,12 +12,14 @@ interface Props {
   highlighted?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  onEdit?: () => void;
+  /** Receives form updates and persists them. When provided, the pencil icon opens an inline popover anchored to the card. */
+  onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
 }
 
-export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
+export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
   const [showBack, setShowBack] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const hasBack = !!item.photo_back;
   const hasAnyPhoto = !!item.photo || hasBack;
 
@@ -44,20 +47,27 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
         )}
 
         {/* Action buttons for user-added items — always visible on touch, hover on desktop */}
-        {(onDelete || onEdit) && !selected && (
+        {(onDelete || onSave) && !selected && (
           <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-            {onEdit && (
-              <div
-                className="h-6 w-6 rounded-full bg-card/90 backdrop-blur-sm border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-                role="button"
-                aria-label={`Edit ${item.name}`}
+            {onSave && (
+              <EditItemPopover
+                item={item}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                onSave={onSave}
               >
-                <Pencil className="h-3 w-3 text-foreground" />
-              </div>
+                <div
+                  className="h-6 w-6 rounded-full bg-card/90 backdrop-blur-sm border flex items-center justify-center shadow cursor-pointer hover:bg-neon-cyan/20 hover:border-neon-cyan/50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  role="button"
+                  aria-label={`Edit ${item.name}`}
+                >
+                  <Pencil className="h-3 w-3 text-foreground" />
+                </div>
+              </EditItemPopover>
             )}
             {onDelete && (
               <div
@@ -66,6 +76,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
                   e.stopPropagation();
                   onDelete();
                 }}
+                onPointerDown={(e) => e.stopPropagation()}
                 role="button"
                 aria-label={`Delete ${item.name}`}
               >
