@@ -146,38 +146,91 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 space-y-4">
-          {/* Photo preview with replace button */}
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className="relative w-28 h-28 rounded-lg overflow-hidden border group"
-              style={{ backgroundColor: colorHex }}
-            >
-              {displayPhoto ? (
-                <img src={displayPhoto} alt={name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center">
-                  <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+          {/* Side-by-side front/back photos */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              {/* FRONT */}
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-[11px] font-medium text-muted-foreground">Front</p>
+                <div
+                  className="relative w-full aspect-square rounded-lg overflow-hidden border"
+                  style={{ backgroundColor: colorHex }}
+                >
+                  {displayPhoto ? (
+                    <img src={displayPhoto} alt={name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                    {displayPhoto ? "Replace" : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                  >
+                    <Camera className="h-3 w-3" />
+                    Camera
+                  </button>
+                </div>
+              </div>
+
+              {/* BACK */}
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-[11px] font-medium text-muted-foreground">Back (optional)</p>
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden border bg-muted/30">
+                  {displayBackPhoto ? (
+                    <img src={displayBackPhoto} alt="Back" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => backFileInputRef.current?.click()}
+                    className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                    {displayBackPhoto ? "Replace" : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => backCameraInputRef.current?.click()}
+                    className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                  >
+                    <Camera className="h-3 w-3" />
+                    Camera
+                  </button>
+                  {displayBackPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+                        setBackPhotoPreview(null);
+                        setNewBackPhotoFile(null);
+                        setRemoveBackPhoto(true);
+                      }}
+                      className="flex items-center gap-1 text-[11px] text-destructive hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <ImageIcon className="h-3.5 w-3.5" />
-                {displayPhoto ? "Replace" : "Add photo"}
-              </button>
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <Camera className="h-3.5 w-3.5" />
-                Camera
-              </button>
-            </div>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -193,73 +246,21 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               className="hidden"
               onChange={handlePhotoSelect}
             />
-
-            {/* Back photo (optional) */}
-            <div className="w-full mt-3 pt-3 border-t border-border/30">
-              <p className="text-[11px] font-medium text-muted-foreground mb-2 text-center">
-                Back photo (optional)
-              </p>
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30"
-                >
-                  {displayBackPhoto ? (
-                    <img src={displayBackPhoto} alt="Back" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => backFileInputRef.current?.click()}
-                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    {displayBackPhoto ? "Replace" : "Add back"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => backCameraInputRef.current?.click()}
-                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                    Camera
-                  </button>
-                  {displayBackPhoto && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
-                        setBackPhotoPreview(null);
-                        setNewBackPhotoFile(null);
-                        setRemoveBackPhoto(true);
-                      }}
-                      className="flex items-center gap-1 text-xs text-destructive hover:underline"
-                    >
-                      Remove back
-                    </button>
-                  )}
-                </div>
-                <input
-                  ref={backFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleBackPhotoSelect}
-                />
-                <input
-                  ref={backCameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleBackPhotoSelect}
-                />
-              </div>
-            </div>
+            <input
+              ref={backFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBackPhotoSelect}
+            />
+            <input
+              ref={backCameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleBackPhotoSelect}
+            />
           </div>
 
           <div className="space-y-1.5">
