@@ -466,7 +466,7 @@ export default function Wardrobe() {
                                 selected={selection.selectedIds.has(item.id)}
                                 highlighted={highlight.highlightId === item.id}
                                 onClick={() => selection.toggle(item)}
-                                onDelete={() => setDeleteItemId(item.id)}
+                                onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
                               />
                             </div>
@@ -484,7 +484,7 @@ export default function Wardrobe() {
                                 selected={selection.selectedIds.has(item.id)}
                                 highlighted={highlight.highlightId === item.id}
                                 onClick={() => selection.toggle(item)}
-                                onDelete={() => setDeleteItemId(item.id)}
+                                onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
                               />
                             </div>
@@ -499,7 +499,7 @@ export default function Wardrobe() {
                             selected={selection.selectedIds.has(item.id)}
                             highlighted={highlight.highlightId === item.id}
                             onClick={() => selection.toggle(item)}
-                            onDelete={() => setDeleteItemId(item.id)}
+                            onDelete={() => handleDeleteItem(item.id)}
                             onSave={(updates) => handleEditItem(item.id, updates)}
                           />
                         </div>
@@ -527,7 +527,7 @@ export default function Wardrobe() {
               selected={selection.selectedIds.has(item.id)}
               highlighted={highlight.highlightId === item.id}
               onClick={() => selection.toggle(item)}
-              onDelete={() => setDeleteItemId(item.id)}
+              onDelete={() => handleDeleteItem(item.id)}
               onSave={(updates) => handleEditItem(item.id, updates)}
             />
           ))}
