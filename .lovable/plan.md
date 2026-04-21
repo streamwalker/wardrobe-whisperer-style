@@ -1,35 +1,47 @@
 
 
 ## Goal
-Allow **floral polos** and **short-sleeve button-ups** to pair with suits — currently the rule engine blocks polos with suits entirely, and short-sleeve button-ups are treated as full dress shirts (which require a tie + dress shoes, blocking smart suit pairings).
+Block the rule engine from ever pairing a **tie** with a **polo** shirt. The screenshot shows "Tropical Nightfall" generating a polo + floral silk tie combination, which is sartorially invalid (polos have no collar stand or button placket designed for a tie).
 
 ## Approach
 
-### 1. Recognize "short-sleeve button-up" as a distinct category
-In `supabase/functions/_shared/dress-shirt-rules.ts`, add a helper `isShortSleeveButtonUp(item)` that matches keywords like `"short sleeve"`, `"short-sleeve"`, `"camp collar"`, `"cuban collar"`, `"resort shirt"` combined with button-up hints.
+### 1. Detect ties as a distinct accessory
+In `supabase/functions/_shared/dress-shirt-rules.ts`, add a helper:
 
-Then update `isDressShirt(item)` to **exclude** short-sleeve variants — a short-sleeve shirt is no longer a "formal dress shirt" requiring tie + dress shoes. This frees it from the strict `isValidDressShirtPairing` requirement (which mandates suit + dress shoes + tie).
+```ts
+export function isTie(item: WardrobeItem): boolean {
+  if (item.category !== "accessories") return false;
+  const text = toSearchText(item);
+  return hasAnyKeyword(text, ["tie", "necktie", "bow tie", "bowtie", "silk tie"]);
+}
+```
 
-### 2. Allow polos and short-sleeve button-ups with suits
-In `isValidOutfitPairing(items)`:
-- **Remove** the line `if (hasPolo && hasSuit) return false;` — polos (including floral) are now allowed under a suit (modern smart-casual tailoring).
-- **Keep** the existing polo restrictions against dress shoes, joggers, and hoodies (these still don't make sense).
-- Short-sleeve button-ups, no longer flagged as dress shirts, automatically pass through `isValidDressShirtPairing` and can pair freely with suits, sneakers (smart-casual), boots, etc. — the same lane as polos.
+### 2. Add a polo-vs-tie prohibition in `isValidOutfitPairing`
+Right alongside the existing polo restrictions (no dress shoes, no joggers, no hoodies), add:
 
-### 3. Update the client-side hint
-In `src/lib/dress-shirt-hint.ts`:
-- Mirror the same "exclude short-sleeve" logic in `isDressShirt` so the missing-pieces nudge ("add a suit, dress shoes, and a tie") only fires for true long-sleeve dress shirts. Floral polos and short-sleeve button-ups won't trigger the formal-completion hint.
+```ts
+const hasTie = items.some((i) => isTie(i));
+if (hasPolo && hasTie) return false;
+```
+
+This guarantees the post-generation validator rejects any AI suggestion that combines a polo with any tie variant (necktie, bow tie, silk tie).
+
+### 3. Reinforce in the AI prompt
+In `supabase/functions/match-outfit/index.ts` (and `suggest-occasion-outfit/index.ts` if it has its own prompt), add an explicit rule line to the styling guidelines passed to the model:
+> "Never pair a polo shirt with a tie of any kind — polos have no collar stand for a tie."
+
+This reduces wasted retries by steering the model away from the combo upfront, while the validator above is the hard guarantee.
 
 ### 4. Files touched
-- `supabase/functions/_shared/dress-shirt-rules.ts` — add `isShortSleeveButtonUp`, refine `isDressShirt`, drop polo-with-suit prohibition in `isValidOutfitPairing`.
-- `src/lib/dress-shirt-hint.ts` — mirror the short-sleeve exclusion so the UI hint stays in sync.
+- `supabase/functions/_shared/dress-shirt-rules.ts` — add `isTie` helper, add polo+tie prohibition to `isValidOutfitPairing`.
+- `supabase/functions/match-outfit/index.ts` — add the rule to the system prompt.
+- `supabase/functions/suggest-occasion-outfit/index.ts` — same prompt addition if it generates outfits independently.
 
-No DB or UI component changes — purely rule-engine logic.
+No DB or UI changes — purely rule-engine + prompt logic.
 
 ## Verification checklist
-- Select a floral polo + a suit + dress shoes → outfit validates (previously blocked).
-- Select a short-sleeve button-up + a suit + sneakers → outfit validates as smart-casual.
-- Select a long-sleeve white dress shirt without a suit → still blocked, hint still shows "add a suit, dress shoes, and a tie".
-- Polo + joggers, polo + hoodie, polo + dress shoes → still blocked (unchanged).
-- Run existing `match-outfit/index.test.ts` — long-sleeve dress shirt rules unaffected.
+- Generate outfits including a polo in the wardrobe → no result includes a tie.
+- Manually select polo + suit + tie → outfit fails validation.
+- Long-sleeve dress shirt + suit + tie → still validates (unchanged).
+- Polo + suit + dress shoes (no tie) → still validates (smart-casual lane preserved).
 
