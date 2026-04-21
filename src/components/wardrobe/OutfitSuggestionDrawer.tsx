@@ -267,7 +267,9 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
 
         {!loading && !incompatible && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No suggestions found. Try different items!
+            {isInspireMode
+              ? "No matches found. Try a different inspiration photo."
+              : "No suggestions found. Try different items!"}
           </p>
         )}
 
