@@ -101,20 +101,14 @@ export function isValidDressShirtPairing(items: WardrobeItem[]): boolean {
   const hasDressShirt = items.some((item) => isDressShirt(item));
   if (!hasDressShirt) return true;
 
+  // STRICT RULE: Dress shirts (button-downs) MUST be paired with a suit.
+  // No business-casual context, no sporty/casual mixing.
   const hasSuit = items.some((item) => item.category === "suits");
+  if (!hasSuit) return false;
 
-  if (hasSuit) {
-    const hasFormalShoes = items.some((item) => isFormalShoe(item));
-    const hasAccessory = items.some((item) => hasTieOrAccessory(item));
-    return hasFormalShoes && hasAccessory;
-  }
-
-  const hasBusinessPant = items.some((item) => isBusinessCasualPant(item));
-  const hasBusinessShoe = items.some((item) => isBusinessCasualShoe(item));
-  const hasStructuredOuterwear = items.some((item) => isBusinessCasualOuterwear(item));
-  const hasSportyPiece = items.some((item) => isSportyItem(item));
-
-  return hasBusinessPant && hasBusinessShoe && hasStructuredOuterwear && !hasSportyPiece;
+  const hasFormalShoes = items.some((item) => isFormalShoe(item));
+  const hasAccessory = items.some((item) => hasTieOrAccessory(item));
+  return hasFormalShoes && hasAccessory;
 }
 
 /**

@@ -85,10 +85,7 @@ async function checkCompatibility(
 Be reasonably flexible — most neutral + bold combinations work. Only flag truly jarring clashes (e.g., competing saturated colors that create visual tension, or wildly mismatched styles).
 
 HARD STYLE RULES (always flag as incompatible):
-- Dress shirts have TWO valid contexts:
-  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
-  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
-  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- Dress shirts (button-downs, button-ups, oxfords, formal/collared shirts) MUST be paired with a suit, dress shoes, and a tie. Never pair a dress shirt with chinos-only outfits, joggers, hoodies, sneakers, athletic wear, graphic tees, or any casual/sporty pieces.
 - SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
 - SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
 - JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
@@ -246,10 +243,7 @@ This means each outfit should have 4-5 items total. Use ALL available categories
 
     const styleRules = `
 HARD STYLE RULES:
-- Dress shirts have TWO valid contexts:
-  FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
-  BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket.
-  Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- Dress shirts (button-downs, button-ups, oxfords, formal/collared shirts) MUST be paired with a suit, dress shoes, and a tie. Never pair a dress shirt with chinos-only outfits, joggers, hoodies, sneakers, athletic wear, graphic tees, or any casual/sporty pieces.
 - SUITS require dress shoes (NEVER sneakers, boots, or casual shoes).
 - SUITS require dress shirts or formal tops (NEVER hoodies, t-shirts, or casual tops).
 - JOGGERS/SWEATPANTS are strictly casual — NEVER pair with dress shirts, suits, or dress shoes.
