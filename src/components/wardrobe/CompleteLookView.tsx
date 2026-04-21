@@ -210,9 +210,9 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
 
       {/* Add missing pieces callout */}
       {unresolvedConceptIdxs.length > 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+        <div className="rounded-xl border border-accent/40 bg-accent/5 p-4 space-y-3">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+            <AlertCircle className="h-4 w-4 text-accent mt-0.5 shrink-0" />
             <div className="space-y-0.5">
               <p className="text-sm font-semibold text-card-foreground">Add missing pieces</p>
               <p className="text-xs text-muted-foreground">
