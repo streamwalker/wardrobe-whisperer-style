@@ -27,6 +27,7 @@ const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] 
 
 export default function AddItem() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement>(null);
