@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, Trash2, Pencil } from "lucide-react";
+import { Star, Check, Trash2, Pencil, RotateCw } from "lucide-react";
 
 interface Props {
   item: WardrobeItem;
@@ -13,6 +14,15 @@ interface Props {
 }
 
 export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
+  const [showBack, setShowBack] = useState(false);
+  const hasBack = !!item.photo_back;
+
+  // Reset when the item or its back photo changes
+  useEffect(() => {
+    setShowBack(false);
+  }, [item.id, item.photo_back]);
+
+  const activePhoto = showBack && hasBack ? item.photo_back : item.photo;
   return (
     <button
       onClick={onClick}
@@ -63,16 +73,30 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
 
       {/* Photo or color swatch fallback */}
       <div
-        className="aspect-square w-full overflow-hidden"
+        className="relative aspect-square w-full overflow-hidden"
         style={{ backgroundColor: item.color_hex }}
       >
-        {item.photo && (
+        {activePhoto && (
           <img
-            src={item.photo}
-            alt={item.name}
+            src={activePhoto}
+            alt={showBack ? `${item.name} (back)` : item.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
+        )}
+        {hasBack && (
+          <div
+            role="button"
+            aria-label={showBack ? "Show front photo" : "Show back photo"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowBack((prev) => !prev);
+            }}
+            className="absolute bottom-1.5 right-1.5 z-10 flex items-center gap-0.5 rounded-full bg-background/80 backdrop-blur-sm border border-neon-cyan/50 px-1.5 py-0.5 text-[9px] font-medium text-neon-cyan shadow-sm cursor-pointer hover:bg-neon-cyan/10 transition-colors"
+          >
+            <RotateCw className="h-2.5 w-2.5" />
+            {showBack ? "Front" : "Back"}
+          </div>
         )}
       </div>
 

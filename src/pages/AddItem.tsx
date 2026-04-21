@@ -28,9 +28,13 @@ export default function AddItem() {
   const { user, loading: authLoading } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const backCameraInputRef = useRef<HTMLInputElement>(null);
+  const backGalleryInputRef = useRef<HTMLInputElement>(null);
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [backPhotoFile, setBackPhotoFile] = useState<File | null>(null);
+  const [backPhotoPreview, setBackPhotoPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -100,6 +104,15 @@ export default function AddItem() {
     analyzePhoto(file);
   };
 
+  const handleBackFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+    setBackPhotoFile(file);
+    setBackPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
   const toggleTag = (tag: string) => {
     setStyleTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -114,25 +127,25 @@ export default function AddItem() {
 
     setSaving(true);
     try {
-      let photoUrl: string | null = null;
-      if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const filePath = `${user!.id}/${Date.now()}.${ext}`;
-
+      const uploadPhoto = async (file: File, suffix = "") => {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filePath = `${user!.id}/${Date.now()}${suffix}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("wardrobe-photos")
-          .upload(filePath, photoFile);
-
+          .upload(filePath, file);
         if (uploadError && !uploadError.message.includes("already exists")) {
           throw uploadError;
         }
-
         const { data: urlData } = supabase.storage
           .from("wardrobe-photos")
           .getPublicUrl(filePath);
+        return urlData.publicUrl;
+      };
 
-        photoUrl = urlData.publicUrl;
-      }
+      let photoUrl: string | null = null;
+      let photoBackUrl: string | null = null;
+      if (photoFile) photoUrl = await uploadPhoto(photoFile);
+      if (backPhotoFile) photoBackUrl = await uploadPhoto(backPhotoFile, "-back");
 
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user!.id,
@@ -146,6 +159,7 @@ export default function AddItem() {
         pattern: pattern || null,
         texture: texture || null,
         photo_url: photoUrl,
+        photo_back_url: photoBackUrl,
         is_new: true,
       } as any);
 
@@ -223,6 +237,81 @@ export default function AddItem() {
         className="hidden"
         onChange={handleFileSelect}
       />
+      <input
+        ref={backCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleBackFileSelect}
+      />
+      <input
+        ref={backGalleryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleBackFileSelect}
+      />
+
+      {/* Optional back photo */}
+      {photoPreview && (
+        <div className="glass-card rounded-xl p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-foreground">Back photo (optional)</span>
+            <span className="text-[10px] text-muted-foreground">Helps capture the full garment</span>
+          </div>
+          {backPhotoPreview ? (
+            <div className="flex items-center gap-3">
+              <img
+                src={backPhotoPreview}
+                alt="Back preview"
+                className="h-20 w-20 rounded-lg object-cover border"
+              />
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => backGalleryInputRef.current?.click()}
+                  className="h-7 text-xs"
+                >
+                  Replace
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+                    setBackPhotoFile(null);
+                    setBackPhotoPreview(null);
+                  }}
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                >
+                  Remove back
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full gap-2">
+              <button
+                type="button"
+                onClick={() => backCameraInputRef.current?.click()}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Camera
+              </button>
+              <button
+                type="button"
+                onClick={() => backGalleryInputRef.current?.click()}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                Choose
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Re-analyze button */}
       {photoPreview && !analyzing && (

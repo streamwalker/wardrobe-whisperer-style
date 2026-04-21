@@ -162,10 +162,13 @@ export default function Wardrobe() {
       pattern?: string;
       texture?: string;
       newPhotoFile?: File;
+      newBackPhotoFile?: File;
+      removeBackPhoto?: boolean;
     },
   ) => {
-    const { newPhotoFile, subcategory, pattern, texture, ...dbUpdates } = updates;
+    const { newPhotoFile, newBackPhotoFile, removeBackPhoto, subcategory, pattern, texture, ...dbUpdates } = updates;
     let photoUrl: string | undefined;
+    let photoBackUrl: string | undefined;
 
     if (newPhotoFile && user) {
       const ext = newPhotoFile.name.split(".").pop() || "jpg";
@@ -178,6 +181,24 @@ export default function Wardrobe() {
       photoUrl = urlData.publicUrl;
     }
 
+    if (newBackPhotoFile && user) {
+      const ext = newBackPhotoFile.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/${Date.now()}-edit-back-${itemId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("wardrobe-photos")
+        .upload(filePath, newBackPhotoFile);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("wardrobe-photos").getPublicUrl(filePath);
+      photoBackUrl = urlData.publicUrl;
+    }
+
+    const backPhotoUpdate =
+      photoBackUrl !== undefined
+        ? { photo_back_url: photoBackUrl }
+        : removeBackPhoto
+          ? { photo_back_url: null }
+          : {};
+
     const { error } = await supabase
       .from("wardrobe_items")
       .update({
@@ -186,6 +207,7 @@ export default function Wardrobe() {
         pattern: pattern || null,
         texture: texture || null,
         ...(photoUrl ? { photo_url: photoUrl } : {}),
+        ...backPhotoUpdate,
       } as any)
       .eq("id", itemId);
     if (error) throw error;

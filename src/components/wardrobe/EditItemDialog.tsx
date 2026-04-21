@@ -38,6 +38,8 @@ interface Props {
     pattern?: string;
     texture?: string;
     newPhotoFile?: File;
+    newBackPhotoFile?: File;
+    removeBackPhoto?: boolean;
   }) => Promise<void>;
 }
 
@@ -53,8 +55,13 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const [saving, setSaving] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [newBackPhotoFile, setNewBackPhotoFile] = useState<File | null>(null);
+  const [backPhotoPreview, setBackPhotoPreview] = useState<string | null>(null);
+  const [removeBackPhoto, setRemoveBackPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const backFileInputRef = useRef<HTMLInputElement>(null);
+  const backCameraInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTag = (tag: string) => {
     setStyleTags((prev) =>
@@ -72,6 +79,16 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
     e.target.value = "";
   };
 
+  const handleBackPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewBackPhotoFile(file);
+    setRemoveBackPhoto(false);
+    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+    setBackPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
   const handleSave = async () => {
     if (!name.trim() || !category || !primaryColor.trim()) return;
     setSaving(true);
@@ -86,6 +103,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         pattern: pattern || undefined,
         texture: texture || undefined,
         newPhotoFile: newPhotoFile ?? undefined,
+        newBackPhotoFile: newBackPhotoFile ?? undefined,
+        removeBackPhoto: removeBackPhoto || undefined,
       });
       onOpenChange(false);
     } catch {
@@ -108,11 +127,16 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       setNewPhotoFile(null);
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
+      setNewBackPhotoFile(null);
+      if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+      setBackPhotoPreview(null);
+      setRemoveBackPhoto(false);
     }
     onOpenChange(nextOpen);
   };
 
   const displayPhoto = photoPreview || item.photo;
+  const displayBackPhoto = backPhotoPreview || (removeBackPhoto ? null : item.photo_back);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -169,6 +193,73 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
               className="hidden"
               onChange={handlePhotoSelect}
             />
+
+            {/* Back photo (optional) */}
+            <div className="w-full mt-3 pt-3 border-t border-border/30">
+              <p className="text-[11px] font-medium text-muted-foreground mb-2 text-center">
+                Back photo (optional)
+              </p>
+              <div className="flex flex-col items-center gap-2">
+                <div
+                  className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30"
+                >
+                  {displayBackPhoto ? (
+                    <img src={displayBackPhoto} alt="Back" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => backFileInputRef.current?.click()}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    {displayBackPhoto ? "Replace" : "Add back"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => backCameraInputRef.current?.click()}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    Camera
+                  </button>
+                  {displayBackPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+                        setBackPhotoPreview(null);
+                        setNewBackPhotoFile(null);
+                        setRemoveBackPhoto(true);
+                      }}
+                      className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                    >
+                      Remove back
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={backFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBackPhotoSelect}
+                />
+                <input
+                  ref={backCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleBackPhotoSelect}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-1.5">

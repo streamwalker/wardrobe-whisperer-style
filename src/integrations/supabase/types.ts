@@ -148,6 +148,7 @@ export type Database = {
           is_new: boolean | null
           name: string
           pattern: string | null
+          photo_back_url: string | null
           photo_url: string | null
           primary_color: string
           style_tags: string[] | null
@@ -166,6 +167,7 @@ export type Database = {
           is_new?: boolean | null
           name: string
           pattern?: string | null
+          photo_back_url?: string | null
           photo_url?: string | null
           primary_color: string
           style_tags?: string[] | null
@@ -184,6 +186,7 @@ export type Database = {
           is_new?: boolean | null
           name?: string
           pattern?: string | null
+          photo_back_url?: string | null
           photo_url?: string | null
           primary_color?: string
           style_tags?: string[] | null

@@ -64,6 +64,7 @@ export function useWardrobeItems(userId: string | undefined) {
     is_new: row.is_new ?? false,
     is_featured: row.is_featured ?? false,
     photo: row.photo_url || undefined,
+    photo_back: row.photo_back_url || undefined,
   }));
 
   return { items, isLoading, rawDbItems: dbItems };

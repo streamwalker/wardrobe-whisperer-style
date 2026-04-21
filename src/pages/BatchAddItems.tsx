@@ -24,6 +24,8 @@ interface BatchItem {
   id: string;
   file: File;
   preview: string;
+  backFile: File | null;
+  backPreview: string | null;
   name: string;
   category: string;
   primaryColor: string;
@@ -65,6 +67,8 @@ export default function BatchAddItems() {
       id: `batch-${++itemCounter}`,
       file,
       preview: URL.createObjectURL(file),
+      backFile: null,
+      backPreview: null,
       name: "",
       category: "",
       primaryColor: "",
@@ -89,6 +93,8 @@ export default function BatchAddItems() {
       id: `batch-${++itemCounter}`,
       file,
       preview: URL.createObjectURL(file),
+      backFile: null,
+      backPreview: null,
       name: "",
       category: "",
       primaryColor: "",
@@ -133,7 +139,10 @@ export default function BatchAddItems() {
   const removeItem = (id: string) => {
     setItems((prev) => {
       const item = prev.find((i) => i.id === id);
-      if (item) URL.revokeObjectURL(item.preview);
+      if (item) {
+        URL.revokeObjectURL(item.preview);
+        if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+      }
       return prev.filter((i) => i.id !== id);
     });
   };
@@ -207,6 +216,7 @@ export default function BatchAddItems() {
     updateItem(item.id, { saving: true });
     try {
       let photoUrl: string | null = null;
+      let photoBackUrl: string | null = null;
       const ext = item.file.name.split(".").pop() || "jpg";
       const filePath = `${user.id}/${Date.now()}-save-${item.id}.${ext}`;
 
@@ -223,6 +233,21 @@ export default function BatchAddItems() {
         .getPublicUrl(filePath);
       photoUrl = urlData.publicUrl;
 
+      if (item.backFile) {
+        const backExt = item.backFile.name.split(".").pop() || "jpg";
+        const backPath = `${user.id}/${Date.now()}-save-back-${item.id}.${backExt}`;
+        const { error: backUploadError } = await supabase.storage
+          .from("wardrobe-photos")
+          .upload(backPath, item.backFile);
+        if (backUploadError && !backUploadError.message.includes("already exists")) {
+          throw backUploadError;
+        }
+        const { data: backUrlData } = supabase.storage
+          .from("wardrobe-photos")
+          .getPublicUrl(backPath);
+        photoBackUrl = backUrlData.publicUrl;
+      }
+
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user.id,
         name: item.name,
@@ -233,6 +258,7 @@ export default function BatchAddItems() {
         pattern: item.pattern || null,
         texture: item.texture || null,
         photo_url: photoUrl,
+        photo_back_url: photoBackUrl,
         is_new: true,
       } as any);
 
@@ -422,6 +448,21 @@ interface BatchItemCardProps {
 
 function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: BatchItemCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const backCameraRef = useRef<HTMLInputElement>(null);
+
+  const handleBackSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+    onUpdate({ backFile: file, backPreview: URL.createObjectURL(file) });
+    e.target.value = "";
+  };
+
+  const removeBack = () => {
+    if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+    onUpdate({ backFile: null, backPreview: null });
+  };
 
   if (item.saved) {
     return (
@@ -539,6 +580,70 @@ function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: Bat
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Back photo (optional) */}
+          <div className="space-y-1">
+            <Label className="text-xs">Back photo (optional)</Label>
+            {item.backPreview ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={item.backPreview}
+                  alt="Back preview"
+                  className="h-12 w-12 rounded-md object-cover border"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => backInputRef.current?.click()}
+                >
+                  Replace
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                  onClick={removeBack}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => backCameraRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-md border border-dashed border-border py-1.5 text-[11px] text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+                >
+                  <Camera className="h-3 w-3" />
+                  Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => backInputRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-md border border-dashed border-border py-1.5 text-[11px] text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+                >
+                  <ImageIcon className="h-3 w-3" />
+                  Choose
+                </button>
+              </div>
+            )}
+            <input
+              ref={backInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBackSelect}
+            />
+            <input
+              ref={backCameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleBackSelect}
+            />
           </div>
         </div>
       )}
