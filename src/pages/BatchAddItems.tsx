@@ -139,7 +139,10 @@ export default function BatchAddItems() {
   const removeItem = (id: string) => {
     setItems((prev) => {
       const item = prev.find((i) => i.id === id);
-      if (item) URL.revokeObjectURL(item.preview);
+      if (item) {
+        URL.revokeObjectURL(item.preview);
+        if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+      }
       return prev.filter((i) => i.id !== id);
     });
   };
@@ -213,6 +216,7 @@ export default function BatchAddItems() {
     updateItem(item.id, { saving: true });
     try {
       let photoUrl: string | null = null;
+      let photoBackUrl: string | null = null;
       const ext = item.file.name.split(".").pop() || "jpg";
       const filePath = `${user.id}/${Date.now()}-save-${item.id}.${ext}`;
 
@@ -229,6 +233,21 @@ export default function BatchAddItems() {
         .getPublicUrl(filePath);
       photoUrl = urlData.publicUrl;
 
+      if (item.backFile) {
+        const backExt = item.backFile.name.split(".").pop() || "jpg";
+        const backPath = `${user.id}/${Date.now()}-save-back-${item.id}.${backExt}`;
+        const { error: backUploadError } = await supabase.storage
+          .from("wardrobe-photos")
+          .upload(backPath, item.backFile);
+        if (backUploadError && !backUploadError.message.includes("already exists")) {
+          throw backUploadError;
+        }
+        const { data: backUrlData } = supabase.storage
+          .from("wardrobe-photos")
+          .getPublicUrl(backPath);
+        photoBackUrl = backUrlData.publicUrl;
+      }
+
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user.id,
         name: item.name,
@@ -239,6 +258,7 @@ export default function BatchAddItems() {
         pattern: item.pattern || null,
         texture: item.texture || null,
         photo_url: photoUrl,
+        photo_back_url: photoBackUrl,
         is_new: true,
       } as any);
 
