@@ -90,7 +90,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
           )}
 
           {/* Lightbox expand button */}
-          {hasAnyPhoto && (
+          {hasAnyPhoto && !selected && (
             <div
               role="button"
               aria-label={`Expand ${item.name} photos`}
