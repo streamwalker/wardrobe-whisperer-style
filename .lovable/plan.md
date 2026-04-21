@@ -1,66 +1,59 @@
 
 
 ## Goal
-When the AI suggests an outfit in the `OutfitSuggestionDrawer`, render a **live visual preview** that composes the suggested pieces into a single "look" image alongside the user's currently selected wardrobe pieces — so users immediately see how the outfit visually comes together instead of just reading a list of thumbnails.
-
-## Current state
-`OutfitSuggestionDrawer` already renders each suggested outfit as a horizontal scroll of small ~80px tiles plus a text explanation. Selected items aren't shown next to the suggestion — the user has to mentally connect the AI's pick back to what they tapped.
+When a user adds a new wardrobe item (single or batch), automatically generate AI outfit suggestions built around that item and surface them in a celebratory drawer with a full visual look, mood badge, and styling rationale — so users immediately see how their new piece fits into their existing wardrobe.
 
 ## Approach
 
-### 1. New `OutfitPreviewBoard` component
-A flat-lay style visual composition that arranges items in a fashion-app layout (top-row outerwear/tops, mid-row bottoms, bottom-row shoes/accessories). Pure CSS grid + image tiles — no canvas, no extra deps.
+### 1. Reuse the existing match engine
+The `match-outfit` edge function and `OutfitSuggestionDrawer` already do exactly what we need: take an anchor item + the rest of the wardrobe and return styled outfits with explanations and mood tags. No backend or AI changes required.
 
-**Layout zones** (driven by `category`):
-```text
-┌─────────────────────────────┐
-│   [Outerwear]  [Top]        │  ← row 1
-│                             │
-│        [Bottom]             │  ← row 2 (centered, larger)
-│                             │
-│   [Shoes]   [Accessory]     │  ← row 3
-└─────────────────────────────┘
-```
-- Each tile = item photo on its color-tinted background (reuses existing `color_hex` fallback pattern).
-- Empty zones collapse gracefully — outfits without outerwear just don't render that slot.
-- Aspect-square container, ~280px tall on mobile, scales on desktop via `sm:` breakpoint.
-- Subtle neon ring around the whole board (`shadow-neon` token already in the project) to match brand.
+### 2. Trigger after a successful add
 
-### 2. Side-by-side comparison view
-Inside each suggestion card in `OutfitSuggestionDrawer`, replace the current single horizontal thumb strip with a **two-column comparison** when there are user-selected anchor items:
+**Single add (`src/pages/AddItem.tsx`)**
+After the `wardrobe_items` insert succeeds, instead of immediately navigating back to `/wardrobe`:
+- Refetch the user's wardrobe (or read from the cached `useWardrobeItems`).
+- Find the newly inserted item by id.
+- Open `OutfitSuggestionDrawer` inline with `items={[newItem]}` and `allWardrobeItems={items}`.
+- The drawer's existing `useEffect` auto-fires `match-outfit` on mount → user immediately sees 3 looks featuring their new piece.
+- Drawer close → navigate back to `/wardrobe`.
 
-```text
-┌──────────────────┬──────────────────┐
-│  YOUR PICK(S)    │  SUGGESTED LOOK  │
-│   [board]        │    [board]       │
-└──────────────────┴──────────────────┘
-```
+Guard: only fire if the user has ≥2 other items in the wardrobe (otherwise there's nothing to pair with — show a small toast "Add a few more items to start getting outfit ideas" and navigate back).
 
-- Left board = the `items` prop (what the user tapped).
-- Right board = the full suggested outfit (`outfit.item_ids` mapped through `allWardrobeItems`).
-- Items shared between both sides get a small "✓ kept" badge on the right board so users see what was preserved vs. what the AI added.
-- On mobile (<640px) the two boards stack vertically with a small "↓" divider; on desktop they sit side-by-side with a vertical divider.
-- The existing tiny thumbnail strip is removed (redundant with the new boards).
+**Batch add (`src/pages/BatchAddItems.tsx`)**
+After the batch insert succeeds:
+- If exactly one item was added → behave like single add.
+- If multiple items added → open the drawer with `items` = the newly added items (the matcher already handles multi-anchor; existing Outfits page uses the same pattern). Header copy adjusts to "Outfits with your new pieces".
 
-### 3. Files touched
-- **New:** `src/components/wardrobe/OutfitPreviewBoard.tsx` — the flat-lay composition component. Props: `items: WardrobeItem[]`, `highlightSharedIds?: string[]`, `label?: string`.
-- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx`
-  - Import the new board.
-  - Inside the outfit card render loop, replace the small thumb strip with the two-column comparison (`YOUR PICK(S)` vs `SUGGESTED LOOK`).
-  - Compute `sharedIds = items.map(i => i.id).filter(id => outfit.item_ids.includes(id))` per outfit and pass to the right board for the "kept" badge.
-- No changes to the edge function, hooks, DB, or anchors.
+### 3. New "just added" header on the drawer
+Add a small optional prop `headline?: string` to `OutfitSuggestionDrawer` (default unchanged). When provided, replace the existing "Outfit Ideas" title with a celebratory header:
+- ✨ icon + "Fresh additions to your wardrobe"
+- Subtitle: "Here's how [item name] (or "your new pieces") works with what you already own."
 
-### 4. Visual polish
-- Both boards share the same fixed height so they line up.
-- Item tiles use `rounded-xl`, `border border-white/10`, hover lift via `transition-transform hover:scale-[1.03]` (desktop only).
-- "Kept" badge: small green-cyan pill in the top-right of the tile using existing `Badge` with `variant="secondary"` + custom class.
-- Empty zone placeholders show a faint dashed outline with the zone label ("Top", "Bottom", "Shoes") in muted text — keeps the grid balanced visually even if a slot is empty.
+This keeps the post-add surface visually distinct from the regular tap-an-item flow without forking the component.
+
+### 4. Bookmark / dismiss behavior
+- "Save Outfit" button already persists to `saved_outfits` — no change.
+- Drawer close button → navigates user to `/wardrobe` (single add) or stays on `/wardrobe` (batch was already navigated there).
+- "Load More" / "Skip This" continue to work as-is.
+
+### 5. Empty / error states
+- If `match-outfit` returns no outfits or fails, drawer already shows the existing empty/error state — user can dismiss and continue. We add a one-line fallback toast "Item added — try tapping it from your wardrobe to see outfit ideas."
+- Free-tier users hitting the AI limit: existing edge function error handling surfaces the message in the drawer, unchanged.
+
+### 6. Files touched
+- **Edit:** `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — accept optional `headline` + `subheadline` props; render them when provided in place of the default title.
+- **Edit:** `src/pages/AddItem.tsx` — after insert, fetch the new item, open the drawer with the celebratory headline; navigate to `/wardrobe` on close.
+- **Edit:** `src/pages/BatchAddItems.tsx` — after batch insert, open the drawer with all newly-added items as anchors and a "your new pieces" headline; navigate to `/wardrobe` on close.
+
+No new tables, no new edge functions, no schema changes, no new dependencies.
 
 ## Verification checklist
-- Tap a single item → drawer opens → each suggestion shows the user's pick on the left and the full suggested look on the right; shared items carry a "Kept" badge.
-- Tap multiple items → left board renders all picks correctly across zones.
-- Outfit without outerwear → that zone collapses or shows the dashed placeholder, no broken layout.
-- Mobile width → boards stack vertically with the divider; desktop → side-by-side.
-- Incompatibility branch (`incompatible !== null`) is unchanged — still shows the existing replacement-suggestion UI.
-- Save / Load More / Skip flows still work; performance stays smooth (images are already lazy-loaded).
+- Add a single item → drawer opens automatically with 3 outfit ideas built around that item, each with the new `OutfitPreviewBoard` comparison and rationale.
+- Add a batch of 3 items → drawer opens with looks anchored on all 3; headline reads "Fresh additions to your wardrobe".
+- Wardrobe with <2 other items → no drawer, friendly toast instead, navigate back normally.
+- Save an outfit from the drawer → appears in `/outfits` as expected.
+- Close drawer → returns to `/wardrobe`.
+- Existing tap-an-item flow on `/wardrobe` still works exactly as before (no headline override).
+- Free-tier AI cap or network error → existing error UI handles it gracefully.
 
