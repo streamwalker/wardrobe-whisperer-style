@@ -28,9 +28,13 @@ export default function AddItem() {
   const { user, loading: authLoading } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const backCameraInputRef = useRef<HTMLInputElement>(null);
+  const backGalleryInputRef = useRef<HTMLInputElement>(null);
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [backPhotoFile, setBackPhotoFile] = useState<File | null>(null);
+  const [backPhotoPreview, setBackPhotoPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -98,6 +102,15 @@ export default function AddItem() {
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
     analyzePhoto(file);
+  };
+
+  const handleBackFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+    setBackPhotoFile(file);
+    setBackPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
   };
 
   const toggleTag = (tag: string) => {
