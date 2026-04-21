@@ -62,6 +62,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export default function Wardrobe() {
   const { user } = useAuth();
@@ -85,6 +87,12 @@ export default function Wardrobe() {
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  // --- Onboarding tour ---
+  const onboarding = useOnboarding({
+    ready: !!user?.id,
+    shouldAutoStart: !!user?.id && allItems.length === 0,
+  });
 
   // Handle Stripe checkout success redirect (one-time on mount)
   useEffect(() => {
