@@ -223,7 +223,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         )}
 
         {/* Incompatibility alert */}
-        {!loading && incompatible && (
+        {!completingOutfit && !loading && incompatible && (
           <div className="space-y-4 pb-6">
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
               <div className="flex items-start gap-3">
@@ -282,7 +282,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </div>
         )}
 
-        {!loading && !incompatible && outfits.length === 0 && hasLoaded && (
+        {!completingOutfit && !loading && !incompatible && outfits.length === 0 && hasLoaded && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {isInspireMode
               ? "No matches found. Try a different inspiration photo."
@@ -290,7 +290,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </p>
         )}
 
-        {!incompatible && (
+        {!completingOutfit && !incompatible && (
           <div className="space-y-5 pb-6">
             {outfits.map((outfit, idx) => {
               const isSaved = savedIds.has(outfitKey(outfit));
