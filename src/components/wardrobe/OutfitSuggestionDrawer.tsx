@@ -390,7 +390,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                                   Inspiration
                                 </p>
                                 <div className="rounded-2xl border border-border/40 bg-card/40 p-3 shadow-neon">
-                                  <div className="h-[360px] w-full overflow-hidden rounded-xl sm:h-[420px]">
+                                  <div className={`w-full overflow-hidden rounded-xl ${density === "compact" ? "h-[240px] sm:h-[280px]" : "h-[360px] sm:h-[420px]"}`}>
                                     <img
                                       src={inspirationImageUrl}
                                       alt="Inspiration"
@@ -401,7 +401,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                                 </div>
                               </div>
                             ) : (
-                              <OutfitPreviewBoard items={items} label="Your pick(s)" />
+                              <OutfitPreviewBoard items={items} label="Your pick(s)" density={density} showDensityToggle={false} />
                             )}
                             <div className="flex items-center justify-center text-muted-foreground">
                               <ArrowDown className="h-5 w-5 sm:hidden" />
@@ -411,6 +411,8 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                               items={suggestedItems}
                               highlightSharedIds={sharedIds}
                               label="Suggested look"
+                              density={density}
+                              showDensityToggle={false}
                             />
                           </div>
                         </TabsContent>
