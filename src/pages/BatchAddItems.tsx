@@ -218,8 +218,8 @@ export default function BatchAddItems() {
     setAnalyzingAll(false);
   };
 
-  const saveItem = async (item: BatchItem): Promise<boolean> => {
-    if (!user || !item.name || !item.category || !item.primaryColor) return false;
+  const saveItem = async (item: BatchItem): Promise<WardrobeItem | null> => {
+    if (!user || !item.name || !item.category || !item.primaryColor) return null;
     updateItem(item.id, { saving: true });
     try {
       let photoUrl: string | null = null;
@@ -255,27 +255,46 @@ export default function BatchAddItems() {
         photoBackUrl = backUrlData.publicUrl;
       }
 
-      const { error: insertError } = await supabase.from("wardrobe_items").insert({
-        user_id: user.id,
-        name: item.name,
-        category: item.category,
-        primary_color: item.primaryColor,
-        color_hex: item.colorHex,
-        style_tags: item.styleTags,
-        pattern: item.pattern || null,
-        texture: item.texture || null,
-        photo_url: photoUrl,
-        photo_back_url: photoBackUrl,
-        is_new: true,
-      } as any);
+      const { data: inserted, error: insertError } = await supabase
+        .from("wardrobe_items")
+        .insert({
+          user_id: user.id,
+          name: item.name,
+          category: item.category,
+          primary_color: item.primaryColor,
+          color_hex: item.colorHex,
+          style_tags: item.styleTags,
+          pattern: item.pattern || null,
+          texture: item.texture || null,
+          photo_url: photoUrl,
+          photo_back_url: photoBackUrl,
+          is_new: true,
+        } as any)
+        .select()
+        .single();
 
       if (insertError) throw insertError;
       updateItem(item.id, { saved: true, saving: false });
-      return true;
+      const row = inserted as any;
+      return {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        subcategory: row.subcategory || undefined,
+        primary_color: row.primary_color,
+        color_hex: row.color_hex || "#888888",
+        style_tags: (row.style_tags || []) as WardrobeItem["style_tags"],
+        pattern: row.pattern || undefined,
+        texture: row.texture || undefined,
+        is_new: true,
+        is_featured: false,
+        photo: row.photo_url || undefined,
+        photo_back: row.photo_back_url || undefined,
+      };
     } catch (err: any) {
       toast({ title: "Save failed", description: `${item.name || "Item"}: ${err.message}`, variant: "destructive" });
       updateItem(item.id, { saving: false });
-      return false;
+      return null;
     }
   };
 
@@ -292,18 +311,36 @@ export default function BatchAddItems() {
     }
 
     setSavingAll(true);
-    let successCount = 0;
+    const savedItems: WardrobeItem[] = [];
     for (const item of toSave) {
-      const ok = await saveItem(item);
-      if (ok) successCount++;
+      const result = await saveItem(item);
+      if (result) savedItems.push(result);
     }
     setSavingAll(false);
 
-    if (successCount > 0) {
-      toast({ title: "Batch saved!", description: `${successCount} item(s) added to your wardrobe.` });
+    if (savedItems.length > 0) {
+      toast({ title: "Batch saved!", description: `${savedItems.length} item(s) added to your wardrobe.` });
       queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
     }
-    if (successCount === toSave.length) {
+
+    if (savedItems.length === toSave.length) {
+      // Open suggestion drawer if there's enough wardrobe to pair with
+      if (allItems.length + savedItems.length >= savedItems.length + 2) {
+        setNewlyAddedItems(savedItems);
+        setSuggestionOpen(true);
+      } else {
+        toast({
+          title: "Add a few more items",
+          description: "Build up your wardrobe to start getting outfit ideas.",
+        });
+        navigate("/wardrobe");
+      }
+    }
+  };
+
+  const handleSuggestionClose = (open: boolean) => {
+    setSuggestionOpen(open);
+    if (!open) {
       navigate("/wardrobe");
     }
   };
