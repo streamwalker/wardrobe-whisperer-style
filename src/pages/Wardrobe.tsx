@@ -363,7 +363,7 @@ export default function Wardrobe() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
+      <div data-tour="filter-bar" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none items-center">
         <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground shrink-0">
           Tone
         </span>
