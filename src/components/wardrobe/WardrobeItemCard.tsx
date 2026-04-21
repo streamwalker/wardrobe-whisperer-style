@@ -4,6 +4,7 @@ import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { Badge } from "@/components/ui/badge";
 import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import EditItemPopover, { type EditItemSaveUpdates } from "./EditItemPopover";
 
 interface Props {
   item: WardrobeItem;
@@ -11,12 +12,14 @@ interface Props {
   highlighted?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  onEdit?: () => void;
+  /** Receives form updates and persists them. When provided, the pencil icon opens an inline popover anchored to the card. */
+  onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
 }
 
-export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onEdit }: Props) {
+export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
   const [showBack, setShowBack] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const hasBack = !!item.photo_back;
   const hasAnyPhoto = !!item.photo || hasBack;
 
