@@ -43,6 +43,12 @@ export function isPolo(item: WardrobeItem): boolean {
   return hasAnyKeyword(text, ["polo", "polo shirt"]);
 }
 
+export function isTie(item: WardrobeItem): boolean {
+  if (item.category !== "accessories") return false;
+  const text = toSearchText(item);
+  return hasAnyKeyword(text, ["tie", "necktie", "bow tie", "bowtie", "silk tie"]);
+}
+
 export function isSportyItem(item: WardrobeItem): boolean {
   const text = toSearchText(item);
   return hasAnyKeyword(text, ["sporty", "athletic", "jogger", "sweatpant", "hoodie", "sneaker", "running", "runner", "training", "gym", "yeezy", "air force", "air max", "boost"]);
@@ -165,6 +171,10 @@ export function isValidOutfitPairing(items: WardrobeItem[]): boolean {
   if (hasPolo && hasDressShoes) return false;
   if (hasPolo && hasJoggers) return false;
   if (hasPolo && hasHoodies) return false;
+
+  // 6. Polos + ties: invalid — polos lack a collar stand/placket designed for a tie.
+  const hasTie = items.some((i) => isTie(i));
+  if (hasPolo && hasTie) return false;
 
   return true;
 }
