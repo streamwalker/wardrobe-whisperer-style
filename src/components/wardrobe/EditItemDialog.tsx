@@ -38,6 +38,8 @@ interface Props {
     pattern?: string;
     texture?: string;
     newPhotoFile?: File;
+    newBackPhotoFile?: File;
+    removeBackPhoto?: boolean;
   }) => Promise<void>;
 }
 
@@ -53,8 +55,13 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
   const [saving, setSaving] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [newBackPhotoFile, setNewBackPhotoFile] = useState<File | null>(null);
+  const [backPhotoPreview, setBackPhotoPreview] = useState<string | null>(null);
+  const [removeBackPhoto, setRemoveBackPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const backFileInputRef = useRef<HTMLInputElement>(null);
+  const backCameraInputRef = useRef<HTMLInputElement>(null);
 
   const toggleTag = (tag: string) => {
     setStyleTags((prev) =>
