@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES, PATTERN_OPTIONS, TEXTURE_OPTIONS } from "@/lib/wardrobe-data";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] 
 
 export default function AddItem() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +55,19 @@ export default function AddItem() {
   const [subcategory, setSubcategory] = useState<string>("");
   const [pattern, setPattern] = useState<string>("");
   const [texture, setTexture] = useState<string>("");
+
+  // Prefill from query params (e.g. /add?category=tops&name=White%20Oxford&hint=...)
+  useEffect(() => {
+    const qpCategory = searchParams.get("category");
+    const qpName = searchParams.get("name");
+    const qpHint = searchParams.get("hint");
+    if (qpCategory && (CATEGORIES as readonly string[]).includes(qpCategory)) {
+      setCategory(qpCategory);
+    }
+    if (qpName) setName(qpName);
+    if (qpHint) setDescription((prev) => (prev ? prev : qpHint));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const analyzePhoto = useCallback(async (file: File, backFile?: File | null) => {
     if (!user) return;
