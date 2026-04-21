@@ -110,6 +110,7 @@ HARD STYLE RULES:
   FORMAL: Dress shirt + suit + tie + dress shoes (full formal outfit).
   BUSINESS CASUAL: Dress shirt + chinos/tailored trousers + loafers/Chelsea boots/dress shoes + blazer/structured jacket. No joggers, hoodies, sneakers, or sporty items with dress shirts.
   Never pair a dress shirt with athletic wear, graphic tees, or fully casual outfits.
+- NEVER pair a polo shirt with a tie of any kind (necktie, bow tie, silk tie) — polos have no collar stand or placket designed for a tie.
 
 PROPORTION & SILHOUETTE RULES (always apply):
 - VOLUME CONTRAST: If the top is oversized/loose, the bottom must be fitted/tapered. If the bottom is wide/relaxed, the top must be fitted/structured. Never pair oversized top + baggy bottom unless going full intentional streetwear.
