@@ -64,6 +64,7 @@ import {
 import { Input } from "@/components/ui/input";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import WardrobeMatchTip from "@/components/wardrobe/WardrobeMatchTip";
 
 export default function Wardrobe() {
   const { user } = useAuth();
