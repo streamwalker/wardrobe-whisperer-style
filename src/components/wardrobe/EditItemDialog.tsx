@@ -79,6 +79,16 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
     e.target.value = "";
   };
 
+  const handleBackPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewBackPhotoFile(file);
+    setRemoveBackPhoto(false);
+    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+    setBackPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
   const handleSave = async () => {
     if (!name.trim() || !category || !primaryColor.trim()) return;
     setSaving(true);
@@ -93,6 +103,8 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
         pattern: pattern || undefined,
         texture: texture || undefined,
         newPhotoFile: newPhotoFile ?? undefined,
+        newBackPhotoFile: newBackPhotoFile ?? undefined,
+        removeBackPhoto: removeBackPhoto || undefined,
       });
       onOpenChange(false);
     } catch {
@@ -115,11 +127,16 @@ export default function EditItemDialog({ item, open, onOpenChange, onSave }: Pro
       setNewPhotoFile(null);
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
+      setNewBackPhotoFile(null);
+      if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+      setBackPhotoPreview(null);
+      setRemoveBackPhoto(false);
     }
     onOpenChange(nextOpen);
   };
 
   const displayPhoto = photoPreview || item.photo;
+  const displayBackPhoto = backPhotoPreview || (removeBackPhoto ? null : item.photo_back);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
