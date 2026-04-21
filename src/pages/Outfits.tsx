@@ -245,35 +245,41 @@ export default function Outfits() {
             </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {outfit.item_ids.map((id) => {
-              const wi = getItemById(id);
-              if (!wi) return null;
-              return (
-                <div
-                  key={id}
-                  className="shrink-0 w-20 rounded-lg overflow-hidden glass-card"
-                >
+          {outfit.item_ids.length === 0 ? (
+            <p className="py-2 text-xs italic text-muted-foreground">
+              All items in this outfit have been removed from your wardrobe.
+            </p>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {outfit.item_ids.map((id) => {
+                const wi = getItemById(id);
+                if (!wi) return null;
+                return (
                   <div
-                    className="aspect-square w-full overflow-hidden"
-                    style={{ backgroundColor: wi.color_hex }}
+                    key={id}
+                    className="shrink-0 w-20 rounded-lg overflow-hidden glass-card"
                   >
-                    {wi.photo && (
-                      <img
-                        src={wi.photo}
-                        alt={wi.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
+                    <div
+                      className="aspect-square w-full overflow-hidden"
+                      style={{ backgroundColor: wi.color_hex }}
+                    >
+                      {wi.photo && (
+                        <img
+                          src={wi.photo}
+                          alt={wi.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                    </div>
+                    <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
+                      {wi.name}
+                    </p>
                   </div>
-                  <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">
-                    {wi.name}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {outfit.explanation && (
             <p className="text-sm leading-relaxed text-muted-foreground">{outfit.explanation}</p>
