@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES, PATTERN_OPTIONS, TEXTURE_OPTIONS } from "@/lib/wardrobe-data";
 import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
