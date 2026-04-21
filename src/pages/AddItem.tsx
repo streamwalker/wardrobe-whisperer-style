@@ -237,6 +237,81 @@ export default function AddItem() {
         className="hidden"
         onChange={handleFileSelect}
       />
+      <input
+        ref={backCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleBackFileSelect}
+      />
+      <input
+        ref={backGalleryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleBackFileSelect}
+      />
+
+      {/* Optional back photo */}
+      {photoPreview && (
+        <div className="glass-card rounded-xl p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-foreground">Back photo (optional)</span>
+            <span className="text-[10px] text-muted-foreground">Helps capture the full garment</span>
+          </div>
+          {backPhotoPreview ? (
+            <div className="flex items-center gap-3">
+              <img
+                src={backPhotoPreview}
+                alt="Back preview"
+                className="h-20 w-20 rounded-lg object-cover border"
+              />
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => backGalleryInputRef.current?.click()}
+                  className="h-7 text-xs"
+                >
+                  Replace
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (backPhotoPreview) URL.revokeObjectURL(backPhotoPreview);
+                    setBackPhotoFile(null);
+                    setBackPhotoPreview(null);
+                  }}
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                >
+                  Remove back
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full gap-2">
+              <button
+                type="button"
+                onClick={() => backCameraInputRef.current?.click()}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Camera
+              </button>
+              <button
+                type="button"
+                onClick={() => backGalleryInputRef.current?.click()}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                Choose
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Re-analyze button */}
       {photoPreview && !analyzing && (
