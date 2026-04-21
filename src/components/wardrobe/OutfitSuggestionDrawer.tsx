@@ -34,9 +34,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSwapItem?: (oldItemId: string, newItemId: string) => void;
+  headline?: string;
+  subheadline?: string;
 }
 
-export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem }: Props) {
+export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -169,8 +171,11 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center gap-2 font-display text-lg">
             <Sparkles className="h-5 w-5 text-accent" />
-            {drawerTitle}
+            {headline ?? drawerTitle}
           </SheetTitle>
+          {subheadline && (
+            <p className="text-sm text-muted-foreground leading-relaxed">{subheadline}</p>
+          )}
         </SheetHeader>
 
         {loading && (
