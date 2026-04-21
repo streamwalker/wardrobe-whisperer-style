@@ -20,7 +20,7 @@ interface Props {
   onMatch?: () => void;
 }
 
-export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave }: Props) {
+export default function WardrobeItemCard({ item, selected, highlighted, onClick, onDelete, onSave, onMatch }: Props) {
   const [showBack, setShowBack] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
