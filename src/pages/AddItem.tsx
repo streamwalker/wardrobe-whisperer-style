@@ -127,25 +127,25 @@ export default function AddItem() {
 
     setSaving(true);
     try {
-      let photoUrl: string | null = null;
-      if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const filePath = `${user!.id}/${Date.now()}.${ext}`;
-
+      const uploadPhoto = async (file: File, suffix = "") => {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filePath = `${user!.id}/${Date.now()}${suffix}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("wardrobe-photos")
-          .upload(filePath, photoFile);
-
+          .upload(filePath, file);
         if (uploadError && !uploadError.message.includes("already exists")) {
           throw uploadError;
         }
-
         const { data: urlData } = supabase.storage
           .from("wardrobe-photos")
           .getPublicUrl(filePath);
+        return urlData.publicUrl;
+      };
 
-        photoUrl = urlData.publicUrl;
-      }
+      let photoUrl: string | null = null;
+      let photoBackUrl: string | null = null;
+      if (photoFile) photoUrl = await uploadPhoto(photoFile);
+      if (backPhotoFile) photoBackUrl = await uploadPhoto(backPhotoFile, "-back");
 
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user!.id,
@@ -159,6 +159,7 @@ export default function AddItem() {
         pattern: pattern || null,
         texture: texture || null,
         photo_url: photoUrl,
+        photo_back_url: photoBackUrl,
         is_new: true,
       } as any);
 
