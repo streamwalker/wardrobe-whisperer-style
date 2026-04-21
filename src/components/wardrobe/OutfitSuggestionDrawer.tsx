@@ -7,10 +7,12 @@ import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import OutfitPreviewBoard from "./OutfitPreviewBoard";
+import OutfitPreviewBoard, { type BoardDensity } from "./OutfitPreviewBoard";
 import OutfitCompareView from "./OutfitCompareView";
 import CompleteLookView from "./CompleteLookView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LayoutGrid, Rows3 } from "lucide-react";
 
 interface OutfitSuggestion {
   name: string;
