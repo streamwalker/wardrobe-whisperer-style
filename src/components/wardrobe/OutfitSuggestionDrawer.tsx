@@ -208,10 +208,31 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]">
         <SheetHeader className="pb-2">
-          <SheetTitle className="flex items-center gap-2 font-display text-lg">
-            <Sparkles className="h-5 w-5 text-accent" />
-            {headline ?? drawerTitle}
-          </SheetTitle>
+          <div className="flex items-start justify-between gap-3">
+            <SheetTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-accent" />
+              {headline ?? drawerTitle}
+            </SheetTitle>
+            {!completingOutfit && !incompatible && outfits.length > 0 && (
+              <ToggleGroup
+                type="single"
+                size="sm"
+                value={density}
+                onValueChange={(v) => v && setDensity(v as BoardDensity)}
+                className="h-7 shrink-0"
+                aria-label="Preview density"
+              >
+                <ToggleGroupItem value="compact" className="h-7 gap-1 px-2 text-[10px]" aria-label="Compact preview">
+                  <Rows3 className="h-3 w-3" />
+                  Compact
+                </ToggleGroupItem>
+                <ToggleGroupItem value="full" className="h-7 gap-1 px-2 text-[10px]" aria-label="Full preview">
+                  <LayoutGrid className="h-3 w-3" />
+                  Full
+                </ToggleGroupItem>
+              </ToggleGroup>
+            )}
+          </div>
           {subheadline && (
             <p className="text-sm text-muted-foreground leading-relaxed">{subheadline}</p>
           )}
