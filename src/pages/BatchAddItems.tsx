@@ -448,6 +448,21 @@ interface BatchItemCardProps {
 
 function BatchItemCard({ item, onUpdate, onRemove, onAnalyze, onToggleTag }: BatchItemCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const backCameraRef = useRef<HTMLInputElement>(null);
+
+  const handleBackSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+    onUpdate({ backFile: file, backPreview: URL.createObjectURL(file) });
+    e.target.value = "";
+  };
+
+  const removeBack = () => {
+    if (item.backPreview) URL.revokeObjectURL(item.backPreview);
+    onUpdate({ backFile: null, backPreview: null });
+  };
 
   if (item.saved) {
     return (
