@@ -36,9 +36,13 @@ interface Props {
   onSwapItem?: (oldItemId: string, newItemId: string) => void;
   headline?: string;
   subheadline?: string;
+  /** When provided, drawer skips its internal match-outfit call and renders these instead. */
+  prefetchedOutfits?: OutfitSuggestion[];
+  /** When set, replaces the empty "your pick(s)" board with the inspiration thumbnail. */
+  inspirationImageUrl?: string;
 }
 
-export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline }: Props) {
+export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline, prefetchedOutfits, inspirationImageUrl }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -49,17 +53,33 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const { user } = useAuth();
 
-  const itemsKey = items.map((i) => i.id).sort().join(",");
+  const isInspireMode = !!inspirationImageUrl;
+  const itemsKey = isInspireMode
+    ? `inspire::${inspirationImageUrl}`
+    : items.map((i) => i.id).sort().join(",");
 
   useEffect(() => {
-    if (open && items.length > 0 && hasLoaded !== itemsKey) {
+    if (!open) return;
+    if (hasLoaded === itemsKey) return;
+
+    // Inspire / prefetched mode: use the supplied outfits directly, no fetch.
+    if (prefetchedOutfits) {
+      setOutfits(prefetchedOutfits);
+      setHasMore(false);
+      setSavedIds(new Set());
+      setIncompatible(null);
+      setHasLoaded(itemsKey);
+      return;
+    }
+
+    if (items.length > 0) {
       setOutfits([]);
       setHasMore(true);
       setSavedIds(new Set());
       setIncompatible(null);
       fetchSuggestions(items, []);
     }
-  }, [open, itemsKey]);
+  }, [open, itemsKey, prefetchedOutfits]);
 
   const fetchSuggestions = async (selectedItems: WardrobeItem[], excludeOutfits: string[][]) => {
     const isInitial = excludeOutfits.length === 0;
