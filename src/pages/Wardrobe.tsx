@@ -61,16 +61,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
 export default function Wardrobe() {
@@ -93,7 +83,6 @@ export default function Wardrobe() {
   const [occasionDrawerOpen, setOccasionDrawerOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
-  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -135,18 +124,15 @@ export default function Wardrobe() {
   const wardrobeWithPhotos = imageGen.itemsWithGenerated;
 
   // --- Mutation handlers that remain inline (coupled to queryClient + supabase) ---
-  const confirmDeleteItem = async () => {
-    if (!deleteItemId) return;
+  const handleDeleteItem = async (itemId: string) => {
     try {
-      const { error } = await supabase.from("wardrobe_items").delete().eq("id", deleteItemId);
+      const { error } = await supabase.from("wardrobe_items").delete().eq("id", itemId);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["wardrobe-items"] });
-      selection.removeById(deleteItemId);
+      selection.removeById(itemId);
       toast.success("Item removed from wardrobe");
     } catch (err: any) {
       toast.error(err.message || "Failed to delete item");
-    } finally {
-      setDeleteItemId(null);
     }
   };
 
@@ -480,7 +466,7 @@ export default function Wardrobe() {
                                 selected={selection.selectedIds.has(item.id)}
                                 highlighted={highlight.highlightId === item.id}
                                 onClick={() => selection.toggle(item)}
-                                onDelete={() => setDeleteItemId(item.id)}
+                                onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
                               />
                             </div>
@@ -498,7 +484,7 @@ export default function Wardrobe() {
                                 selected={selection.selectedIds.has(item.id)}
                                 highlighted={highlight.highlightId === item.id}
                                 onClick={() => selection.toggle(item)}
-                                onDelete={() => setDeleteItemId(item.id)}
+                                onDelete={() => handleDeleteItem(item.id)}
                                 onSave={(updates) => handleEditItem(item.id, updates)}
                               />
                             </div>
@@ -513,7 +499,7 @@ export default function Wardrobe() {
                             selected={selection.selectedIds.has(item.id)}
                             highlighted={highlight.highlightId === item.id}
                             onClick={() => selection.toggle(item)}
-                            onDelete={() => setDeleteItemId(item.id)}
+                            onDelete={() => handleDeleteItem(item.id)}
                             onSave={(updates) => handleEditItem(item.id, updates)}
                           />
                         </div>
@@ -541,7 +527,7 @@ export default function Wardrobe() {
               selected={selection.selectedIds.has(item.id)}
               highlighted={highlight.highlightId === item.id}
               onClick={() => selection.toggle(item)}
-              onDelete={() => setDeleteItemId(item.id)}
+              onDelete={() => handleDeleteItem(item.id)}
               onSave={(updates) => handleEditItem(item.id, updates)}
             />
           ))}
@@ -640,26 +626,6 @@ export default function Wardrobe() {
         />
       )}
 
-      <AlertDialog
-        open={!!deleteItemId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteItemId(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The item will be permanently removed from your
-              wardrobe.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteItem}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

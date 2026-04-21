@@ -5,13 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Check, Trash2, Pencil, RotateCw, Maximize2, ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import EditItemPopover, { type EditItemSaveUpdates } from "./EditItemPopover";
+import DeleteItemPopover from "./DeleteItemPopover";
 
 interface Props {
   item: WardrobeItem;
   selected?: boolean;
   highlighted?: boolean;
   onClick?: () => void;
-  onDelete?: () => void;
+  /** Called when the user confirms deletion via the inline popover. May return a promise. */
+  onDelete?: () => Promise<void> | void;
   /** Receives form updates and persists them. When provided, the pencil icon opens an inline popover anchored to the card. */
   onSave?: (updates: EditItemSaveUpdates) => Promise<void>;
 }
@@ -20,6 +22,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
   const [showBack, setShowBack] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const hasBack = !!item.photo_back;
   const hasAnyPhoto = !!item.photo || hasBack;
 
@@ -70,18 +73,22 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
               </EditItemPopover>
             )}
             {onDelete && (
-              <div
-                className="h-6 w-6 rounded-full bg-destructive/90 backdrop-blur-sm flex items-center justify-center shadow cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                role="button"
-                aria-label={`Delete ${item.name}`}
+              <DeleteItemPopover
+                itemName={item.name}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                onConfirm={onDelete}
               >
-                <Trash2 className="h-3 w-3 text-destructive-foreground" />
-              </div>
+                <div
+                  className="h-6 w-6 rounded-full bg-destructive/90 backdrop-blur-sm flex items-center justify-center shadow cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  role="button"
+                  aria-label={`Delete ${item.name}`}
+                >
+                  <Trash2 className="h-3 w-3 text-destructive-foreground" />
+                </div>
+              </DeleteItemPopover>
             )}
           </div>
         )}
