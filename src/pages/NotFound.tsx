@@ -1,5 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,15 +10,33 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <LcarsStandaloneShell
+      title="RED ALERT · SECTOR NOT FOUND"
+      subtitle="UNCHARTED SPACE"
+      headerColor="red"
+      topColor="red"
+      sideColor="yellow"
+      bottomColor="red"
+      maxWidth="md"
+    >
+      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+        <div className="text-7xl font-display text-lcars-red animate-lcars-pulse">404</div>
+        <p className="lcars-label text-sm text-lcars-peach">
+          REQUESTED COORDINATES UNKNOWN
+        </p>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          The route{" "}
+          <span className="lcars-mono text-lcars-cyan">{location.pathname}</span> is
+          not part of this LCARS console.
+        </p>
+        <Link
+          to="/wardrobe"
+          className="lcars-pill bg-lcars-orange text-black px-5 h-10 inline-flex items-center lcars-label text-xs hover:brightness-110"
+        >
+          RETURN TO WARDROBE
+        </Link>
       </div>
-    </div>
+    </LcarsStandaloneShell>
   );
 };
 

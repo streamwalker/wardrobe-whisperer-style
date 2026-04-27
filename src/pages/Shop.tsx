@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
 
 interface AnalyzedItem {
   name: string;
@@ -187,15 +188,20 @@ export default function Shop() {
   const isProcessing = analyzing || matching;
 
   return (
+    <LcarsSection
+      title="ACQUISITIONS"
+      subtitle="SECTOR 02 · SHOPPING MODE"
+      headerColor="lavender"
+      topColor="lavender"
+      sideColor="peach"
+      bottomColor="salmon"
+    >
     <div className="space-y-6 pb-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <h2 className="font-display text-2xl font-semibold text-foreground">Shopping Mode</h2>
-          {!isPro && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Pro</Badge>}
-        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Snap a photo of something you're eyeing and see how it pairs with your wardrobe.
+          {!isPro && " (Pro feature)"}
         </p>
       </div>
 
@@ -375,5 +381,6 @@ export default function Shop() {
       </>
       )}
     </div>
+    </LcarsSection>
   );
 }

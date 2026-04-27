@@ -8,6 +8,7 @@ import { useSubscription, STRIPE_PLANS } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
 
 const FREE_FEATURES = [
   "Up to 20 wardrobe items",
@@ -55,6 +56,14 @@ export default function Pricing() {
   };
 
   return (
+    <LcarsSection
+      title="TIER UPGRADE"
+      subtitle="SECTOR 99 · COMMERCE"
+      headerColor="yellow"
+      topColor="yellow"
+      sideColor="orange"
+      bottomColor="red"
+    >
     <div className="space-y-8 pb-8 max-w-lg mx-auto">
       <div className="text-center space-y-2">
         <h2 className="font-display text-3xl font-semibold text-foreground">
@@ -151,5 +160,6 @@ export default function Pricing() {
         )}
       </div>
     </div>
+    </LcarsSection>
   );
 }

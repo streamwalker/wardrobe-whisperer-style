@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
 
 export default function SharedWardrobe() {
   const { token } = useParams<{ token: string }>();
@@ -60,60 +60,73 @@ export default function SharedWardrobe() {
 
   if (profileLoading || itemsLoading) {
     return (
-      <div className="min-h-screen bg-background p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full rounded-lg" />
-      </div>
+      <LcarsStandaloneShell
+        title="GUEST ACCESS"
+        subtitle="LOADING WARDROBE"
+        headerColor="cyan"
+      >
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      </LcarsStandaloneShell>
     );
   }
 
   if (itemsError || !items) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
-        <p className="text-lg font-medium text-foreground">This wardrobe link is invalid or expired.</p>
-        <button onClick={() => navigate("/")} className="text-sm text-primary underline">
-          Go home
-        </button>
-      </div>
+      <LcarsStandaloneShell
+        title="ACCESS DENIED"
+        subtitle="LINK INVALID OR EXPIRED"
+        headerColor="red"
+        topColor="red"
+        sideColor="yellow"
+        bottomColor="orange"
+      >
+        <div className="flex flex-col items-center justify-center gap-4 py-12">
+          <p className="text-lg font-medium text-foreground">This wardrobe link is invalid or expired.</p>
+          <button
+            onClick={() => navigate("/")}
+            className="lcars-pill bg-lcars-cyan text-black px-4 h-9 inline-flex items-center lcars-label text-xs hover:brightness-110"
+          >
+            RETURN TO BASE
+          </button>
+        </div>
+      </LcarsStandaloneShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-        <div className="container flex h-14 items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-muted-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="font-display text-lg font-semibold text-foreground">
-            {ownerName}'s Wardrobe
-          </h1>
-        </div>
-      </header>
-
-      <main className="container py-4 space-y-4">
-        <p className="text-sm text-muted-foreground">{wardrobeItems.length} items</p>
-
+    <LcarsStandaloneShell
+      title={`${ownerName.toUpperCase()} • GUEST WARDROBE`}
+      subtitle={`${wardrobeItems.length} UNITS · READ-ONLY`}
+      headerColor="cyan"
+      topColor="cyan"
+      sideColor="lavender"
+      bottomColor="salmon"
+      maxWidth="xl"
+    >
+      <div className="space-y-4">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
             onClick={() => setActiveCategory("all")}
             className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors lcars-label",
               activeCategory === "all"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-lcars-orange text-black"
                 : "bg-secondary text-secondary-foreground"
             )}
           >
-            All
+            ALL
           </button>
           {CATEGORIES.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setActiveCategory(cat.value)}
               className={cn(
-                "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors lcars-label",
                 activeCategory === cat.value
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-lcars-orange text-black"
                   : "bg-secondary text-secondary-foreground"
               )}
             >
@@ -131,7 +144,7 @@ export default function SharedWardrobe() {
         {filtered.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-12">No items to show.</p>
         )}
-      </main>
-    </div>
+      </div>
+    </LcarsStandaloneShell>
   );
 }

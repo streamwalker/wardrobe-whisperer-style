@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
@@ -239,14 +241,21 @@ export default function AddItem() {
   };
 
   return (
+    <LcarsSection
+      title="SPECIMEN INTAKE"
+      subtitle="ADD ITEM"
+      headerColor="lavender"
+      topColor="lavender"
+      sideColor="cyan"
+      bottomColor="orange"
+      rightSlot={
+        <LcarsPill color="cyan" side="r" onClick={() => navigate("/wardrobe")}>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          OPS
+        </LcarsPill>
+      }
+    >
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground glass-card rounded-full p-2 hover:shadow-neon transition-shadow">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h2 className="font-display text-xl font-semibold">Add Item</h2>
-      </div>
 
       {/* Photo upload */}
       {photoPreview ? (
@@ -521,5 +530,6 @@ export default function AddItem() {
         />
       )}
     </div>
+    </LcarsSection>
   );
 }

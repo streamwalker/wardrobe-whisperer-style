@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
@@ -350,6 +352,20 @@ export default function BatchAddItems() {
   const unanalyzedCount = items.filter((i) => !i.analyzed && !i.analyzing).length;
 
   return (
+    <LcarsSection
+      title="BATCH UPLINK"
+      subtitle="MULTI-SPECIMEN INTAKE"
+      headerColor="violet"
+      topColor="violet"
+      sideColor="cyan"
+      bottomColor="lavender"
+      rightSlot={
+        <LcarsPill color="cyan" side="r" onClick={() => navigate("/wardrobe")}>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          OPS
+        </LcarsPill>
+      }
+    >
     <div
       ref={dropZoneRef}
       className="space-y-5 pb-28"
@@ -358,14 +374,8 @@ export default function BatchAddItems() {
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/wardrobe")} className="text-muted-foreground glass-card rounded-full p-2 hover:shadow-neon transition-shadow">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h2 className="font-display text-xl font-semibold">Batch Add Items</h2>
-          <p className="text-xs text-muted-foreground">Select, take, or drag & drop photos</p>
-        </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Select, take, or drag &amp; drop photos</p>
       </div>
 
       {/* Drag overlay */}
@@ -492,6 +502,7 @@ export default function BatchAddItems() {
         />
       )}
     </div>
+    </LcarsSection>
   );
 }
 
