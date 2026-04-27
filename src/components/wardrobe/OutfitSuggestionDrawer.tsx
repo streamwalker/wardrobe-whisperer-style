@@ -64,6 +64,11 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [savedState, setSavedState] = useState<Map<string, "saved" | "favorited">>(new Map());
   const [savingState, setSavingState] = useState<{ idx: number; mode: "saved" | "favorited" } | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
+  // Outfit keys dismissed during this session — hidden locally even before the
+  // preference query refreshes.
+  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
+  const [dismissingKey, setDismissingKey] = useState<string | null>(null);
+  const { profile: stylePrefs, invalidate: invalidatePrefs } = useStylePreferences();
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
   const [density, setDensity] = useState<BoardDensity>(() => {
     if (typeof window === "undefined") return "full";
