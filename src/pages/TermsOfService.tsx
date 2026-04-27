@@ -1,17 +1,31 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-background px-4 py-8">
-      <div className="mx-auto max-w-3xl space-y-8">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/auth"><ArrowLeft className="h-4 w-4" /></Link>
-          </Button>
-          <h1 className="font-display text-3xl font-bold text-foreground">Terms of Service & End-User License Agreement</h1>
-        </div>
+    <LcarsStandaloneShell
+      title="DIRECTIVE 010 · TERMS OF SERVICE"
+      subtitle="LEGAL ARCHIVE"
+      headerColor="cyan"
+      topColor="cyan"
+      sideColor="lavender"
+      bottomColor="orange"
+      maxWidth="lg"
+      rightSlot={
+        <Link to="/auth">
+          <LcarsPill color="orange" side="r" as any>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            AUTH
+          </LcarsPill>
+        </Link>
+      }
+    >
+      <div className="space-y-6 py-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-lcars-peach uppercase tracking-widest">
+          Terms of Service &amp; End-User License Agreement
+        </h1>
 
         <p className="text-sm text-muted-foreground">Last updated: March 9, 2026</p>
 
