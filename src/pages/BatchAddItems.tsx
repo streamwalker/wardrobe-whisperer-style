@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
