@@ -1,7 +1,20 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { CATEGORIES, type WardrobeCategory } from "@/lib/wardrobe-data";
+import { CATEGORIES } from "@/lib/wardrobe-data";
 import { cn } from "@/lib/utils";
-import { LayoutGrid } from "lucide-react";
+import { lcarsCode } from "@/components/lcars/LcarsPrimitives";
+
+// Cycle of LCARS colors for category buttons (image 1/2/3 palette)
+const CAT_COLORS = [
+  "bg-lcars-orange",
+  "bg-lcars-lavender",
+  "bg-lcars-salmon",
+  "bg-lcars-peach",
+  "bg-lcars-violet",
+  "bg-lcars-bronze",
+  "bg-lcars-blue",
+  "bg-lcars-yellow",
+  "bg-lcars-cyan",
+];
 
 export default function CategorySidebar() {
   const location = useLocation();
@@ -18,51 +31,52 @@ export default function CategorySidebar() {
     }
   };
 
+  const items = [{ value: "all", label: "All Items", icon: "◧" }, ...CATEGORIES];
+
   return (
     <aside
       data-tour="category-sidebar"
-      className="hidden md:flex flex-col w-14 lg:w-44 shrink-0 glass-panel border-r-0 rounded-none sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto transition-all"
+      className="hidden md:flex flex-col w-20 lg:w-52 shrink-0 bg-black sticky top-[68px] h-[calc(100vh-68px)] overflow-y-auto"
     >
-      <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-neon-cyan/20 via-neon-pink/10 to-transparent" />
-      <nav className="flex flex-col gap-0.5 p-2 pt-3">
-        {/* All */}
-        <button
-          onClick={() => handleCategoryClick("all")}
-          className={cn(
-            "relative flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-all",
-            isWardrobePage && activeCat === "all"
-              ? "glass-card text-neon-cyan shadow-neon/20"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
-        >
-          {isWardrobePage && activeCat === "all" && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-neon-cyan shadow-neon" />
-          )}
-          <LayoutGrid className="h-4 w-4 shrink-0" />
-          <span className="hidden lg:inline truncate">All Items</span>
-        </button>
+      {/* Top elbow connecting to header bar */}
+      <div className="flex items-stretch gap-1 px-2 pt-2">
+        <div className="bg-lcars-orange h-8 flex-1 rounded-tl-[40px]" />
+      </div>
 
-        <div className="my-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => handleCategoryClick(cat.value)}
-            className={cn(
-              "relative flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-medium transition-all",
-              isWardrobePage && activeCat === cat.value
-                ? "glass-card text-neon-cyan shadow-neon/20"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}
-          >
-            {isWardrobePage && activeCat === cat.value && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-neon-cyan shadow-neon" />
-            )}
-            <span className="text-base leading-none shrink-0">{cat.icon}</span>
-            <span className="hidden lg:inline truncate">{cat.label}</span>
-          </button>
-        ))}
+      <nav className="flex flex-col gap-1 p-2 pt-2">
+        {items.map((cat, idx) => {
+          const isActive = isWardrobePage && activeCat === cat.value;
+          const colorClass = CAT_COLORS[idx % CAT_COLORS.length];
+          const code = lcarsCode(cat.value, String(idx + 1).padStart(2, "0"));
+          return (
+            <button
+              key={cat.value}
+              onClick={() => handleCategoryClick(cat.value)}
+              className={cn(
+                "lcars-pill-l h-10 px-3 text-left transition-[filter] hover:brightness-110 active:brightness-95 flex items-center gap-2",
+                colorClass,
+                "text-black",
+                isActive && "ring-2 ring-inset ring-white brightness-110",
+              )}
+            >
+              <span className="text-base leading-none shrink-0">{cat.icon}</span>
+              <div className="hidden lg:flex flex-col leading-tight overflow-hidden">
+                <span className="lcars-label text-[11px] truncate">{cat.label}</span>
+                <span className="lcars-numerals text-[8px] opacity-70 truncate">{code}</span>
+              </div>
+            </button>
+          );
+        })}
       </nav>
+
+      {/* Bottom decorative blocks */}
+      <div className="mt-auto p-2 flex flex-col gap-1">
+        <div className="bg-lcars-cyan h-3" />
+        <div className="bg-lcars-violet h-2" />
+        <div className="bg-lcars-orange h-6 rounded-bl-[40px] flex items-end justify-end px-2 pb-1">
+          <span className="lcars-numerals text-[8px] text-black">29-1268</span>
+        </div>
+      </div>
     </aside>
   );
 }
