@@ -470,31 +470,72 @@ export default function AddItem() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Category</Label>
-          <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes" && val !== "accessories") setSubcategory(""); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="capitalize">
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* REQUIRED: Item Type */}
+        <div ref={typeSectionRef} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>
+              Item Type <span className="text-lcars-red">*</span>
+            </Label>
+            {intakeType && !typeConfirmed && (
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-yellow animate-pulse">
+                ⌁ Tap to confirm
+              </span>
+            )}
+          </div>
+          {triedSave && !typeOk && (
+            <div className="flex items-center gap-2 rounded-md border border-lcars-red/60 bg-lcars-red/10 px-2 py-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-lcars-red shrink-0" />
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+                INTAKE BLOCKED · {intakeType ? "CONFIRM ITEM TYPE" : "ITEM TYPE REQUIRED"}
+              </span>
+            </div>
+          )}
+          {aiSuggestedRemap && intakeType && (
+            <p className="lcars-mono text-[10px] uppercase tracking-wider text-titan-teal">
+              ⌁ AI suggested "{aiSuggestedRemap}" → mapped to {intakeType}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {INTAKE_TYPES.map((t) => {
+              const selected = intakeType === t.value;
+              const needsConfirm = selected && !typeConfirmed;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    setIntakeType(t.value);
+                    setTypeConfirmed(true);
+                    if (t.value !== "shoes") setSubcategory("");
+                  }}
+                  aria-pressed={selected}
+                  className={cn(
+                    "lcars-pill h-12 px-3 inline-flex items-center justify-center gap-2 lcars-label text-xs",
+                    "transition-[filter,box-shadow] duration-150 hover:brightness-110 active:brightness-95",
+                    selected
+                      ? "bg-titan-amber text-black"
+                      : "bg-titan-steel text-titan-frost",
+                    needsConfirm && "ring-2 ring-titan-amber/70 animate-pulse",
+                  )}
+                >
+                  <span className="text-base leading-none" aria-hidden>{t.icon}</span>
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {(category === "shoes" || category === "accessories") && (
+        {/* Shoe subcategory (only when type = Shoes) */}
+        {intakeType === "shoes" && (
           <div className="space-y-2">
-            <Label>Subcategory</Label>
+            <Label>Shoe style</Label>
             <Select value={subcategory} onValueChange={setSubcategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Select subcategory (optional)" />
+                <SelectValue placeholder="Optional · Hi-Tops or Boots" />
               </SelectTrigger>
               <SelectContent>
-                {(category === "shoes" ? SHOE_SUBCATEGORIES : ACCESSORY_SUBCATEGORIES).map((sub) => (
+                {SHOE_SUBCATEGORIES.map((sub) => (
                   <SelectItem key={sub.value} value={sub.value}>
                     {sub.label}
                   </SelectItem>
