@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff, Upload, Shirt, AlertCircle } from "lucide-react";
+import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff, Upload, Shirt, AlertCircle, Heart } from "lucide-react";
 import { type WardrobeItem, type ConceptPiece, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +44,8 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
   const [rationale, setRationale] = useState<string>(outfit.explanation);
   const [conceptPieces, setConceptPieces] = useState<ConceptPiece[]>([]);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<false | "saved" | "favorited">(false);
+  const [savingMode, setSavingMode] = useState<null | "saved" | "favorited">(null);
   /** Picked replacements by concept index (chosen from existing wardrobe). */
   const [replacedConcepts, setReplacedConcepts] = useState<Record<number, WardrobeItem>>({});
   const [pickerForConcept, setPickerForConcept] = useState<number | null>(null);
