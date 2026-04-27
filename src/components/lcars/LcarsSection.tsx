@@ -1,4 +1,4 @@
-import { LcarsHeader, LcarsFrame, type LcarsColor, lcarsCode } from "./LcarsPrimitives";
+import { LcarsHeader, LcarsFrame, LcarsTickRow, type LcarsColor, lcarsCode } from "./LcarsPrimitives";
 import { cn } from "@/lib/utils";
 
 interface LcarsSectionProps {
@@ -10,6 +10,10 @@ interface LcarsSectionProps {
   topColor?: LcarsColor;
   sideColor?: LcarsColor;
   bottomColor?: LcarsColor;
+  /** "blocks" = TNG colored elbow strips; "rounded" = Picard double-stroke panel. */
+  variant?: "blocks" | "rounded";
+  /** Render dotted tick rows above the header / below the frame. Default true. */
+  tickRows?: boolean;
   /** Optional pill row rendered to the right of the header (desktop only by default). */
   rightSlot?: React.ReactNode;
   /** Pill row shown below the header on small screens (use for actions that don't fit). */
@@ -27,10 +31,12 @@ export function LcarsSection({
   title,
   subtitle,
   code,
-  headerColor = "orange",
-  topColor = "orange",
-  sideColor = "lavender",
-  bottomColor = "salmon",
+  headerColor = "amber",
+  topColor = "steel",
+  sideColor = "amber",
+  bottomColor = "slate",
+  variant = "blocks",
+  tickRows = true,
   rightSlot,
   mobileActions,
   className,
@@ -38,6 +44,7 @@ export function LcarsSection({
 }: LcarsSectionProps) {
   return (
     <section className={cn("space-y-2", className)}>
+      {tickRows && <LcarsTickRow className="opacity-70" />}
       <LcarsHeader
         title={title}
         subtitle={subtitle}
@@ -59,9 +66,15 @@ export function LcarsSection({
           {rightSlot}
         </div>
       )}
-      <LcarsFrame topColor={topColor} sideColor={sideColor} bottomColor={bottomColor}>
-        <div className="px-1 sm:px-2">{children}</div>
+      <LcarsFrame
+        topColor={topColor}
+        sideColor={sideColor}
+        bottomColor={bottomColor}
+        variant={variant}
+      >
+        <div className={variant === "rounded" ? "" : "px-1 sm:px-2"}>{children}</div>
       </LcarsFrame>
+      {tickRows && <LcarsTickRow className="opacity-50" dense />}
     </section>
   );
 }
