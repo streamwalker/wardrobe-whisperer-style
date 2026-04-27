@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
 
 interface AnalyzedItem {
   name: string;
