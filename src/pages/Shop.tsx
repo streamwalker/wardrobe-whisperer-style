@@ -328,18 +328,23 @@ export default function Shop() {
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
       <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
-      {/* Action button */}
+      {/* INSTANT catalog matches — appears the moment analysis completes */}
+      {analyzedItem && instantMatches && (
+        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} />
+      )}
+
+      {/* Action button — first triggers the scan, then offers deeper full-outfit AI search */}
       {photoPreview && outfits.length === 0 && (
         <Button onClick={handleAnalyzeAndMatch} disabled={isProcessing} variant="neon" className="w-full gap-2" size="lg">
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              {analyzing ? "Analyzing item…" : "Finding outfit matches…"}
+              {analyzing ? "Scanning item…" : "Building full outfits…"}
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Find Wardrobe Matches
+              {analyzedItem ? "Build Full Outfit Suggestions" : "Scan & Match"}
             </>
           )}
         </Button>
