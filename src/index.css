@@ -61,6 +61,15 @@
     --lcars-yellow: 45 100% 60%;
     --lcars-bronze: 30 70% 50%;
 
+    /* Picard / USS Titan — cool slate instrumentation chrome */
+    --titan-slate: 215 18% 28%;
+    --titan-steel: 212 22% 42%;
+    --titan-frost: 210 30% 78%;
+    --titan-rail: 218 16% 18%;
+    --titan-grid: 210 30% 50%;
+    --titan-teal: 188 60% 55%;
+    --titan-amber: 24 90% 60%;
+
     /* Legacy aliases — preserved so existing components keep compiling */
     --wardrobe-sand: 30 100% 75%;
     --wardrobe-clay: 12 80% 65%;
