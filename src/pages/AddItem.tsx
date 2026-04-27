@@ -57,21 +57,37 @@ export default function AddItem() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<string>("");
+  const [intakeType, setIntakeType] = useState<IntakeType["value"] | "">("");
+  const [typeConfirmed, setTypeConfirmed] = useState(false);
+  const [aiSuggestedRemap, setAiSuggestedRemap] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("");
   const [colorHex, setColorHex] = useState("#000000");
   const [styleTags, setStyleTags] = useState<string[]>([]);
   const [subcategory, setSubcategory] = useState<string>("");
   const [pattern, setPattern] = useState<string>("");
   const [texture, setTexture] = useState<string>("");
+  const [triedSave, setTriedSave] = useState(false);
+
+  // Refs for scroll-to-error
+  const typeSectionRef = useRef<HTMLDivElement>(null);
+  const colorSectionRef = useRef<HTMLDivElement>(null);
+  const tagsSectionRef = useRef<HTMLDivElement>(null);
+
+  // Validation
+  const typeOk = !!intakeType && typeConfirmed;
+  const colorOk = primaryColor.trim().length > 0 && HEX_RE.test(colorHex);
+  const tagsOk = styleTags.length >= 1;
+  const formValid = typeOk && colorOk && tagsOk;
 
   // Prefill from query params (e.g. /add?category=tops&name=White%20Oxford&hint=...)
   useEffect(() => {
     const qpCategory = searchParams.get("category");
     const qpName = searchParams.get("name");
     const qpHint = searchParams.get("hint");
-    if (qpCategory && (CATEGORIES as readonly string[]).includes(qpCategory)) {
-      setCategory(qpCategory);
+    const mapped = mapCategoryToIntakeType(qpCategory);
+    if (mapped) {
+      setIntakeType(mapped);
+      setTypeConfirmed(true); // explicit URL prefill counts as user intent
     }
     if (qpName) setName(qpName);
     if (qpHint) setDescription((prev) => (prev ? prev : qpHint));
