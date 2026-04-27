@@ -65,6 +65,8 @@ import { Input } from "@/components/ui/input";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import WardrobeMatchTip from "@/components/wardrobe/WardrobeMatchTip";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsCodeChip } from "@/components/lcars/LcarsPrimitives";
 
 export default function Wardrobe() {
   const { user } = useAuth();
