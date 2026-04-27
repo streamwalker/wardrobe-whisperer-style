@@ -607,12 +607,28 @@ export default function AddItem() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Style Tags</Label>
+        {/* REQUIRED: Style Tags */}
+        <div ref={tagsSectionRef} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>
+              Style Tags <span className="text-lcars-red">*</span>
+            </Label>
+            {!tagsOk && (
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-titan-frost/70">
+                ⌁ Select at least one
+              </span>
+            )}
+          </div>
+          {triedSave && !tagsOk && (
+            <p className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+              ⌁ At least one style tag required
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             {STYLE_TAGS.map((tag) => (
               <button
                 key={tag}
+                type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium capitalize transition-all",
@@ -628,9 +644,32 @@ export default function AddItem() {
         </div>
       </div>
 
-      <Button onClick={handleSave} disabled={saving || analyzing} className="w-full" size="lg">
+      {/* Required-fields status line above Save */}
+      {!formValid && (
+        <p className="lcars-mono text-[10px] uppercase tracking-wider text-titan-frost/80 text-center">
+          ⌁ Required to save:{" "}
+          <span className={cn(typeOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {typeOk ? "✓" : "○"} type
+          </span>
+          {" · "}
+          <span className={cn(colorOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {colorOk ? "✓" : "○"} color
+          </span>
+          {" · "}
+          <span className={cn(tagsOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {tagsOk ? "✓" : "○"} tags
+          </span>
+        </p>
+      )}
+
+      <Button
+        onClick={handleSave}
+        disabled={saving || analyzing || !formValid}
+        className="w-full"
+        size="lg"
+      >
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save to Wardrobe
+        {formValid ? "Save to Wardrobe" : "Complete required fields to save"}
       </Button>
 
       {newlyAddedItem && (
