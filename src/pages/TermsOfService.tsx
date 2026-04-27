@@ -118,6 +118,6 @@ export default function TermsOfService() {
           </section>
         </div>
       </div>
-    </div>
+    </LcarsStandaloneShell>
   );
 }
