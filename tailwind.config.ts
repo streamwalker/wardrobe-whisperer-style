@@ -74,7 +74,7 @@ export default {
           pink: "hsl(var(--lcars-red))",
           lime: "hsl(var(--lcars-yellow))",
         },
-        // LCARS palette
+        // LCARS palette (TNG-era warm accents)
         lcars: {
           orange: "hsl(var(--lcars-orange))",
           red: "hsl(var(--lcars-red))",
@@ -86,6 +86,15 @@ export default {
           cyan: "hsl(var(--lcars-cyan))",
           yellow: "hsl(var(--lcars-yellow))",
           bronze: "hsl(var(--lcars-bronze))",
+        },
+        // Picard / USS Titan instrumentation chrome
+        titan: {
+          slate: "hsl(var(--titan-slate))",
+          steel: "hsl(var(--titan-steel))",
+          frost: "hsl(var(--titan-frost))",
+          rail: "hsl(var(--titan-rail))",
+          teal: "hsl(var(--titan-teal))",
+          amber: "hsl(var(--titan-amber))",
         },
       },
       borderRadius: {
