@@ -442,6 +442,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                           />
                         </TabsContent>
                       </Tabs>
+                      </>
                     );
                   })()}
 
