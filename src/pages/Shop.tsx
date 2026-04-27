@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
+import ScanMatchPanel from "@/components/wardrobe/ScanMatchPanel";
+import { scoreCatalogMatches, type CatalogMatchResult } from "@/lib/catalog-match";
 
 interface AnalyzedItem {
   name: string;
@@ -18,6 +20,9 @@ interface AnalyzedItem {
   primary_color: string;
   color_hex: string;
   style_tags: string[];
+  pattern?: string;
+  texture?: string;
+  description?: string;
 }
 
 interface OutfitSuggestion {
@@ -114,6 +119,9 @@ export default function Shop() {
         primary_color: data.primary_color || "Unknown",
         color_hex: data.color_hex || "#888888",
         style_tags: data.style_tags || [],
+        pattern: data.pattern || undefined,
+        texture: data.texture || undefined,
+        description: data.description || undefined,
       };
       setAnalyzedItem(item);
     } catch (err: any) {
@@ -186,6 +194,24 @@ export default function Shop() {
   const getItemById = (id: string) => wardrobeItems.find((i) => i.id === id);
 
   const isProcessing = analyzing || matching;
+
+  // Instant deterministic catalog matches — recomputed any time analysis or wardrobe changes.
+  const instantMatches: CatalogMatchResult | null = useMemo(() => {
+    if (!analyzedItem) return null;
+    return scoreCatalogMatches(
+      {
+        name: analyzedItem.name,
+        category: analyzedItem.category,
+        primary_color: analyzedItem.primary_color,
+        color_hex: analyzedItem.color_hex,
+        style_tags: analyzedItem.style_tags,
+        pattern: analyzedItem.pattern,
+        texture: analyzedItem.texture,
+        description: analyzedItem.description,
+      },
+      wardrobeItems,
+    );
+  }, [analyzedItem, wardrobeItems]);
 
   return (
     <LcarsSection
@@ -302,18 +328,23 @@ export default function Shop() {
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
       <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
-      {/* Action button */}
+      {/* INSTANT catalog matches — appears the moment analysis completes */}
+      {analyzedItem && instantMatches && (
+        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} />
+      )}
+
+      {/* Action button — first triggers the scan, then offers deeper full-outfit AI search */}
       {photoPreview && outfits.length === 0 && (
         <Button onClick={handleAnalyzeAndMatch} disabled={isProcessing} variant="neon" className="w-full gap-2" size="lg">
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              {analyzing ? "Analyzing item…" : "Finding outfit matches…"}
+              {analyzing ? "Scanning item…" : "Building full outfits…"}
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Find Wardrobe Matches
+              {analyzedItem ? "Build Full Outfit Suggestions" : "Scan & Match"}
             </>
           )}
         </Button>
