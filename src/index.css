@@ -538,3 +538,31 @@
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
 }
+
+/* New-item match card utilities */
+.new-intake-glow {
+  box-shadow:
+    0 0 0 1px hsl(var(--titan-teal) / 0.6),
+    0 0 16px -2px hsl(var(--titan-teal) / 0.55);
+  animation: new-intake-pulse 2.4s ease-in-out infinite;
+}
+@keyframes new-intake-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px hsl(var(--titan-teal) / 0.6),
+      0 0 16px -2px hsl(var(--titan-teal) / 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px hsl(var(--titan-teal) / 0.85),
+      0 0 22px -1px hsl(var(--titan-teal) / 0.75);
+  }
+}
+.color-swatch-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 1px hsl(var(--titan-frost) / 0.6);
+  flex-shrink: 0;
+}

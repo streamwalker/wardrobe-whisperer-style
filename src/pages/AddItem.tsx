@@ -527,6 +527,7 @@ export default function AddItem() {
           allWardrobeItems={[...allItems, newlyAddedItem]}
           headline="Fresh addition to your wardrobe ✨"
           subheadline={`Here's how ${newlyAddedItem.name} works with what you already own.`}
+          newlyAddedItemId={newlyAddedItem.id}
         />
       )}
     </div>
