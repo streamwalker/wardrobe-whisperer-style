@@ -15,6 +15,8 @@ import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { OUTFITS_TOUR_STEPS } from "@/components/onboarding/outfits-tour-steps";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import OutfitSuggestionDrawer from "@/components/wardrobe/OutfitSuggestionDrawer";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 interface InspireOutfit {
   name: string;
