@@ -1,6 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
+import { LcarsAlertBanner, LcarsTickRow } from "@/components/lcars/LcarsPrimitives";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,30 +12,37 @@ const NotFound = () => {
 
   return (
     <LcarsStandaloneShell
-      title="RED ALERT · SECTOR NOT FOUND"
+      title="SECTOR NOT FOUND"
       subtitle="UNCHARTED SPACE"
       headerColor="red"
       topColor="red"
-      sideColor="yellow"
+      sideColor="amber"
       bottomColor="red"
       maxWidth="md"
+      variant="rounded"
     >
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="text-7xl font-display text-lcars-red animate-lcars-pulse">404</div>
-        <p className="lcars-label text-sm text-lcars-peach">
-          REQUESTED COORDINATES UNKNOWN
-        </p>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          The route{" "}
-          <span className="lcars-mono text-lcars-cyan">{location.pathname}</span> is
-          not part of this LCARS console.
-        </p>
-        <Link
-          to="/wardrobe"
-          className="lcars-pill bg-lcars-orange text-black px-5 h-10 inline-flex items-center lcars-label text-xs hover:brightness-110"
-        >
-          RETURN TO WARDROBE
-        </Link>
+      <div className="condition-red p-6">
+        <LcarsAlertBanner title="ALERT: CONDITION RED" subtitle="HULL DAMAGE — CRITICAL" />
+        <div className="flex flex-col items-center justify-center gap-5 py-10 text-center">
+          <div className="text-7xl font-display text-lcars-red lcars-blink-red px-6 py-2 rounded-md">
+            404
+          </div>
+          <p className="lcars-label text-sm text-titan-frost">
+            REQUESTED COORDINATES UNKNOWN
+          </p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            The route{" "}
+            <span className="lcars-mono text-titan-teal">{location.pathname}</span> is
+            not part of this LCARS console.
+          </p>
+          <LcarsTickRow className="w-40 opacity-70" />
+          <Link
+            to="/wardrobe"
+            className="lcars-pill bg-lcars-orange text-black px-5 h-10 inline-flex items-center lcars-label text-xs hover:brightness-110"
+          >
+            RETURN TO WARDROBE
+          </Link>
+        </div>
       </div>
     </LcarsStandaloneShell>
   );

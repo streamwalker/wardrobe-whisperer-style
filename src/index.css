@@ -61,6 +61,15 @@
     --lcars-yellow: 45 100% 60%;
     --lcars-bronze: 30 70% 50%;
 
+    /* Picard / USS Titan — cool slate instrumentation chrome */
+    --titan-slate: 215 18% 28%;
+    --titan-steel: 212 22% 42%;
+    --titan-frost: 210 30% 78%;
+    --titan-rail: 218 16% 18%;
+    --titan-grid: 210 30% 50%;
+    --titan-teal: 188 60% 55%;
+    --titan-amber: 24 90% 60%;
+
     /* Legacy aliases — preserved so existing components keep compiling */
     --wardrobe-sand: 30 100% 75%;
     --wardrobe-clay: 12 80% 65%;
@@ -72,47 +81,47 @@
   }
 
   .dark {
-    /* LCARS — ALPHA SHIFT (canonical: pure black with vivid color blocks) */
+    /* LCARS — ALPHA SHIFT (Picard-era: black + slate chrome with sparse warm accents) */
     --background: 0 0% 0%;
-    --foreground: 30 100% 78%;
+    --foreground: 210 30% 82%;
 
     --card: 0 0% 0%;
-    --card-foreground: 30 100% 78%;
+    --card-foreground: 210 30% 82%;
 
-    --popover: 0 0% 0%;
-    --popover-foreground: 30 100% 78%;
+    --popover: 218 16% 12%;
+    --popover-foreground: 210 30% 82%;
 
     --primary: 28 100% 55%;
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 260 55% 70%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 212 22% 42%;
+    --secondary-foreground: 210 30% 90%;
 
-    --muted: 0 0% 8%;
-    --muted-foreground: 30 60% 65%;
+    --muted: 218 16% 14%;
+    --muted-foreground: 210 18% 60%;
 
-    --accent: 195 90% 55%;
+    --accent: 188 60% 55%;
     --accent-foreground: 0 0% 0%;
 
     --destructive: 4 85% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 28 100% 55% / 0.4;
-    --input: 0 0% 0%;
-    --ring: 195 90% 55%;
+    --border: 212 22% 42% / 0.45;
+    --input: 218 16% 14%;
+    --ring: 188 60% 55%;
 
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 30 100% 78%;
+    --sidebar-background: 218 16% 18%;
+    --sidebar-foreground: 210 30% 82%;
     --sidebar-primary: 28 100% 55%;
     --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 260 55% 70%;
+    --sidebar-accent: 188 60% 55%;
     --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 28 100% 55% / 0.3;
-    --sidebar-ring: 195 90% 55%;
+    --sidebar-border: 212 22% 42% / 0.4;
+    --sidebar-ring: 188 60% 55%;
 
-    --neon-cyan: 195 90% 55%;
+    --neon-cyan: 188 60% 55%;
     --neon-pink: 4 85% 55%;
-    --neon-lime: 45 100% 60%;
+    --neon-lime: 24 90% 60%;
   }
 }
 
@@ -251,28 +260,21 @@
     filter: contrast(1.05) saturate(1.1);
   }
 
-  /* ===== Subtle scanline body background (replaces bg-mesh) ===== */
-  .bg-mesh {
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        hsl(0 0% 0% / 0.06) 0px,
-        hsl(0 0% 0% / 0.06) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-      hsl(var(--background));
+  /* ===== Picard-era dotted grid background (replaces bg-mesh; both classes alias) ===== */
+  .bg-mesh,
+  .bg-grid {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(hsl(var(--titan-grid) / 0.18) 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-position: 0 0;
   }
-  .dark .bg-mesh {
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        hsl(30 60% 50% / 0.025) 0px,
-        hsl(30 60% 50% / 0.025) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-      hsl(0 0% 0%);
+  .dark .bg-mesh,
+  .dark .bg-grid {
+    background-color: hsl(0 0% 0%);
+    background-image:
+      radial-gradient(hsl(var(--titan-grid) / 0.14) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   /* ===== Repurposed legacy utilities — every existing consumer inherits LCARS ===== */
@@ -419,6 +421,97 @@
     pointer-events: none;
     mix-blend-mode: screen;
   }
+
+  /* ===== Picard / Titan: thin double-stroke rounded panel ===== */
+  .lcars-frame-rounded {
+    position: relative;
+    background: hsl(0 0% 0%);
+    border: 1px solid hsl(var(--titan-steel) / 0.85);
+    border-radius: 22px;
+    box-shadow:
+      0 0 0 4px hsl(0 0% 0%),
+      0 0 0 5px hsl(var(--titan-steel) / 0.5);
+  }
+
+  /* ===== Dotted tick row (image 2 top dots strip) ===== */
+  .lcars-tick-row {
+    height: 8px;
+    background-image: radial-gradient(
+      circle,
+      hsl(var(--titan-frost) / 0.55) 1.2px,
+      transparent 1.4px
+    );
+    background-size: 14px 8px;
+    background-position: center;
+    background-repeat: repeat-x;
+  }
+  .lcars-tick-row--dense {
+    background-size: 9px 8px;
+  }
+
+  /* ===== Slate numeric chip (Picard data-rail) ===== */
+  .lcars-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--titan-steel));
+    color: hsl(var(--titan-frost));
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-family: 'Antonio', sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.1em;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .lcars-chip--slate { background: hsl(var(--titan-slate)); }
+  .lcars-chip--rail  { background: hsl(var(--titan-rail)); color: hsl(var(--titan-frost) / 0.85); }
+  .lcars-chip--amber { background: hsl(var(--titan-amber)); color: hsl(0 0% 0%); }
+  .lcars-chip--teal  { background: hsl(var(--titan-teal));  color: hsl(0 0% 0%); }
+  .lcars-chip--alert { background: hsl(var(--lcars-red));   color: hsl(0 0% 100%); }
+
+  /* ===== Reticle / scanner overlay (image 2 Morganogram) ===== */
+  .lcars-reticle {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background-image:
+      linear-gradient(to right,  hsl(var(--titan-teal) / 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--titan-teal) / 0.18) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .lcars-reticle::before,
+  .lcars-reticle::after {
+    content: '';
+    position: absolute;
+    background: hsl(var(--titan-teal) / 0.7);
+  }
+  .lcars-reticle::before {
+    left: 50%; top: 12%; bottom: 12%;
+    width: 1px; transform: translateX(-50%);
+  }
+  .lcars-reticle::after {
+    top: 50%; left: 12%; right: 12%;
+    height: 1px; transform: translateY(-50%);
+  }
+
+  /* ===== Condition Red full-page wrapper (image 4) ===== */
+  .condition-red {
+    position: relative;
+    border: 2px solid hsl(var(--lcars-red));
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 24px hsl(var(--lcars-red) / 0.25),
+      0 0 0 4px hsl(0 0% 0%),
+      0 0 0 5px hsl(var(--lcars-red) / 0.5);
+    animation: lcars-red-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes lcars-red-pulse {
+  0%, 100% { box-shadow: inset 0 0 24px hsl(var(--lcars-red) / 0.25), 0 0 0 4px hsl(0 0% 0%), 0 0 0 5px hsl(var(--lcars-red) / 0.5); }
+  50%      { box-shadow: inset 0 0 36px hsl(var(--lcars-red) / 0.45), 0 0 0 4px hsl(0 0% 0%), 0 0 0 5px hsl(var(--lcars-red) / 0.85); }
 }
 
 @keyframes lcars-blink-red {

@@ -184,13 +184,29 @@ export default function ZoomableImage({
         src={src}
         alt={alt}
         draggable={false}
-        className="h-full w-full object-contain p-1.5 will-change-transform"
+        className="h-full w-full object-contain p-1.5 will-change-transform lcars-image-tint"
         style={{
           transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
           transformOrigin: "center center",
           transition: pointersRef.current.size === 0 && lastPinchDistRef.current == null ? "transform 120ms ease-out" : "none",
         }}
       />
+
+      {/* Picard-era Morganogram reticle overlay (decorative) */}
+      <div className="lcars-reticle" aria-hidden />
+      <div className="absolute top-1.5 left-1.5 z-[4] pointer-events-none">
+        <span className="lcars-chip lcars-chip--rail text-[8px] py-0">
+          MORGANOGRAM SCAN ⌁ {String(src).slice(-4) || "0000"}
+        </span>
+      </div>
+      {/* Right-side 0..90 ladder */}
+      <div className="absolute right-1 top-2 bottom-6 z-[4] pointer-events-none flex flex-col justify-between text-[7px] lcars-numerals text-titan-teal/85">
+        {[90, 70, 50, 30, 10].map((n) => <span key={n}>{n}</span>)}
+      </div>
+      {/* Bottom letter scale */}
+      <div className="absolute bottom-1 left-2 right-2 z-[4] pointer-events-none flex justify-between text-[7px] lcars-mono text-titan-teal/85">
+        {["S.T.", "S.B.", "J.M.", "M.F.", "L.V."].map((l) => <span key={l}>{l}</span>)}
+      </div>
     </div>
   );
 }
