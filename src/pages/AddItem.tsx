@@ -1,7 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES, PATTERN_OPTIONS, TEXTURE_OPTIONS } from "@/lib/wardrobe-data";
-import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
+import {
+  SHOE_SUBCATEGORIES,
+  PATTERN_OPTIONS,
+  TEXTURE_OPTIONS,
+  INTAKE_TYPES,
+  mapCategoryToIntakeType,
+  type IntakeType,
+} from "@/lib/wardrobe-data";
+import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +31,8 @@ import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
 import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 export default function AddItem() {
   const navigate = useNavigate();
