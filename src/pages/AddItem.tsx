@@ -545,10 +545,24 @@ export default function AddItem() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* REQUIRED: Primary Color */}
+        <div ref={colorSectionRef} className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="color">Color</Label>
-            <Input id="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="e.g. Navy" />
+            <Label htmlFor="color">
+              Primary Color <span className="text-lcars-red">*</span>
+            </Label>
+            <Input
+              id="color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              placeholder="e.g. Navy"
+              className={cn(triedSave && !colorOk && "border-lcars-red focus:border-lcars-red")}
+            />
+            {triedSave && !colorOk && (
+              <p className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+                ⌁ Color name + valid hex required
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="hex">Hex</Label>
