@@ -376,46 +376,48 @@ export default function Outfits() {
 
   if (outfits.length === 0) {
     return (
-      <div className="space-y-6">
-        {renderInspireCta}
-        <div className="flex flex-col items-center justify-center gap-6 py-12 text-center">
-          <div className="empty-state-blob">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
-              <Heart className="h-8 w-8 text-muted-foreground" />
+      <LcarsSection {...sectorProps}>
+        <div className="space-y-6">
+          {renderInspireCta}
+          <div className="flex flex-col items-center justify-center gap-6 py-12 text-center">
+            <div className="empty-state-blob">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+                <Heart className="h-8 w-8 text-muted-foreground" />
+              </div>
             </div>
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                Tap any wardrobe item to get AI outfit suggestions, or recreate a look above.
+              </p>
+            </div>
+            <Button variant="secondary" asChild>
+              <Link to="/wardrobe">Browse Wardrobe</Link>
+            </Button>
           </div>
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-foreground">No Saved Outfits</h2>
-            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Tap any wardrobe item to get AI outfit suggestions, or recreate a look above.
-            </p>
-          </div>
-          <Button variant="secondary" asChild>
-            <Link to="/wardrobe">Browse Wardrobe</Link>
-          </Button>
+          {inspireSheetAndDrawer}
         </div>
-        {inspireSheetAndDrawer}
-      </div>
+      </LcarsSection>
     );
   }
 
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold text-foreground">Saved Outfits</h2>
-        <Button
-          variant="outline"
-          size="sm"
+    <LcarsSection
+      {...sectorProps}
+      rightSlot={
+        <LcarsPill
+          color="cyan"
           onClick={handleExportPdf}
           disabled={exporting || filteredOutfits.length === 0}
-          className="shadow-neon"
           data-tour="outfits-export"
         >
-          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-          Export PDF
-        </Button>
-      </div>
+          {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+          EXPORT PDF
+        </LcarsPill>
+      }
+    >
+    <div className="space-y-4">
 
       {renderInspireCta}
 
