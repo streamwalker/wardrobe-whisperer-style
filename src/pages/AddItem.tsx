@@ -124,7 +124,17 @@ export default function AddItem() {
         const baseDesc = data.description || "";
         const back = (data.back_details || "").trim();
         setDescription(back ? `${baseDesc}${baseDesc ? " " : ""}Back: ${back}` : baseDesc);
-        setCategory(data.category || "");
+        // Map AI category onto our 4-type intake set; preserve the original for a notice if remapped.
+        const aiCat = (data.category || "") as string;
+        const mapped = mapCategoryToIntakeType(aiCat);
+        if (mapped) {
+          setIntakeType(mapped);
+          setTypeConfirmed(false); // user must confirm AI's pick
+          const offered = INTAKE_TYPES.find((t) => t.value === mapped)?.category;
+          setAiSuggestedRemap(aiCat && aiCat !== offered ? aiCat : null);
+        } else {
+          setAiSuggestedRemap(aiCat || null);
+        }
         setPrimaryColor(data.primary_color || "");
         setColorHex(data.color_hex || "#000000");
         setStyleTags(data.style_tags || []);
