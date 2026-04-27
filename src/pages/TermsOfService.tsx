@@ -14,11 +14,12 @@ export default function TermsOfService() {
       bottomColor="orange"
       maxWidth="lg"
       rightSlot={
-        <Link to="/auth">
-          <LcarsPill color="orange" side="r" as any>
-            <ArrowLeft className="h-3.5 w-3.5" />
-            AUTH
-          </LcarsPill>
+        <Link
+          to="/auth"
+          className="lcars-pill-r bg-lcars-orange text-black px-4 h-9 inline-flex items-center gap-2 lcars-label text-xs hover:brightness-110"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          AUTH
         </Link>
       }
     >
