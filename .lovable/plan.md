@@ -1,82 +1,54 @@
 ## Goal
-After a user uploads a new item, surface a **dedicated visual preview card** for each suggested outfit that places the **newly added item** next to its matching wardrobe pieces, with a short, focused **color-theory explanation** (complementary / analogous / neutral anchor / monochrome / triadic, etc.) — styled in the LCARS Picard aesthetic.
+Rebuild the existing **/add** intake screen so it enforces the exact wording from your request — **Shoes / Pants / Shirts / Hoodies** — as a required item-type selector, alongside required **primary color** and at least one **style tag**. Keep all current power features (photo upload, AI auto-fill, back photo, pattern/texture, subcategories, outfit-suggestion drawer) but gate the save button behind validated intake fields with clear inline errors.
 
-This complements the existing Board / Compare tabs in `OutfitSuggestionDrawer` rather than replacing them.
+The 4-type wording is a UI label only — under the hood we still write to existing DB categories (`shoes`, `pants`, `tops`, `outerwear`) so no migration is needed and the matcher / filters / sharing all keep working.
 
-## What changes
+## Type mapping (display ↔ DB)
+| Intake label | DB `category` |
+|---|---|
+| 👟 Shoes | `shoes` |
+| 👖 Pants | `pants` |
+| 👕 Shirts | `tops` |
+| 🧥 Hoodies | `outerwear` |
 
-### 1. New component: `src/components/wardrobe/NewItemMatchCard.tsx`
-A compact, scannable "spotlight" card with three regions:
+Other categories (`suits`, `accessories`, `dress-shoes`) remain editable from the wardrobe edit popover but are not offered in this intake. If the AI returns one of those, we'll fall back to the closest of the 4 (e.g. `dress-shoes` → `shoes`) and surface a small notice so you can fix it manually if needed.
 
-- **Left tile — "JUST ADDED"** (lavender LCARS endcap)
-  - Large image of the newly uploaded item with a glowing teal border + "NEW INTAKE" pill
-  - Color swatch chip showing `color_hex` + color name
-- **Connector** — animated `→` arrow with a tiny LCARS chip ("MATCH 87%" style, derived locally) and a color-relationship label (e.g. `COMPLEMENTARY`, `ANALOGOUS`, `NEUTRAL ANCHOR`)
-- **Right tile — "MATCHING PIECES"** (orange LCARS endcap)
-  - Horizontal strip of the *other* outfit items (excluding the new item), each with their own color swatch
-- **Bottom strip — "COLOR THEORY"**
-  - Two lines:
-    1. The relationship label + a one-sentence rule of thumb (generated from a local helper, see §3)
-    2. The AI's existing `outfit.explanation` (already returned by `match-outfit`), prefixed with a small lavender code chip
-  - Mini palette row: 4–6 swatch dots showing the dominant hex of every piece in the outfit, in the order top → bottom of the body
+## UX changes on `/add`
+1. **Required Type selector (top of form, above photo)**
+   - Big LCARS-style 4-pill radio rail using `LcarsPill` primitives, one per type, with emoji + label.
+   - Selected pill paints in `titan-amber`; unselected use `titan-steel`.
+   - Empty-state error: `"INTAKE BLOCKED · ITEM TYPE REQUIRED"` banner using `LcarsAlertBanner`.
+2. **Required Primary Color**
+   - Inline color name input + native color picker + hex (already present); now flagged required with red LCARS sub-label when blank on save attempt.
+3. **Required Style Tags (≥1)**
+   - Existing pill toggles, but now show a `"SELECT AT LEAST ONE"` micro-hint until satisfied.
+4. **Save button state**
+   - Disabled (grayed amber pill) until type + primary color + ≥1 style tag are set. Tooltip / sub-line explains what's missing.
+   - On click with missing fields: scroll-to-first-invalid + LCARS alert chime via toast.
+5. **AI auto-fill behavior**
+   - Photo + AI analyze still pre-fills everything, but the user must visually confirm the type pill (we won't auto-select it as "validated"; the pill highlights in pulsing amber until tapped to confirm). This satisfies the "must set" requirement even when AI does the work.
+6. **Subcategory** stays available only when type = Shoes (Hi-Tops / Boots).
 
-All copy uppercase tracking-widest where appropriate; uses `LcarsPill`, `LcarsCodeChip`, `lcarsCode()` from `LcarsPrimitives.tsx`.
+## Files to edit
+- **`src/pages/AddItem.tsx`** — main rebuild:
+  - Replace the `<Select>` category dropdown with a 4-pill LCARS radio rail.
+  - Add `validate()` helper returning `{ typeOk, colorOk, tagsOk }` and a `triedSave` flag for inline errors.
+  - Map AI category → 4-type set; show notice when remapped.
+  - Disable Save until valid; reorder layout so Type sits at the top of the form card.
+- **`src/lib/wardrobe-data.ts`** — add an `INTAKE_TYPES` constant exporting the 4 display types with their DB category mapping (single source of truth).
+- **`src/components/lcars/LcarsPrimitives.tsx`** *(only if needed)* — small `LcarsRadioRail` helper if it cleans up the JSX; otherwise compose with existing `LcarsPill`.
 
-### 2. Wire the new card into `OutfitSuggestionDrawer.tsx`
-- Add a new prop `newlyAddedItemId?: string` to `OutfitSuggestionDrawer`.
-- When set, render `NewItemMatchCard` **above** the existing Tabs (Board / Compare) for each outfit that contains that item ID. (No card if the outfit doesn't include the new item.)
-- The existing Board/Compare tabs stay intact — the new card is the at-a-glance hero.
-- In `AddItem.tsx` (the existing post-save flow that already opens the drawer with `newlyAddedItem`), pass `newlyAddedItemId={newlyAddedItem.id}`.
+## Files NOT touched
+- DB schema / `category` CHECK constraint — no migration needed.
+- Outfit matcher, filters, sharing — they continue to see `tops`/`outerwear` as before.
+- BatchAddItems — out of scope; this plan is for the single-item intake at `/add`.
+- Edit popover on the wardrobe grid — keeps full 7-category list so existing items (suits, accessories, dress-shoes) remain editable.
 
-### 3. New helper: `src/lib/color-theory.ts`
-A pure, dependency-free helper used by the new card:
+## Validation rules (final)
+- `category` must be one of the 4 intake types (after mapping).
+- `primary_color` must be non-empty after `.trim()` and `color_hex` must be a valid `#RRGGBB`.
+- `style_tags.length >= 1`.
+- Photo remains optional (you can intake metadata-only items).
 
-```ts
-export type ColorRelationship =
-  | "monochrome" | "analogous" | "complementary"
-  | "triadic" | "neutral-anchor" | "tonal-contrast";
-
-export function describeOutfitPalette(hexes: string[]): {
-  relationship: ColorRelationship;
-  label: string;        // e.g. "COMPLEMENTARY"
-  rationale: string;    // one-sentence rule of thumb
-  dominantHexes: string[]; // deduped, ordered
-};
-```
-
-Logic:
-- Convert each hex → HSL.
-- Treat S < 12% or L < 12% / > 88% as **neutral**. If the outfit has ≥1 neutral + ≥1 chromatic → `neutral-anchor`.
-- All hues within ~20° → `monochrome` (if also similar L) or `analogous`.
-- Two clusters ~180° apart → `complementary`.
-- Three clusters ~120° apart → `triadic`.
-- Same hue, very different L → `tonal-contrast`.
-- Each branch returns a short, plain-English rationale (e.g. *"Opposite hues on the wheel — they make each other pop without clashing."*).
-
-This means the color-theory blurb is **deterministic and instant**, even before the AI explanation renders, and works offline.
-
-### 4. Light styling additions in `src/index.css`
-- `.new-intake-glow` — soft teal box-shadow + animated subtle pulse for the JUST ADDED tile border.
-- `.color-swatch-dot` — 14px round chip with 1px frost ring used in the mini palette row.
-
-No Tailwind config or token changes — reuses existing `lcars-*` and `titan-*` tokens.
-
-### 5. Touch points (small)
-- `src/pages/AddItem.tsx` — pass new prop when opening the drawer (1 line).
-- `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — accept new prop, render `NewItemMatchCard` above tabs when applicable (~10 lines).
-- No edge-function changes; existing `outfit.explanation` from `match-outfit` is reused as the AI commentary line.
-
-## Files
-**Create**
-- `src/components/wardrobe/NewItemMatchCard.tsx`
-- `src/lib/color-theory.ts`
-
-**Edit**
-- `src/components/wardrobe/OutfitSuggestionDrawer.tsx` (add prop + render hero card)
-- `src/pages/AddItem.tsx` (pass `newlyAddedItemId`)
-- `src/index.css` (two small utility classes)
-
-## Out of scope
-- No changes to `match-outfit` edge function.
-- No DB migrations.
-- No changes to the Outfits page (this is specifically the **post-upload** experience — the user said "newly uploaded item").
+## Out of scope / open question
+If you'd like the same 4-type restriction applied to **BatchAddItems** as well, say the word and I'll add it as a follow-up. Same for swapping the wardrobe filter chips to use the new "Shirts / Hoodies" wording (purely cosmetic; data stays as `tops`/`outerwear`).
