@@ -564,6 +564,7 @@ export default function Wardrobe() {
           ))}
         </div>
       )}
+      </LcarsSection>
 
       {/* Floating multi-select bar */}
       {selection.selectedItems.length >= 1 && !drawerOpen && (
