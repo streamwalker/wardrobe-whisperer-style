@@ -89,7 +89,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     if (prefetchedOutfits) {
       setOutfits(prefetchedOutfits);
       setHasMore(false);
-      setSavedIds(new Set());
+      setSavedState(new Map());
       setIncompatible(null);
       setHasLoaded(itemsKey);
       return;
@@ -98,7 +98,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     if (items.length > 0) {
       setOutfits([]);
       setHasMore(true);
-      setSavedIds(new Set());
+      setSavedState(new Map());
       setIncompatible(null);
       fetchSuggestions(items, []);
     }
