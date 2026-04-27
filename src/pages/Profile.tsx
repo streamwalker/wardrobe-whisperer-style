@@ -649,6 +649,5 @@ function ShareSection({ userId }: { userId?: string }) {
         </div>
       )}
     </div>
-    </LcarsSection>
   );
 }
