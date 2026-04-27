@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Bookmark, Check, CalendarDays, CloudSun } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, CalendarDays, CloudSun, Heart } from "lucide-react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,8 +57,8 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
   const [weather, setWeather] = useState("");
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const [savedState, setSavedState] = useState<Map<string, "saved" | "favorited">>(new Map());
+  const [savingState, setSavingState] = useState<{ idx: number; mode: "saved" | "favorited" } | null>(null);
   const { user } = useAuth();
 
   const activeOccasion = customOccasion.trim() || occasion;
