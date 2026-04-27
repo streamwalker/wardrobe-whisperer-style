@@ -195,6 +195,24 @@ export default function Shop() {
 
   const isProcessing = analyzing || matching;
 
+  // Instant deterministic catalog matches — recomputed any time analysis or wardrobe changes.
+  const instantMatches: CatalogMatchResult | null = useMemo(() => {
+    if (!analyzedItem) return null;
+    return scoreCatalogMatches(
+      {
+        name: analyzedItem.name,
+        category: analyzedItem.category,
+        primary_color: analyzedItem.primary_color,
+        color_hex: analyzedItem.color_hex,
+        style_tags: analyzedItem.style_tags,
+        pattern: analyzedItem.pattern,
+        texture: analyzedItem.texture,
+        description: analyzedItem.description,
+      },
+      wardrobeItems,
+    );
+  }, [analyzedItem, wardrobeItems]);
+
   return (
     <LcarsSection
       title="ACQUISITIONS"
