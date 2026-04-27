@@ -58,6 +58,44 @@ export const CATEGORIES: { value: WardrobeCategory; label: string; icon: string 
   { value: 'dress-shoes', label: 'Dress Shoes', icon: '👞' },
 ];
 
+/**
+ * The 4 item types offered in the strict intake form (/add).
+ * Display labels can differ from DB category — the matcher / filters
+ * still operate on the DB `category` value.
+ */
+export interface IntakeType {
+  value: 'shoes' | 'pants' | 'shirts' | 'hoodies';
+  label: string;
+  icon: string;
+  category: WardrobeCategory; // DB-side category written on save
+}
+
+export const INTAKE_TYPES: IntakeType[] = [
+  { value: 'shoes',   label: 'Shoes',   icon: '👟', category: 'shoes' },
+  { value: 'pants',   label: 'Pants',   icon: '👖', category: 'pants' },
+  { value: 'shirts',  label: 'Shirts',  icon: '👕', category: 'tops' },
+  { value: 'hoodies', label: 'Hoodies', icon: '🧥', category: 'outerwear' },
+];
+
+/** Map an arbitrary DB category (e.g. from AI analysis) onto the closest of the 4 intake types. */
+export function mapCategoryToIntakeType(cat: string | undefined | null): IntakeType['value'] | '' {
+  switch (cat) {
+    case 'shoes':
+    case 'dress-shoes':
+      return 'shoes';
+    case 'pants':
+      return 'pants';
+    case 'tops':
+    case 'suits':
+    case 'accessories':
+      return 'shirts';
+    case 'outerwear':
+      return 'hoodies';
+    default:
+      return '';
+  }
+}
+
 export type ColorTone = 'dark' | 'light' | 'neutral';
 
 export function getColorTone(hex: string): ColorTone {

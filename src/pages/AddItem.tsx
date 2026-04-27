@@ -1,7 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES, PATTERN_OPTIONS, TEXTURE_OPTIONS } from "@/lib/wardrobe-data";
-import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon } from "lucide-react";
+import {
+  SHOE_SUBCATEGORIES,
+  PATTERN_OPTIONS,
+  TEXTURE_OPTIONS,
+  INTAKE_TYPES,
+  mapCategoryToIntakeType,
+  type IntakeType,
+} from "@/lib/wardrobe-data";
+import { ArrowLeft, Camera, Loader2, Sparkles, ImageIcon, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +31,8 @@ import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
 import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
-const CATEGORIES = ["shoes", "pants", "tops", "outerwear", "suits", "accessories", "dress-shoes"] as const;
 const STYLE_TAGS = ["casual", "neutral", "bold", "luxury", "minimal", "sporty"] as const;
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 export default function AddItem() {
   const navigate = useNavigate();
@@ -50,21 +57,37 @@ export default function AddItem() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<string>("");
+  const [intakeType, setIntakeType] = useState<IntakeType["value"] | "">("");
+  const [typeConfirmed, setTypeConfirmed] = useState(false);
+  const [aiSuggestedRemap, setAiSuggestedRemap] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("");
   const [colorHex, setColorHex] = useState("#000000");
   const [styleTags, setStyleTags] = useState<string[]>([]);
   const [subcategory, setSubcategory] = useState<string>("");
   const [pattern, setPattern] = useState<string>("");
   const [texture, setTexture] = useState<string>("");
+  const [triedSave, setTriedSave] = useState(false);
+
+  // Refs for scroll-to-error
+  const typeSectionRef = useRef<HTMLDivElement>(null);
+  const colorSectionRef = useRef<HTMLDivElement>(null);
+  const tagsSectionRef = useRef<HTMLDivElement>(null);
+
+  // Validation
+  const typeOk = !!intakeType && typeConfirmed;
+  const colorOk = primaryColor.trim().length > 0 && HEX_RE.test(colorHex);
+  const tagsOk = styleTags.length >= 1;
+  const formValid = typeOk && colorOk && tagsOk;
 
   // Prefill from query params (e.g. /add?category=tops&name=White%20Oxford&hint=...)
   useEffect(() => {
     const qpCategory = searchParams.get("category");
     const qpName = searchParams.get("name");
     const qpHint = searchParams.get("hint");
-    if (qpCategory && (CATEGORIES as readonly string[]).includes(qpCategory)) {
-      setCategory(qpCategory);
+    const mapped = mapCategoryToIntakeType(qpCategory);
+    if (mapped) {
+      setIntakeType(mapped);
+      setTypeConfirmed(true); // explicit URL prefill counts as user intent
     }
     if (qpName) setName(qpName);
     if (qpHint) setDescription((prev) => (prev ? prev : qpHint));
@@ -101,7 +124,17 @@ export default function AddItem() {
         const baseDesc = data.description || "";
         const back = (data.back_details || "").trim();
         setDescription(back ? `${baseDesc}${baseDesc ? " " : ""}Back: ${back}` : baseDesc);
-        setCategory(data.category || "");
+        // Map AI category onto our 4-type intake set; preserve the original for a notice if remapped.
+        const aiCat = (data.category || "") as string;
+        const mapped = mapCategoryToIntakeType(aiCat);
+        if (mapped) {
+          setIntakeType(mapped);
+          setTypeConfirmed(false); // user must confirm AI's pick
+          const offered = INTAKE_TYPES.find((t) => t.value === mapped)?.category;
+          setAiSuggestedRemap(aiCat && aiCat !== offered ? aiCat : null);
+        } else {
+          setAiSuggestedRemap(aiCat || null);
+        }
         setPrimaryColor(data.primary_color || "");
         setColorHex(data.color_hex || "#000000");
         setStyleTags(data.style_tags || []);
@@ -145,8 +178,31 @@ export default function AddItem() {
   };
 
   const handleSave = async () => {
-    if (!name || !category || !primaryColor) {
-      toast({ title: "Missing fields", description: "Please fill in name, category, and color.", variant: "destructive" });
+    setTriedSave(true);
+    if (!formValid) {
+      // Find first invalid section and scroll to it
+      const target =
+        !typeOk ? typeSectionRef.current
+        : !colorOk ? colorSectionRef.current
+        : !tagsOk ? tagsSectionRef.current
+        : null;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const missing = [
+        !typeOk && (intakeType ? "confirm item type" : "item type"),
+        !colorOk && "primary color",
+        !tagsOk && "at least one style tag",
+      ].filter(Boolean).join(", ");
+      toast({
+        title: "Intake blocked",
+        description: `Required: ${missing}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const dbCategory = INTAKE_TYPES.find((t) => t.value === intakeType)?.category;
+    if (!dbCategory) {
+      toast({ title: "Invalid type", description: "Please re-select an item type.", variant: "destructive" });
       return;
     }
 
@@ -172,15 +228,18 @@ export default function AddItem() {
       if (photoFile) photoUrl = await uploadPhoto(photoFile);
       if (backPhotoFile) photoBackUrl = await uploadPhoto(backPhotoFile, "-back");
 
+      // Default a name if user left it blank — keeps the form lean per intake spec.
+      const finalName = name.trim() || `${intakeType?.toUpperCase()} · ${primaryColor.trim()}`;
+
       const { data: inserted, error: insertError } = await supabase
         .from("wardrobe_items")
         .insert({
           user_id: user!.id,
-          name,
+          name: finalName,
           description: description || null,
-          category,
-          subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : null,
-          primary_color: primaryColor,
+          category: dbCategory,
+          subcategory: intakeType === "shoes" && subcategory ? subcategory : null,
+          primary_color: primaryColor.trim(),
           color_hex: colorHex,
           style_tags: styleTags,
           pattern: pattern || null,
@@ -411,31 +470,72 @@ export default function AddItem() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Category</Label>
-          <Select value={category} onValueChange={(val) => { setCategory(val); if (val !== "shoes" && val !== "accessories") setSubcategory(""); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="capitalize">
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* REQUIRED: Item Type */}
+        <div ref={typeSectionRef} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>
+              Item Type <span className="text-lcars-red">*</span>
+            </Label>
+            {intakeType && !typeConfirmed && (
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-yellow animate-pulse">
+                ⌁ Tap to confirm
+              </span>
+            )}
+          </div>
+          {triedSave && !typeOk && (
+            <div className="flex items-center gap-2 rounded-md border border-lcars-red/60 bg-lcars-red/10 px-2 py-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-lcars-red shrink-0" />
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+                INTAKE BLOCKED · {intakeType ? "CONFIRM ITEM TYPE" : "ITEM TYPE REQUIRED"}
+              </span>
+            </div>
+          )}
+          {aiSuggestedRemap && intakeType && (
+            <p className="lcars-mono text-[10px] uppercase tracking-wider text-titan-teal">
+              ⌁ AI suggested "{aiSuggestedRemap}" → mapped to {intakeType}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {INTAKE_TYPES.map((t) => {
+              const selected = intakeType === t.value;
+              const needsConfirm = selected && !typeConfirmed;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    setIntakeType(t.value);
+                    setTypeConfirmed(true);
+                    if (t.value !== "shoes") setSubcategory("");
+                  }}
+                  aria-pressed={selected}
+                  className={cn(
+                    "lcars-pill h-12 px-3 inline-flex items-center justify-center gap-2 lcars-label text-xs",
+                    "transition-[filter,box-shadow] duration-150 hover:brightness-110 active:brightness-95",
+                    selected
+                      ? "bg-titan-amber text-black"
+                      : "bg-titan-steel text-titan-frost",
+                    needsConfirm && "ring-2 ring-titan-amber/70 animate-pulse",
+                  )}
+                >
+                  <span className="text-base leading-none" aria-hidden>{t.icon}</span>
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {(category === "shoes" || category === "accessories") && (
+        {/* Shoe subcategory (only when type = Shoes) */}
+        {intakeType === "shoes" && (
           <div className="space-y-2">
-            <Label>Subcategory</Label>
+            <Label>Shoe style</Label>
             <Select value={subcategory} onValueChange={setSubcategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Select subcategory (optional)" />
+                <SelectValue placeholder="Optional · Hi-Tops or Boots" />
               </SelectTrigger>
               <SelectContent>
-                {(category === "shoes" ? SHOE_SUBCATEGORIES : ACCESSORY_SUBCATEGORIES).map((sub) => (
+                {SHOE_SUBCATEGORIES.map((sub) => (
                   <SelectItem key={sub.value} value={sub.value}>
                     {sub.label}
                   </SelectItem>
@@ -445,10 +545,24 @@ export default function AddItem() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* REQUIRED: Primary Color */}
+        <div ref={colorSectionRef} className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="color">Color</Label>
-            <Input id="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="e.g. Navy" />
+            <Label htmlFor="color">
+              Primary Color <span className="text-lcars-red">*</span>
+            </Label>
+            <Input
+              id="color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              placeholder="e.g. Navy"
+              className={cn(triedSave && !colorOk && "border-lcars-red focus:border-lcars-red")}
+            />
+            {triedSave && !colorOk && (
+              <p className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+                ⌁ Color name + valid hex required
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="hex">Hex</Label>
@@ -493,12 +607,28 @@ export default function AddItem() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Style Tags</Label>
+        {/* REQUIRED: Style Tags */}
+        <div ref={tagsSectionRef} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>
+              Style Tags <span className="text-lcars-red">*</span>
+            </Label>
+            {!tagsOk && (
+              <span className="lcars-mono text-[10px] uppercase tracking-wider text-titan-frost/70">
+                ⌁ Select at least one
+              </span>
+            )}
+          </div>
+          {triedSave && !tagsOk && (
+            <p className="lcars-mono text-[10px] uppercase tracking-wider text-lcars-red">
+              ⌁ At least one style tag required
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             {STYLE_TAGS.map((tag) => (
               <button
                 key={tag}
+                type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium capitalize transition-all",
@@ -514,9 +644,32 @@ export default function AddItem() {
         </div>
       </div>
 
-      <Button onClick={handleSave} disabled={saving || analyzing} className="w-full" size="lg">
+      {/* Required-fields status line above Save */}
+      {!formValid && (
+        <p className="lcars-mono text-[10px] uppercase tracking-wider text-titan-frost/80 text-center">
+          ⌁ Required to save:{" "}
+          <span className={cn(typeOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {typeOk ? "✓" : "○"} type
+          </span>
+          {" · "}
+          <span className={cn(colorOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {colorOk ? "✓" : "○"} color
+          </span>
+          {" · "}
+          <span className={cn(tagsOk ? "text-titan-teal" : "text-lcars-yellow")}>
+            {tagsOk ? "✓" : "○"} tags
+          </span>
+        </p>
+      )}
+
+      <Button
+        onClick={handleSave}
+        disabled={saving || analyzing || !formValid}
+        className="w-full"
+        size="lg"
+      >
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save to Wardrobe
+        {formValid ? "Save to Wardrobe" : "Complete required fields to save"}
       </Button>
 
       {newlyAddedItem && (
