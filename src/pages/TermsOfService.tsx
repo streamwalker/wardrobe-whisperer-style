@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
-import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 export default function TermsOfService() {
   return (
