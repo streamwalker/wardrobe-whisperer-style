@@ -20,6 +20,9 @@ interface AnalyzedItem {
   primary_color: string;
   color_hex: string;
   style_tags: string[];
+  pattern?: string;
+  texture?: string;
+  description?: string;
 }
 
 interface OutfitSuggestion {
