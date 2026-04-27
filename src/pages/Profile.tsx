@@ -154,7 +154,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <LcarsSection title="CREW DOSSIER" subtitle="SECTOR 04" headerColor="cyan" topColor="cyan" sideColor="lavender" bottomColor="orange">
+      <LcarsSection title="CREW DOSSIER" subtitle="SECTOR 04" headerColor="teal" topColor="steel" sideColor="amber" bottomColor="slate" variant="rounded">
         <div className="space-y-6">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-64 w-full rounded-lg" />
@@ -167,10 +167,11 @@ export default function Profile() {
     <LcarsSection
       title="CREW DOSSIER"
       subtitle="SECTOR 04"
-      headerColor="cyan"
-      topColor="cyan"
-      sideColor="lavender"
-      bottomColor="orange"
+      headerColor="teal"
+      topColor="steel"
+      sideColor="amber"
+      bottomColor="slate"
+      variant="rounded"
       rightSlot={
         <LcarsPill color="red" side="r" onClick={handleLogout}>
           <LogOut className="h-3.5 w-3.5" />

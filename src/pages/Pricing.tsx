@@ -59,10 +59,11 @@ export default function Pricing() {
     <LcarsSection
       title="TIER UPGRADE"
       subtitle="SECTOR 99 · COMMERCE"
-      headerColor="yellow"
-      topColor="yellow"
-      sideColor="orange"
-      bottomColor="red"
+      headerColor="amber"
+      topColor="steel"
+      sideColor="amber"
+      bottomColor="slate"
+      variant="rounded"
     >
     <div className="space-y-8 pb-8 max-w-lg mx-auto">
       <div className="text-center space-y-2">
