@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import WardrobeItemCard from "@/components/wardrobe/WardrobeItemCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import LcarsStandaloneShell from "@/components/lcars/LcarsStandaloneShell";
 
 export default function SharedWardrobe() {
   const { token } = useParams<{ token: string }>();
