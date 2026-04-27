@@ -154,22 +154,31 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full rounded-lg" />
-      </div>
+      <LcarsSection title="CREW DOSSIER" subtitle="SECTOR 04" headerColor="cyan" topColor="cyan" sideColor="lavender" bottomColor="orange">
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      </LcarsSection>
     );
   }
 
   return (
+    <LcarsSection
+      title="CREW DOSSIER"
+      subtitle="SECTOR 04"
+      headerColor="cyan"
+      topColor="cyan"
+      sideColor="lavender"
+      bottomColor="orange"
+      rightSlot={
+        <LcarsPill color="red" side="r" onClick={handleLogout}>
+          <LogOut className="h-3.5 w-3.5" />
+          LOG OUT
+        </LcarsPill>
+      }
+    >
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl font-semibold text-foreground">Style Profile</h2>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
-          <LogOut className="h-4 w-4 mr-1.5" />
-          Log out
-        </Button>
-      </div>
 
       {/* Name & Mood */}
       <div className="glass-card gradient-border rounded-2xl p-5 space-y-3">
