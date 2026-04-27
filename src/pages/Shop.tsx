@@ -119,6 +119,9 @@ export default function Shop() {
         primary_color: data.primary_color || "Unknown",
         color_hex: data.color_hex || "#888888",
         style_tags: data.style_tags || [],
+        pattern: data.pattern || undefined,
+        texture: data.texture || undefined,
+        description: data.description || undefined,
       };
       setAnalyzedItem(item);
     } catch (err: any) {
