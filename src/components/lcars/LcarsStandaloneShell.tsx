@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { LcarsTicker, type LcarsColor } from "./LcarsPrimitives";
+import { LcarsTicker, LcarsTickRow, LcarsCodeChip, type LcarsColor } from "./LcarsPrimitives";
 import { LcarsSection } from "./LcarsSection";
 import { cn } from "@/lib/utils";
 
