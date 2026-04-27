@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { restartOnboarding } from "@/hooks/useOnboarding";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
+import { LcarsPill } from "@/components/lcars/LcarsPrimitives";
 
 const STYLE_MOODS = ["neutral", "bold", "luxury", "streetwear", "classic", "minimalist"];
 const SKIN_TONES = ["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Dark"];
