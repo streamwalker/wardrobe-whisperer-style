@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
