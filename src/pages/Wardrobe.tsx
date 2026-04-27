@@ -267,13 +267,18 @@ export default function Wardrobe() {
 
   return (
     <div className="space-y-3 sm:space-y-5 pb-24">
+      <LcarsSection
+        title={wardrobeTitle.toUpperCase()}
+        subtitle={`SECTOR 01 · ${wardrobeWithPhotos.length} UNITS`}
+        headerColor="orange"
+        topColor="orange"
+        sideColor="lavender"
+        bottomColor="salmon"
+        rightSlot={
+          <LcarsCodeChip code={`UNITS-${wardrobeWithPhotos.length.toString().padStart(3, "0")}`} color="cyan" />
+        }
+      >
       <div className="space-y-2 sm:space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
-            {wardrobeTitle}
-          </h2>
-          <span className="text-xs text-muted-foreground">{wardrobeWithPhotos.length} items</span>
-        </div>
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
           {imageGen.itemsMissingPhotos.length > 0 && (
             <Button
