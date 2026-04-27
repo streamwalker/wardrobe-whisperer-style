@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2 } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart } from "lucide-react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,8 +56,9 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasLoaded, setHasLoaded] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  // Map of outfitKey → which save mode was used. Absence = unsaved.
+  const [savedState, setSavedState] = useState<Map<string, "saved" | "favorited">>(new Map());
+  const [savingState, setSavingState] = useState<{ idx: number; mode: "saved" | "favorited" } | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
   const [density, setDensity] = useState<BoardDensity>(() => {

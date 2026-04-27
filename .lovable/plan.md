@@ -1,64 +1,60 @@
-# Scan Upload Flow → Instant Top Matches (Shoes / Pants / Shirts)
-
 ## Goal
-On the Shop page, after photo upload + AI analysis, immediately surface the **top matched items from the user's own catalog** in each of the three target categories — **Shoes, Pants, Shirts (tops)** — *before* (and alongside) the slower full-outfit AI matcher.
+In every outfit suggestion surface, expose a **Heart** action that saves the suggested look to `saved_outfits` **and** marks `is_favorite = true` in a single tap. The existing **Bookmark** button stays as the "save without favoriting" path, so the user gets a clean two-button affordance everywhere a suggestion is shown.
 
-This is a fast, deterministic local scoring pass that runs the moment `analyze-clothing` returns, so the user sees relevant pieces of their wardrobe in roughly one frame.
+Saved-state remains session-only per the user's choice — closing/reopening a drawer resets the visual saved indicator (no extra `saved_outfits` query on open).
 
-## UX Flow (Shop page)
+## Surfaces touched
+All four currently render outfit suggestions; all four get the same control pair.
 
-1. User snaps / uploads a shopping photo (existing UI).
-2. `analyze-clothing` returns `{ name, category, primary_color, color_hex, style_tags, pattern, texture }` (already implemented).
-3. **NEW** — Immediately run a local `scoreCatalogMatches()` pass over `wardrobeItems` and render a **"TOP MATCHES IN YOUR CATALOG"** LCARS panel with three rails:
-   - 👟 SHOES — top 3 (combines `shoes` + `dress-shoes`)
-   - 👖 PANTS — top 3
-   - 👕 SHIRTS — top 3 (`tops`)
-   Each rail shows match % chip, color swatch, item name. Tapping a card opens the existing zoomable view.
-4. Below the rails, the existing **"Find Wardrobe Matches"** button is still available for the slower full-outfit AI suggestions — this becomes optional / secondary.
-5. If a category has zero items, that rail shows an empty LCARS hint ("NO PANTS IN CATALOG").
+| Surface | File | Currently has | Add |
+|---|---|---|---|
+| Wardrobe → "Outfit Ideas" drawer | `src/components/wardrobe/OutfitSuggestionDrawer.tsx` | Bookmark only | Heart (save + favorite) |
+| Outfits → "Recreate a Look" drawer | reuses `OutfitSuggestionDrawer.tsx` (`prefetchedOutfits`) | Bookmark only | Heart (save + favorite) |
+| Occasion drawer | `src/components/wardrobe/OccasionOutfitDrawer.tsx` | Bookmark only | Heart (save + favorite) |
+| Complete-Look composer | `src/components/wardrobe/CompleteLookView.tsx` | Single "Save" button | Heart "Save + Favorite" companion next to existing Save |
 
-## Scoring (deterministic, runs in browser, ~instant)
+## Implementation details
 
-New file `src/lib/catalog-match.ts` — pure function:
+### 1. `OutfitSuggestionDrawer.tsx`
+- Extend the per-suggestion saved-state from `Set<string>` to a small `Map<string, "saved" | "favorited">` so the icon row can reflect which button was used.
+- Refactor `saveOutfit(outfit, idx)` → `saveOutfit(outfit, idx, { favorite: boolean })`. Single insert with `is_favorite: favorite`.
+- Render order in the per-outfit header: `Wand2` (complete look) · **Heart** (new) · **Bookmark** (existing) · mood badge.
+- Heart states:
+  - default → outline Heart
+  - in-flight → `Loader2`
+  - after success → filled Heart in `text-primary` (matches `Outfits.tsx` styling for visual consistency)
+- Disable both buttons once the outfit is saved (in either mode) to prevent duplicates within the session.
+- Toast copy: `"Outfit saved!"` for Bookmark, `"Saved & favorited ❤️"` for Heart.
 
-```ts
-scoreCatalogMatches(scanned: AnalyzedItem, catalog: WardrobeItem[]) →
-  { shoes: ScoredItem[]; pants: ScoredItem[]; shirts: ScoredItem[] }
-```
+### 2. `OccasionOutfitDrawer.tsx`
+Same pattern: bump `savedIds: Set<string>` → `savedState: Map<string, "saved" | "favorited">`, pass `{ favorite }` into `saveOutfit`, render the Heart next to the existing Bookmark, and use the same toast copy. The icon column already lives in the suggestion card header so it slots in cleanly.
 
-Score (0–100) per candidate:
-- **Color harmony (50 pts)** — reuse `describeOutfitPalette([scanned.hex, candidate.hex])`:
-  - complementary / analogous / neutral-anchor / monochrome → 50
-  - triadic → 40
-  - tonal-contrast → 35
-  - else → 20
-- **Style tag overlap (25 pts)** — `25 * intersection / union` of `style_tags`.
-- **Formality compatibility (15 pts)** — penalize hard mismatches (e.g. scanned hoodie vs `dress-shoes`, scanned suit vs casual `shoes`); use the same dress-shirt / suit / hoodie rules already encoded in `supabase/functions/_shared/dress-shirt-rules.ts` (lift the rule constants into a shared client-safe helper).
-- **Pattern/texture bonus (10 pts)** — bonus when patterns differ in scale (≤1 patterned item per pair) and textures contrast.
+### 3. `CompleteLookView.tsx`
+- Refactor `handleSave` → `handleSave({ favorite: boolean })` and pass `is_favorite: favorite` into the insert.
+- Add a second button beside the existing "Save" CTA labeled **"Save + Favorite"** with a Heart icon (filled on success). Both buttons share the `saving` lock and become disabled / show a check after a successful save.
 
-Sort each category descending by score, take top 3 with score ≥ 35 (anything lower is hidden so we don't show garbage matches).
+### 4. No DB / RLS / schema changes required
+`saved_outfits.is_favorite` already exists (`boolean`, default `false`) and current RLS already permits `INSERT WITH CHECK (auth.uid() = user_id)`. Inserting with `is_favorite: true` Just Works.
 
-## Deliverables
+### 5. No changes to the Outfits page
+The Heart toggle on the saved-outfit cards in `Outfits.tsx` already exists and continues to behave the same way (toggling `is_favorite` on existing rows). Outfits saved via the new Heart button will appear there with their Heart pre-filled — confirming the round-trip.
 
-**New files**
-- `src/lib/catalog-match.ts` — scoring + per-category top-N selector.
-- `src/components/wardrobe/ScanMatchRail.tsx` — LCARS rail (label chip, 3 cards, empty state).
-- `src/components/wardrobe/ScanMatchPanel.tsx` — wraps three rails with the "TOP MATCHES" header, scanned-item swatch, and overall best-relationship label from `describeOutfitPalette`.
+## What deliberately stays the same
+- **Session-only saved state** — re-opening the drawer resets the indicators per the user's decision. No extra fetch on drawer open.
+- **No new save targets** — we are not introducing a "save to collection" or tagging system. Just save and save+favorite.
+- **No edits to existing Outfits-page heart toggle** — it already does the right thing.
 
-**Edited files**
-- `src/pages/Shop.tsx`:
-  - After analyze succeeds, compute matches synchronously via `scoreCatalogMatches` and render `<ScanMatchPanel/>` immediately.
-  - Keep existing "Save to Wardrobe" + "Find Wardrobe Matches" CTAs below.
-  - Demote outfit suggestions: only render when explicitly requested.
-- `src/index.css` — small additions for `.scan-match-card` (subtle teal accent + match-percentage chip).
-- `supabase/functions/_shared/dress-shirt-rules.ts` (or a new `src/lib/style-rules.ts`) — extract the formality matrix as plain constants importable from the client. *No edge function logic changes; we just reuse the data.*
+## Files to edit
+- `src/components/wardrobe/OutfitSuggestionDrawer.tsx`
+- `src/components/wardrobe/OccasionOutfitDrawer.tsx`
+- `src/components/wardrobe/CompleteLookView.tsx`
 
-## Out of Scope (intentionally)
-- No new edge function — scoring is fully local and deterministic, which is what makes it "instant."
-- No DB schema changes.
-- No changes to the AI outfit matcher (`match-outfit`) — it still powers the full-look suggestions when the user opts in.
-- Pro gating stays as-is on Shop.
+## Files NOT touched
+- `src/pages/Outfits.tsx` — already has favorite/delete on saved cards
+- `src/pages/Wardrobe.tsx` — only opens the drawer; no changes needed
+- DB migrations — schema already supports this
 
-## Open Questions for the User
-1. Should the legacy AI "Find Wardrobe Matches" button stay visible as a secondary action, or be removed entirely now that instant matches exist?
-2. Top-N size — keep it at **3 per category**, or expose a "see more" expand to show up to 6?
+## Verification
+- TypeScript clean (`tsc --noEmit`).
+- Manual flow: open suggestion drawer → tap Heart on outfit → toast "Saved & favorited ❤️" → both buttons disable on that card → navigate to Outfits page → outfit appears with Heart already filled.
+- Manual flow: same drawer → tap Bookmark on a different outfit → toast "Outfit saved!" → outfit appears in Outfits page with Heart **unfilled**, and the existing toggle on that page can flip it on.
