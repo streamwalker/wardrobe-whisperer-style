@@ -216,40 +216,55 @@ export default function Outfits() {
     shouldAutoStart: onboardingReady,
   });
 
+  const sectorProps = {
+    title: "STYLE LIBRARY",
+    subtitle: "SECTOR 03",
+    headerColor: "salmon" as const,
+    topColor: "salmon" as const,
+    sideColor: "lavender" as const,
+    bottomColor: "cyan" as const,
+  };
+
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <LcarsSection {...sectorProps}>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </LcarsSection>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-        <div className="empty-state-blob">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
-            <LogIn className="h-8 w-8 text-muted-foreground" />
+      <LcarsSection {...sectorProps}>
+        <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+          <div className="empty-state-blob">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">
+              <LogIn className="h-8 w-8 text-muted-foreground" />
+            </div>
           </div>
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-foreground">Saved Outfits</h2>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              Sign in to save and view your favorite outfit combinations.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/auth">Sign In</Link>
+          </Button>
         </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold text-foreground">Saved Outfits</h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            Sign in to save and view your favorite outfit combinations.
-          </p>
-        </div>
-        <Button asChild>
-          <Link to="/auth">Sign In</Link>
-        </Button>
-      </div>
+      </LcarsSection>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <LcarsSection {...sectorProps}>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </LcarsSection>
     );
   }
 
