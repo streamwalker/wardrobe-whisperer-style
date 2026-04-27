@@ -386,7 +386,9 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
 
         {!completingOutfit && !incompatible && (
           <div className="space-y-5 pb-6">
-            {outfits.map((outfit, idx) => {
+            {rerankOutfits(outfits, stylePrefs, allWardrobeItems)
+              .filter((o) => !dismissedKeys.has(outfitKey(o)))
+              .map((outfit, idx) => {
               const key = outfitKey(outfit);
               const savedMode = savedState.get(key);
               const isSaved = !!savedMode;
@@ -412,6 +414,20 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                         onClick={() => setCompletingOutfit(outfit)}
                       >
                         <Wand2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Not for me — show fewer like this"
+                        disabled={isSaved || dismissingKey === key}
+                        onClick={() => dismissOutfit(outfit)}
+                      >
+                        {dismissingKey === key ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ThumbsDown className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"
