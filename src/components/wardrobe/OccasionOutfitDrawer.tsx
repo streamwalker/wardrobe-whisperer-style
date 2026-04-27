@@ -75,7 +75,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     }
     setLoading(true);
     setOutfits([]);
-    setSavedIds(new Set());
+    setSavedState(new Map());
 
     try {
       const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
@@ -96,12 +96,17 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     }
   };
 
-  const saveOutfit = async (outfit: OutfitSuggestion, idx: number) => {
+  const saveOutfit = async (
+    outfit: OutfitSuggestion,
+    idx: number,
+    opts: { favorite: boolean } = { favorite: false },
+  ) => {
     if (!user) {
       toast.error("Sign in to save outfits");
       return;
     }
-    setSavingIdx(idx);
+    const mode: "saved" | "favorited" = opts.favorite ? "favorited" : "saved";
+    setSavingState({ idx, mode });
     try {
       const { error } = await supabase.from("saved_outfits").insert({
         user_id: user.id,
@@ -109,14 +114,19 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
         item_ids: outfit.item_ids,
         mood: outfit.mood,
         explanation: outfit.explanation,
+        is_favorite: opts.favorite,
       });
       if (error) throw error;
-      setSavedIds((prev) => new Set(prev).add(`${outfit.name}::${outfit.item_ids.join(",")}`));
-      toast.success("Outfit saved!");
+      setSavedState((prev) => {
+        const next = new Map(prev);
+        next.set(`${outfit.name}::${outfit.item_ids.join(",")}`, mode);
+        return next;
+      });
+      toast.success(opts.favorite ? "Saved & favorited ❤️" : "Outfit saved!");
     } catch (e: any) {
       toast.error(e?.message || "Failed to save outfit");
     } finally {
-      setSavingIdx(null);
+      setSavingState(null);
     }
   };
 
@@ -128,7 +138,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     setCustomOccasion("");
     setWeather("");
     setOutfits([]);
-    setSavedIds(new Set());
+    setSavedState(new Map());
   };
 
   return (
