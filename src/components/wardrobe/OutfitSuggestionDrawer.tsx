@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,9 @@ import NewItemMatchCard from "./NewItemMatchCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LayoutGrid, Rows3 } from "lucide-react";
+import { useStylePreferences } from "@/hooks/useStylePreferences";
+import { recordSignal, recordDismissedOutfit, snapshotFromItems } from "@/lib/style-signals";
+import { rerankOutfits } from "@/lib/preference-profile";
 
 interface OutfitSuggestion {
   name: string;
