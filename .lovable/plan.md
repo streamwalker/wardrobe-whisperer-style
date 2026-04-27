@@ -1,54 +1,64 @@
+# Scan Upload Flow → Instant Top Matches (Shoes / Pants / Shirts)
+
 ## Goal
-Rebuild the existing **/add** intake screen so it enforces the exact wording from your request — **Shoes / Pants / Shirts / Hoodies** — as a required item-type selector, alongside required **primary color** and at least one **style tag**. Keep all current power features (photo upload, AI auto-fill, back photo, pattern/texture, subcategories, outfit-suggestion drawer) but gate the save button behind validated intake fields with clear inline errors.
+On the Shop page, after photo upload + AI analysis, immediately surface the **top matched items from the user's own catalog** in each of the three target categories — **Shoes, Pants, Shirts (tops)** — *before* (and alongside) the slower full-outfit AI matcher.
 
-The 4-type wording is a UI label only — under the hood we still write to existing DB categories (`shoes`, `pants`, `tops`, `outerwear`) so no migration is needed and the matcher / filters / sharing all keep working.
+This is a fast, deterministic local scoring pass that runs the moment `analyze-clothing` returns, so the user sees relevant pieces of their wardrobe in roughly one frame.
 
-## Type mapping (display ↔ DB)
-| Intake label | DB `category` |
-|---|---|
-| 👟 Shoes | `shoes` |
-| 👖 Pants | `pants` |
-| 👕 Shirts | `tops` |
-| 🧥 Hoodies | `outerwear` |
+## UX Flow (Shop page)
 
-Other categories (`suits`, `accessories`, `dress-shoes`) remain editable from the wardrobe edit popover but are not offered in this intake. If the AI returns one of those, we'll fall back to the closest of the 4 (e.g. `dress-shoes` → `shoes`) and surface a small notice so you can fix it manually if needed.
+1. User snaps / uploads a shopping photo (existing UI).
+2. `analyze-clothing` returns `{ name, category, primary_color, color_hex, style_tags, pattern, texture }` (already implemented).
+3. **NEW** — Immediately run a local `scoreCatalogMatches()` pass over `wardrobeItems` and render a **"TOP MATCHES IN YOUR CATALOG"** LCARS panel with three rails:
+   - 👟 SHOES — top 3 (combines `shoes` + `dress-shoes`)
+   - 👖 PANTS — top 3
+   - 👕 SHIRTS — top 3 (`tops`)
+   Each rail shows match % chip, color swatch, item name. Tapping a card opens the existing zoomable view.
+4. Below the rails, the existing **"Find Wardrobe Matches"** button is still available for the slower full-outfit AI suggestions — this becomes optional / secondary.
+5. If a category has zero items, that rail shows an empty LCARS hint ("NO PANTS IN CATALOG").
 
-## UX changes on `/add`
-1. **Required Type selector (top of form, above photo)**
-   - Big LCARS-style 4-pill radio rail using `LcarsPill` primitives, one per type, with emoji + label.
-   - Selected pill paints in `titan-amber`; unselected use `titan-steel`.
-   - Empty-state error: `"INTAKE BLOCKED · ITEM TYPE REQUIRED"` banner using `LcarsAlertBanner`.
-2. **Required Primary Color**
-   - Inline color name input + native color picker + hex (already present); now flagged required with red LCARS sub-label when blank on save attempt.
-3. **Required Style Tags (≥1)**
-   - Existing pill toggles, but now show a `"SELECT AT LEAST ONE"` micro-hint until satisfied.
-4. **Save button state**
-   - Disabled (grayed amber pill) until type + primary color + ≥1 style tag are set. Tooltip / sub-line explains what's missing.
-   - On click with missing fields: scroll-to-first-invalid + LCARS alert chime via toast.
-5. **AI auto-fill behavior**
-   - Photo + AI analyze still pre-fills everything, but the user must visually confirm the type pill (we won't auto-select it as "validated"; the pill highlights in pulsing amber until tapped to confirm). This satisfies the "must set" requirement even when AI does the work.
-6. **Subcategory** stays available only when type = Shoes (Hi-Tops / Boots).
+## Scoring (deterministic, runs in browser, ~instant)
 
-## Files to edit
-- **`src/pages/AddItem.tsx`** — main rebuild:
-  - Replace the `<Select>` category dropdown with a 4-pill LCARS radio rail.
-  - Add `validate()` helper returning `{ typeOk, colorOk, tagsOk }` and a `triedSave` flag for inline errors.
-  - Map AI category → 4-type set; show notice when remapped.
-  - Disable Save until valid; reorder layout so Type sits at the top of the form card.
-- **`src/lib/wardrobe-data.ts`** — add an `INTAKE_TYPES` constant exporting the 4 display types with their DB category mapping (single source of truth).
-- **`src/components/lcars/LcarsPrimitives.tsx`** *(only if needed)* — small `LcarsRadioRail` helper if it cleans up the JSX; otherwise compose with existing `LcarsPill`.
+New file `src/lib/catalog-match.ts` — pure function:
 
-## Files NOT touched
-- DB schema / `category` CHECK constraint — no migration needed.
-- Outfit matcher, filters, sharing — they continue to see `tops`/`outerwear` as before.
-- BatchAddItems — out of scope; this plan is for the single-item intake at `/add`.
-- Edit popover on the wardrobe grid — keeps full 7-category list so existing items (suits, accessories, dress-shoes) remain editable.
+```ts
+scoreCatalogMatches(scanned: AnalyzedItem, catalog: WardrobeItem[]) →
+  { shoes: ScoredItem[]; pants: ScoredItem[]; shirts: ScoredItem[] }
+```
 
-## Validation rules (final)
-- `category` must be one of the 4 intake types (after mapping).
-- `primary_color` must be non-empty after `.trim()` and `color_hex` must be a valid `#RRGGBB`.
-- `style_tags.length >= 1`.
-- Photo remains optional (you can intake metadata-only items).
+Score (0–100) per candidate:
+- **Color harmony (50 pts)** — reuse `describeOutfitPalette([scanned.hex, candidate.hex])`:
+  - complementary / analogous / neutral-anchor / monochrome → 50
+  - triadic → 40
+  - tonal-contrast → 35
+  - else → 20
+- **Style tag overlap (25 pts)** — `25 * intersection / union` of `style_tags`.
+- **Formality compatibility (15 pts)** — penalize hard mismatches (e.g. scanned hoodie vs `dress-shoes`, scanned suit vs casual `shoes`); use the same dress-shirt / suit / hoodie rules already encoded in `supabase/functions/_shared/dress-shirt-rules.ts` (lift the rule constants into a shared client-safe helper).
+- **Pattern/texture bonus (10 pts)** — bonus when patterns differ in scale (≤1 patterned item per pair) and textures contrast.
 
-## Out of scope / open question
-If you'd like the same 4-type restriction applied to **BatchAddItems** as well, say the word and I'll add it as a follow-up. Same for swapping the wardrobe filter chips to use the new "Shirts / Hoodies" wording (purely cosmetic; data stays as `tops`/`outerwear`).
+Sort each category descending by score, take top 3 with score ≥ 35 (anything lower is hidden so we don't show garbage matches).
+
+## Deliverables
+
+**New files**
+- `src/lib/catalog-match.ts` — scoring + per-category top-N selector.
+- `src/components/wardrobe/ScanMatchRail.tsx` — LCARS rail (label chip, 3 cards, empty state).
+- `src/components/wardrobe/ScanMatchPanel.tsx` — wraps three rails with the "TOP MATCHES" header, scanned-item swatch, and overall best-relationship label from `describeOutfitPalette`.
+
+**Edited files**
+- `src/pages/Shop.tsx`:
+  - After analyze succeeds, compute matches synchronously via `scoreCatalogMatches` and render `<ScanMatchPanel/>` immediately.
+  - Keep existing "Save to Wardrobe" + "Find Wardrobe Matches" CTAs below.
+  - Demote outfit suggestions: only render when explicitly requested.
+- `src/index.css` — small additions for `.scan-match-card` (subtle teal accent + match-percentage chip).
+- `supabase/functions/_shared/dress-shirt-rules.ts` (or a new `src/lib/style-rules.ts`) — extract the formality matrix as plain constants importable from the client. *No edge function logic changes; we just reuse the data.*
+
+## Out of Scope (intentionally)
+- No new edge function — scoring is fully local and deterministic, which is what makes it "instant."
+- No DB schema changes.
+- No changes to the AI outfit matcher (`match-outfit`) — it still powers the full-look suggestions when the user opts in.
+- Pro gating stays as-is on Shop.
+
+## Open Questions for the User
+1. Should the legacy AI "Find Wardrobe Matches" button stay visible as a secondary action, or be removed entirely now that instant matches exist?
+2. Top-N size — keep it at **3 per category**, or expose a "see more" expand to show up to 6?
