@@ -322,22 +322,42 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
         <p className="text-sm leading-relaxed italic text-card-foreground/90">{rationale}</p>
       </div>
 
-      <div className="flex gap-2 pt-1">
-        <Button variant="outline" onClick={onBack} className="flex-1">
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button variant="outline" onClick={onBack} className="flex-1 min-w-[88px]">
           Back
         </Button>
         <Button
-          onClick={handleSave}
-          disabled={saving || saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
-          className="flex-1 gap-2"
+          onClick={() => handleSave({ favorite: false })}
+          disabled={saving || !!saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
+          variant={saved === "saved" ? "secondary" : "default"}
+          className="flex-1 min-w-[140px] gap-2"
           title={(existingItems.length + Object.keys(replacedConcepts).length) === 0 ? "Need at least one real wardrobe piece to save" : undefined}
         >
-          {saved ? (
+          {saved === "saved" || saved === "favorited" ? (
             <><Check className="h-4 w-4" /> Saved</>
-          ) : saving ? (
+          ) : savingMode === "saved" ? (
             <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
           ) : (
             <><Bookmark className="h-4 w-4" /> Save this look</>
+          )}
+        </Button>
+        <Button
+          onClick={() => handleSave({ favorite: true })}
+          disabled={saving || !!saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
+          variant={saved === "favorited" ? "secondary" : "default"}
+          className="flex-1 min-w-[160px] gap-2"
+          title={
+            (existingItems.length + Object.keys(replacedConcepts).length) === 0
+              ? "Need at least one real wardrobe piece to save"
+              : "Save and mark as favorite"
+          }
+        >
+          {saved === "favorited" ? (
+            <><Heart className="h-4 w-4 fill-current" /> Favorited</>
+          ) : savingMode === "favorited" ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+          ) : (
+            <><Heart className="h-4 w-4" /> Save + Favorite</>
           )}
         </Button>
       </div>
