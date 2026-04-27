@@ -376,7 +376,20 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                     const sharedIds = items
                       .map((i) => i.id)
                       .filter((id) => outfit.item_ids.includes(id));
+                    const newItem = newlyAddedItemId
+                      ? suggestedItems.find((i) => i.id === newlyAddedItemId)
+                      : undefined;
                     return (
+                      <>
+                        {newItem && (
+                          <NewItemMatchCard
+                            newItem={newItem}
+                            matchingItems={suggestedItems}
+                            outfitName={outfit.name}
+                            aiExplanation={outfit.explanation}
+                            className="mb-3"
+                          />
+                        )}
                       <Tabs defaultValue="board" className="w-full">
                         <TabsList className="h-8">
                           <TabsTrigger value="board" className="text-xs">Board</TabsTrigger>
