@@ -1,6 +1,7 @@
 import type { WardrobeItem } from "@/lib/wardrobe-data";
 import { describeOutfitPalette } from "@/lib/color-theory";
 import { formalityCompatibility } from "@/lib/style-rules";
+import { scoreItemBoost, type PreferenceProfile } from "@/lib/preference-profile";
 
 export interface ScannedItem {
   name?: string;
@@ -22,6 +23,7 @@ export interface ScoredMatch {
     style: number;
     formality: number;
     patternTexture: number;
+    learned: number;
   };
   relationshipLabel: string; // e.g. "COMPLEMENTARY"
 }
@@ -94,16 +96,21 @@ function patternTextureScore(scanned: ScannedItem, candidate: WardrobeItem): num
   return Math.max(-4, Math.min(10, pts));
 }
 
-function scoreOne(scanned: ScannedItem, candidate: WardrobeItem): ScoredMatch {
+function scoreOne(
+  scanned: ScannedItem,
+  candidate: WardrobeItem,
+  prefs?: PreferenceProfile,
+): ScoredMatch {
   const { pts: color, label } = colorScore(scanned.color_hex, candidate.color_hex);
   const style = styleTagScore(scanned.style_tags, candidate.style_tags as string[]);
   const formality = formalityScore(scanned, candidate);
   const patternTexture = patternTextureScore(scanned, candidate);
-  const total = Math.max(0, Math.min(100, color + style + formality + patternTexture));
+  const learned = prefs ? Math.round(scoreItemBoost(prefs, candidate)) : 0;
+  const total = Math.max(0, Math.min(100, color + style + formality + patternTexture + learned));
   return {
     item: candidate,
     score: total,
-    breakdown: { color, style, formality, patternTexture },
+    breakdown: { color, style, formality, patternTexture, learned },
     relationshipLabel: label,
   };
 }
@@ -112,10 +119,11 @@ function topMatchesIn(
   scanned: ScannedItem,
   catalog: WardrobeItem[],
   categories: string[],
+  prefs?: PreferenceProfile,
 ): ScoredMatch[] {
   return catalog
     .filter((it) => categories.includes(it.category))
-    .map((it) => scoreOne(scanned, it))
+    .map((it) => scoreOne(scanned, it, prefs))
     .filter((s) => s.score >= MIN_SCORE)
     .sort((a, b) => b.score - a.score)
     .slice(0, TOP_N);
@@ -124,15 +132,18 @@ function topMatchesIn(
 /**
  * Returns the top matches from the user's wardrobe in each of the
  * three target buckets — shoes, pants, shirts — for a freshly
- * scanned shopping item.
+ * scanned shopping item. When `prefs` is provided, the user's learned
+ * style preferences add a soft boost (clamped ±15) on top of the
+ * deterministic score.
  */
 export function scoreCatalogMatches(
   scanned: ScannedItem,
   catalog: WardrobeItem[],
+  prefs?: PreferenceProfile,
 ): CatalogMatchResult {
   return {
-    shoes: topMatchesIn(scanned, catalog, ["shoes", "dress-shoes"]),
-    pants: topMatchesIn(scanned, catalog, ["pants"]),
-    shirts: topMatchesIn(scanned, catalog, ["tops"]),
+    shoes: topMatchesIn(scanned, catalog, ["shoes", "dress-shoes"], prefs),
+    pants: topMatchesIn(scanned, catalog, ["pants"], prefs),
+    shirts: topMatchesIn(scanned, catalog, ["tops"], prefs),
   };
 }
