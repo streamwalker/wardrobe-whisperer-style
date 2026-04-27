@@ -197,11 +197,47 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         next.set(outfitKey(outfit), mode);
         return next;
       });
+      // Learning signal — fire-and-forget.
+      const items = outfit.item_ids
+        .map((id) => allWardrobeItems.find((i) => i.id === id))
+        .filter((i): i is WardrobeItem => !!i);
+      void recordSignal(
+        opts.favorite ? "favorite" : "save",
+        snapshotFromItems(items, outfit.mood),
+        user.id,
+      ).then(() => invalidatePrefs());
       toast.success(opts.favorite ? "Saved & favorited ❤️" : "Outfit saved!");
     } catch (e: any) {
       toast.error(e?.message || "Failed to save outfit");
     } finally {
       setSavingState(null);
+    }
+  };
+
+  const dismissOutfit = async (outfit: OutfitSuggestion) => {
+    if (!user) {
+      toast.error("Sign in to personalize suggestions");
+      return;
+    }
+    const key = outfitKey(outfit);
+    setDismissingKey(key);
+    try {
+      const items = outfit.item_ids
+        .map((id) => allWardrobeItems.find((i) => i.id === id))
+        .filter((i): i is WardrobeItem => !!i);
+      await Promise.all([
+        recordSignal("dismiss", snapshotFromItems(items, outfit.mood), user.id),
+        recordDismissedOutfit(outfit.item_ids, user.id),
+      ]);
+      setDismissedKeys((prev) => {
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
+      invalidatePrefs();
+      toast.success("Got it — we'll show fewer like this.");
+    } finally {
+      setDismissingKey(null);
     }
   };
 
