@@ -340,7 +340,7 @@ export default function Shop() {
 
       {/* INSTANT catalog matches — appears the moment analysis completes */}
       {analyzedItem && instantMatches && (
-        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} />
+        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} onItemClick={handleScanItemClick} />
       )}
 
       {/* Action button — first triggers the scan, then offers deeper full-outfit AI search */}
