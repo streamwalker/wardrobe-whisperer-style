@@ -530,5 +530,6 @@ export default function AddItem() {
         />
       )}
     </div>
+    </LcarsSection>
   );
 }
