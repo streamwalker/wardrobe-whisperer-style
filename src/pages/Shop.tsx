@@ -197,7 +197,9 @@ export default function Shop() {
 
   const isProcessing = analyzing || matching;
 
-  // Instant deterministic catalog matches — recomputed any time analysis or wardrobe changes.
+  // Instant deterministic catalog matches — recomputed any time analysis,
+  // wardrobe, or learned preferences change.
+  const { profile: stylePrefs } = useStylePreferences();
   const instantMatches: CatalogMatchResult | null = useMemo(() => {
     if (!analyzedItem) return null;
     return scoreCatalogMatches(
@@ -212,8 +214,14 @@ export default function Shop() {
         description: analyzedItem.description,
       },
       wardrobeItems,
+      stylePrefs,
     );
-  }, [analyzedItem, wardrobeItems]);
+  }, [analyzedItem, wardrobeItems, stylePrefs]);
+
+  const handleScanItemClick = (id: string) => {
+    const item = wardrobeItems.find((i) => i.id === id);
+    if (item && user) recordItemView(item, user.id);
+  };
 
   return (
     <LcarsSection
