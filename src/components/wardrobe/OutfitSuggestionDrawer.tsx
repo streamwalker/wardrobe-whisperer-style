@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import OutfitPreviewBoard, { type BoardDensity } from "./OutfitPreviewBoard";
 import OutfitCompareView from "./OutfitCompareView";
 import CompleteLookView from "./CompleteLookView";
+import NewItemMatchCard from "./NewItemMatchCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LayoutGrid, Rows3 } from "lucide-react";
@@ -45,9 +46,11 @@ interface Props {
   prefetchedOutfits?: OutfitSuggestion[];
   /** When set, replaces the empty "your pick(s)" board with the inspiration thumbnail. */
   inspirationImageUrl?: string;
+  /** When set, renders a hero "spotlight" card highlighting this newly-added item's matches. */
+  newlyAddedItemId?: string;
 }
 
-export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline, prefetchedOutfits, inspirationImageUrl }: Props) {
+export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, onOpenChange, onSwapItem, headline, subheadline, prefetchedOutfits, inspirationImageUrl, newlyAddedItemId }: Props) {
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
