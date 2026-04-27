@@ -381,5 +381,6 @@ export default function Shop() {
       </>
       )}
     </div>
+    </LcarsSection>
   );
 }
