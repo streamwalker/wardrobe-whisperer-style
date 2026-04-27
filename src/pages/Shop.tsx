@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
 import ScanMatchPanel from "@/components/wardrobe/ScanMatchPanel";
 import { scoreCatalogMatches, type CatalogMatchResult } from "@/lib/catalog-match";
+import { useStylePreferences } from "@/hooks/useStylePreferences";
+import { recordItemView } from "@/lib/style-signals";
 
 interface AnalyzedItem {
   name: string;
