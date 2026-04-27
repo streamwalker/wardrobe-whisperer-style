@@ -260,28 +260,21 @@
     filter: contrast(1.05) saturate(1.1);
   }
 
-  /* ===== Subtle scanline body background (replaces bg-mesh) ===== */
-  .bg-mesh {
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        hsl(0 0% 0% / 0.06) 0px,
-        hsl(0 0% 0% / 0.06) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-      hsl(var(--background));
+  /* ===== Picard-era dotted grid background (replaces bg-mesh; both classes alias) ===== */
+  .bg-mesh,
+  .bg-grid {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(hsl(var(--titan-grid) / 0.18) 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-position: 0 0;
   }
-  .dark .bg-mesh {
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        hsl(30 60% 50% / 0.025) 0px,
-        hsl(30 60% 50% / 0.025) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-      hsl(0 0% 0%);
+  .dark .bg-mesh,
+  .dark .bg-grid {
+    background-color: hsl(0 0% 0%);
+    background-image:
+      radial-gradient(hsl(var(--titan-grid) / 0.14) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   /* ===== Repurposed legacy utilities — every existing consumer inherits LCARS ===== */
