@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      dismissed_outfits: {
+        Row: {
+          created_at: string
+          id: string
+          outfit_signature: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outfit_signature: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outfit_signature?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           body_type: string | null
@@ -113,6 +134,42 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      style_signals: {
+        Row: {
+          color_hexes: string[]
+          created_at: string
+          id: string
+          item_ids: string[]
+          mood: string | null
+          signal_type: string
+          style_tags: string[]
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          color_hexes?: string[]
+          created_at?: string
+          id?: string
+          item_ids?: string[]
+          mood?: string | null
+          signal_type: string
+          style_tags?: string[]
+          user_id: string
+          weight: number
+        }
+        Update: {
+          color_hexes?: string[]
+          created_at?: string
+          id?: string
+          item_ids?: string[]
+          mood?: string | null
+          signal_type?: string
+          style_tags?: string[]
+          user_id?: string
+          weight?: number
         }
         Relationships: []
       }

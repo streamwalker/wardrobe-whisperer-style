@@ -1,60 +1,141 @@
-## Goal
-In every outfit suggestion surface, expose a **Heart** action that saves the suggested look to `saved_outfits` **and** marks `is_favorite = true` in a single tap. The existing **Bookmark** button stays as the "save without favoriting" path, so the user gets a clean two-button affordance everywhere a suggestion is shown.
+# Adaptive Style Learning
 
-Saved-state remains session-only per the user's choice — closing/reopening a drawer resets the visual saved indicator (no extra `saved_outfits` query on open).
+A lightweight per-user preference model derived from real interactions. It biases every suggestion surface toward what you favorite/save/inspect and away from what you dismiss — without retraining anything.
 
-## Surfaces touched
-All four currently render outfit suggestions; all four get the same control pair.
+---
 
-| Surface | File | Currently has | Add |
-|---|---|---|---|
-| Wardrobe → "Outfit Ideas" drawer | `src/components/wardrobe/OutfitSuggestionDrawer.tsx` | Bookmark only | Heart (save + favorite) |
-| Outfits → "Recreate a Look" drawer | reuses `OutfitSuggestionDrawer.tsx` (`prefetchedOutfits`) | Bookmark only | Heart (save + favorite) |
-| Occasion drawer | `src/components/wardrobe/OccasionOutfitDrawer.tsx` | Bookmark only | Heart (save + favorite) |
-| Complete-Look composer | `src/components/wardrobe/CompleteLookView.tsx` | Single "Save" button | Heart "Save + Favorite" companion next to existing Save |
+## 1. Capture signals (DB)
 
-## Implementation details
+New table `style_signals` (RLS, owner-only insert/select/delete):
 
-### 1. `OutfitSuggestionDrawer.tsx`
-- Extend the per-suggestion saved-state from `Set<string>` to a small `Map<string, "saved" | "favorited">` so the icon row can reflect which button was used.
-- Refactor `saveOutfit(outfit, idx)` → `saveOutfit(outfit, idx, { favorite: boolean })`. Single insert with `is_favorite: favorite`.
-- Render order in the per-outfit header: `Wand2` (complete look) · **Heart** (new) · **Bookmark** (existing) · mood badge.
-- Heart states:
-  - default → outline Heart
-  - in-flight → `Loader2`
-  - after success → filled Heart in `text-primary` (matches `Outfits.tsx` styling for visual consistency)
-- Disable both buttons once the outfit is saved (in either mode) to prevent duplicates within the session.
-- Toast copy: `"Outfit saved!"` for Bookmark, `"Saved & favorited ❤️"` for Heart.
+```
+id uuid pk
+user_id uuid not null
+signal_type text not null check (signal_type in ('favorite','save','dismiss','view'))
+weight smallint not null   -- favorite=+2, save=+1, view=+1, dismiss=-2
+item_ids text[] not null default '{}'  -- the wardrobe items in the suggestion
+mood text
+color_hexes text[] default '{}'        -- snapshot of dominant hexes
+style_tags text[] default '{}'         -- union of tags
+created_at timestamptz default now()
+```
 
-### 2. `OccasionOutfitDrawer.tsx`
-Same pattern: bump `savedIds: Set<string>` → `savedState: Map<string, "saved" | "favorited">`, pass `{ favorite }` into `saveOutfit`, render the Heart next to the existing Bookmark, and use the same toast copy. The icon column already lives in the suggestion card header so it slots in cleanly.
+Indexes on `(user_id, created_at desc)` and a partial index on `signal_type`.
 
-### 3. `CompleteLookView.tsx`
-- Refactor `handleSave` → `handleSave({ favorite: boolean })` and pass `is_favorite: favorite` into the insert.
-- Add a second button beside the existing "Save" CTA labeled **"Save + Favorite"** with a Heart icon (filled on success). Both buttons share the `saving` lock and become disabled / show a check after a successful save.
+A second table `dismissed_outfits` (small, just `user_id` + `outfit_signature` text + `created_at`) suppresses a previously-dismissed AI-returned outfit if it shows up again in the same session — by exact item-id signature.
 
-### 4. No DB / RLS / schema changes required
-`saved_outfits.is_favorite` already exists (`boolean`, default `false`) and current RLS already permits `INSERT WITH CHECK (auth.uid() = user_id)`. Inserting with `is_favorite: true` Just Works.
+No schema change to `saved_outfits` (already has `is_favorite`).
 
-### 5. No changes to the Outfits page
-The Heart toggle on the saved-outfit cards in `Outfits.tsx` already exists and continues to behave the same way (toggling `is_favorite` on existing rows). Outfits saved via the new Heart button will appear there with their Heart pre-filled — confirming the round-trip.
+---
 
-## What deliberately stays the same
-- **Session-only saved state** — re-opening the drawer resets the indicators per the user's decision. No extra fetch on drawer open.
-- **No new save targets** — we are not introducing a "save to collection" or tagging system. Just save and save+favorite.
-- **No edits to existing Outfits-page heart toggle** — it already does the right thing.
+## 2. Logging hooks (client)
 
-## Files to edit
-- `src/components/wardrobe/OutfitSuggestionDrawer.tsx`
-- `src/components/wardrobe/OccasionOutfitDrawer.tsx`
-- `src/components/wardrobe/CompleteLookView.tsx`
+A single helper `src/lib/style-signals.ts` exporting `recordSignal(type, payload)`. Calls fire-and-forget (no toast on failure, console.warn only).
 
-## Files NOT touched
-- `src/pages/Outfits.tsx` — already has favorite/delete on saved cards
-- `src/pages/Wardrobe.tsx` — only opens the drawer; no changes needed
-- DB migrations — schema already supports this
+Surfaces that emit:
 
-## Verification
-- TypeScript clean (`tsc --noEmit`).
-- Manual flow: open suggestion drawer → tap Heart on outfit → toast "Saved & favorited ❤️" → both buttons disable on that card → navigate to Outfits page → outfit appears with Heart already filled.
-- Manual flow: same drawer → tap Bookmark on a different outfit → toast "Outfit saved!" → outfit appears in Outfits page with Heart **unfilled**, and the existing toggle on that page can flip it on.
+| Action | Signal | Where |
+|---|---|---|
+| Heart "Save + Favorite" | `favorite` (+2) | OutfitSuggestionDrawer, OccasionOutfitDrawer, CompleteLookView |
+| Plain Bookmark "Save" | `save` (+1) | same three components |
+| New 👎 Thumbs-down button | `dismiss` (−2) | same three components — also hides that suggestion locally and inserts into `dismissed_outfits` |
+| Tap a suggested item card to inspect | `view` (+1) | ScanMatchRail, OutfitPreviewBoard (debounced, max one view per item per minute on the client to prevent spam) |
+| Toggle ❤ on already-saved Outfits page | `favorite` (+2) on toggle-on, `dismiss` (−2) on toggle-off | Outfits.tsx `toggleFavorite` |
+
+Each signal records the snapshot of color hexes + tags so the model is robust even if items are later deleted.
+
+---
+
+## 3. Build the preference profile (client, cached)
+
+New hook `src/hooks/useStylePreferences.ts`:
+
+- React-Query keyed `["style-signals", userId]`, 10-min stale time.
+- Fetches the last 200 signals, weighted by recency (half-life ~30 days: `recencyMul = 0.5 ^ (daysOld / 30)`).
+- Aggregates into a `PreferenceProfile`:
+  - `colorWeights: Map<bucketedHex, number>` — hexes bucketed to nearest of 24 hue buckets × 3 lightness tiers.
+  - `tagWeights: Map<string, number>` — case-folded tag → weight.
+  - `moodWeights: Map<string, number>`.
+  - `itemWeights: Map<itemId, number>` — direct per-item bias.
+  - `dismissedSignatures: Set<string>` (item-id sorted concat).
+- Exposes `scoreItemBoost(item) → number in [-15, +15]` and `scoreOutfitBoost({ items, mood }) → number in [-25, +25]`.
+
+Boosts are clamped so the learned model can never fully override hard formality rules.
+
+---
+
+## 4. Apply boosts everywhere
+
+**a) Shop instant matches — `src/lib/catalog-match.ts`**
+- `scoreCatalogMatches(scanned, catalog, prefs?)` adds an optional 5th component:
+  ```
+  total = color + style + formality + patternTexture + clamp(prefs.scoreItemBoost(candidate), -15, +15)
+  ```
+- Re-sort & re-cut by `MIN_SCORE`. Items the user has favorited frequently will rise; tags they dismiss drop.
+- `Shop.tsx` reads the prefs hook and passes it into `useMemo`.
+
+**b) AI drawers — `OutfitSuggestionDrawer` & `OccasionOutfitDrawer`**
+- After receiving `outfits` from `match-outfit`/`suggest-occasion-outfit`, run `outfits = rerankOutfits(outfits, prefs, allWardrobeItems)` which:
+  1. Filters out any whose item-id signature is in `dismissedSignatures`.
+  2. Sorts by `aiOrder + scoreOutfitBoost(...) * 0.5` (small nudge — keeps AI ordering as the spine).
+- No edge-function changes needed for v1 (purely client rerank). Edge functions stay deterministic and cacheable.
+
+**c) Inspire flow — `Outfits.tsx`**
+- Same `rerankOutfits` applied to `inspireOutfits` before they're handed to the drawer.
+
+---
+
+## 5. Dismiss UI (👎 button)
+
+Three components get a third button next to Heart/Bookmark:
+
+- Icon: `ThumbsDown` from lucide.
+- Tooltip: "Not for me — show less like this".
+- Click flow:
+  1. Insert `dismiss` signal with snapshot.
+  2. Insert into `dismissed_outfits` with the item-id signature.
+  3. Locally remove the suggestion from the list (slide-out animation via existing tailwind classes).
+  4. Toast: "Got it — we'll show fewer like this."
+- Disabled once the outfit was saved/favorited (you can't both like and dismiss).
+
+---
+
+## 6. Profile page transparency
+
+Add a small **"Style Preferences (Learned)"** card on `Profile.tsx` showing:
+
+- Top 5 boosted style tags + hue chips (so the user sees what the system is picking up).
+- A "Reset learning" button → deletes their `style_signals` rows after a confirm dialog. Same destructive style as existing "Clear all data".
+
+Purely informational — keeps users in control and satisfies the GDPR transparency principle already in place.
+
+---
+
+## 7. Files
+
+**New**
+- `supabase/migrations/<ts>_style_signals.sql` — `style_signals` + `dismissed_outfits` tables, RLS, indexes.
+- `src/lib/style-signals.ts` — `recordSignal`, `signatureFor`.
+- `src/lib/preference-profile.ts` — `buildProfile`, `scoreItemBoost`, `scoreOutfitBoost`, `rerankOutfits`, hue bucketing.
+- `src/hooks/useStylePreferences.ts` — React-Query hook returning the profile + helpers.
+
+**Edited**
+- `src/lib/catalog-match.ts` — accept optional `prefs` and add boost component.
+- `src/pages/Shop.tsx` — pass prefs into `scoreCatalogMatches`; emit `view` signal on item click.
+- `src/components/wardrobe/ScanMatchRail.tsx` — emit `view` on click (already has `onItemClick`).
+- `src/components/wardrobe/OutfitSuggestionDrawer.tsx` — rerank, add 👎 button, log signals on save/favorite/dismiss.
+- `src/components/wardrobe/OccasionOutfitDrawer.tsx` — same three additions.
+- `src/components/wardrobe/CompleteLookView.tsx` — log on save/favorite, add 👎 button.
+- `src/pages/Outfits.tsx` — rerank `inspireOutfits`; emit favorite/dismiss in `toggleFavorite` mutation.
+- `src/pages/Profile.tsx` — add "Learned Preferences" card + reset button.
+
+No changes to edge functions, no new secrets, no extra AI cost. All scoring is local.
+
+---
+
+## 8. Verification
+
+- `tsc --noEmit` clean.
+- Manual: favorite an outfit with navy + minimalist tags → reopen Shop, scan a navy shirt → favorited navy items should rank above newer additions.
+- Dismiss a suggestion → reopen drawer in same session → it stays out. Reload → it can return (only the per-suggestion signature is suppressed in-session via `dismissed_outfits`; long-term effect comes from the weighted aggregate).
+- Reset button on Profile clears signals and the next reload returns to neutral ranking.

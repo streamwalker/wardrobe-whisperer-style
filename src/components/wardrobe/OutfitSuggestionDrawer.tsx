@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, AlertTriangle, ArrowDown, ArrowRight, Wand2, Heart, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,9 @@ import NewItemMatchCard from "./NewItemMatchCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LayoutGrid, Rows3 } from "lucide-react";
+import { useStylePreferences } from "@/hooks/useStylePreferences";
+import { recordSignal, recordDismissedOutfit, snapshotFromItems } from "@/lib/style-signals";
+import { rerankOutfits } from "@/lib/preference-profile";
 
 interface OutfitSuggestion {
   name: string;
@@ -61,6 +64,11 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [savedState, setSavedState] = useState<Map<string, "saved" | "favorited">>(new Map());
   const [savingState, setSavingState] = useState<{ idx: number; mode: "saved" | "favorited" } | null>(null);
   const [incompatible, setIncompatible] = useState<IncompatibilityResult | null>(null);
+  // Outfit keys dismissed during this session — hidden locally even before the
+  // preference query refreshes.
+  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
+  const [dismissingKey, setDismissingKey] = useState<string | null>(null);
+  const { profile: stylePrefs, invalidate: invalidatePrefs } = useStylePreferences();
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
   const [density, setDensity] = useState<BoardDensity>(() => {
     if (typeof window === "undefined") return "full";
@@ -189,11 +197,47 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         next.set(outfitKey(outfit), mode);
         return next;
       });
+      // Learning signal — fire-and-forget.
+      const items = outfit.item_ids
+        .map((id) => allWardrobeItems.find((i) => i.id === id))
+        .filter((i): i is WardrobeItem => !!i);
+      void recordSignal(
+        opts.favorite ? "favorite" : "save",
+        snapshotFromItems(items, outfit.mood),
+        user.id,
+      ).then(() => invalidatePrefs());
       toast.success(opts.favorite ? "Saved & favorited ❤️" : "Outfit saved!");
     } catch (e: any) {
       toast.error(e?.message || "Failed to save outfit");
     } finally {
       setSavingState(null);
+    }
+  };
+
+  const dismissOutfit = async (outfit: OutfitSuggestion) => {
+    if (!user) {
+      toast.error("Sign in to personalize suggestions");
+      return;
+    }
+    const key = outfitKey(outfit);
+    setDismissingKey(key);
+    try {
+      const items = outfit.item_ids
+        .map((id) => allWardrobeItems.find((i) => i.id === id))
+        .filter((i): i is WardrobeItem => !!i);
+      await Promise.all([
+        recordSignal("dismiss", snapshotFromItems(items, outfit.mood), user.id),
+        recordDismissedOutfit(outfit.item_ids, user.id),
+      ]);
+      setDismissedKeys((prev) => {
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
+      invalidatePrefs();
+      toast.success("Got it — we'll show fewer like this.");
+    } finally {
+      setDismissingKey(null);
     }
   };
 
@@ -342,7 +386,9 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
 
         {!completingOutfit && !incompatible && (
           <div className="space-y-5 pb-6">
-            {outfits.map((outfit, idx) => {
+            {rerankOutfits(outfits, stylePrefs, allWardrobeItems)
+              .filter((o) => !dismissedKeys.has(outfitKey(o)))
+              .map((outfit, idx) => {
               const key = outfitKey(outfit);
               const savedMode = savedState.get(key);
               const isSaved = !!savedMode;
@@ -368,6 +414,20 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                         onClick={() => setCompletingOutfit(outfit)}
                       >
                         <Wand2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Not for me — show fewer like this"
+                        disabled={isSaved || dismissingKey === key}
+                        onClick={() => dismissOutfit(outfit)}
+                      >
+                        {dismissingKey === key ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ThumbsDown className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"

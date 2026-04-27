@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
 import ScanMatchPanel from "@/components/wardrobe/ScanMatchPanel";
 import { scoreCatalogMatches, type CatalogMatchResult } from "@/lib/catalog-match";
+import { useStylePreferences } from "@/hooks/useStylePreferences";
+import { recordItemView } from "@/lib/style-signals";
 
 interface AnalyzedItem {
   name: string;
@@ -195,7 +197,9 @@ export default function Shop() {
 
   const isProcessing = analyzing || matching;
 
-  // Instant deterministic catalog matches — recomputed any time analysis or wardrobe changes.
+  // Instant deterministic catalog matches — recomputed any time analysis,
+  // wardrobe, or learned preferences change.
+  const { profile: stylePrefs } = useStylePreferences();
   const instantMatches: CatalogMatchResult | null = useMemo(() => {
     if (!analyzedItem) return null;
     return scoreCatalogMatches(
@@ -210,8 +214,14 @@ export default function Shop() {
         description: analyzedItem.description,
       },
       wardrobeItems,
+      stylePrefs,
     );
-  }, [analyzedItem, wardrobeItems]);
+  }, [analyzedItem, wardrobeItems, stylePrefs]);
+
+  const handleScanItemClick = (id: string) => {
+    const item = wardrobeItems.find((i) => i.id === id);
+    if (item && user) recordItemView(item, user.id);
+  };
 
   return (
     <LcarsSection
@@ -330,7 +340,7 @@ export default function Shop() {
 
       {/* INSTANT catalog matches — appears the moment analysis completes */}
       {analyzedItem && instantMatches && (
-        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} />
+        <ScanMatchPanel scanned={analyzedItem} matches={instantMatches} onItemClick={handleScanItemClick} />
       )}
 
       {/* Action button — first triggers the scan, then offers deeper full-outfit AI search */}
