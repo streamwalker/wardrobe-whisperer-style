@@ -342,7 +342,13 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         {!completingOutfit && !incompatible && (
           <div className="space-y-5 pb-6">
             {outfits.map((outfit, idx) => {
-              const isSaved = savedIds.has(outfitKey(outfit));
+              const key = outfitKey(outfit);
+              const savedMode = savedState.get(key);
+              const isSaved = !!savedMode;
+              const isFavorited = savedMode === "favorited";
+              const isSavingThis = savingState?.idx === idx;
+              const isSavingFavorite = isSavingThis && savingState?.mode === "favorited";
+              const isSavingPlain = isSavingThis && savingState?.mode === "saved";
               return (
                 <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -366,12 +372,32 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        disabled={isSaved || savingIdx === idx}
-                        onClick={() => saveOutfit(outfit, idx)}
+                        title={isFavorited ? "Saved & favorited" : "Save & favorite"}
+                        disabled={isSaved || isSavingThis}
+                        onClick={() => saveOutfit(outfit, idx, { favorite: true })}
                       >
-                        {isSaved ? (
+                        {isSavingFavorite ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Heart
+                            className={cn(
+                              "h-4 w-4",
+                              isFavorited ? "fill-primary text-primary" : "text-muted-foreground",
+                            )}
+                          />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title={isSaved ? "Saved" : "Save"}
+                        disabled={isSaved || isSavingThis}
+                        onClick={() => saveOutfit(outfit, idx, { favorite: false })}
+                      >
+                        {isSaved && !isSavingPlain ? (
                           <Check className="h-4 w-4 text-primary" />
-                        ) : savingIdx === idx ? (
+                        ) : isSavingPlain ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Bookmark className="h-4 w-4" />
@@ -379,6 +405,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                       </Button>
                     </div>
                   </div>
+
 
                   {(() => {
                     const suggestedItems = outfit.item_ids
