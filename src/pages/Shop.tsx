@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LcarsSection } from "@/components/lcars/LcarsSection";
+import ScanMatchPanel from "@/components/wardrobe/ScanMatchPanel";
+import { scoreCatalogMatches, type CatalogMatchResult } from "@/lib/catalog-match";
 
 interface AnalyzedItem {
   name: string;
