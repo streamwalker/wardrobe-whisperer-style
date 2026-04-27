@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Bookmark, Check, CalendarDays, CloudSun } from "lucide-react";
+import { Sparkles, Loader2, Bookmark, Check, CalendarDays, CloudSun, Heart } from "lucide-react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,8 +57,8 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
   const [weather, setWeather] = useState("");
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const [savedState, setSavedState] = useState<Map<string, "saved" | "favorited">>(new Map());
+  const [savingState, setSavingState] = useState<{ idx: number; mode: "saved" | "favorited" } | null>(null);
   const { user } = useAuth();
 
   const activeOccasion = customOccasion.trim() || occasion;
@@ -75,7 +75,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     }
     setLoading(true);
     setOutfits([]);
-    setSavedIds(new Set());
+    setSavedState(new Map());
 
     try {
       const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
@@ -96,12 +96,17 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     }
   };
 
-  const saveOutfit = async (outfit: OutfitSuggestion, idx: number) => {
+  const saveOutfit = async (
+    outfit: OutfitSuggestion,
+    idx: number,
+    opts: { favorite: boolean } = { favorite: false },
+  ) => {
     if (!user) {
       toast.error("Sign in to save outfits");
       return;
     }
-    setSavingIdx(idx);
+    const mode: "saved" | "favorited" = opts.favorite ? "favorited" : "saved";
+    setSavingState({ idx, mode });
     try {
       const { error } = await supabase.from("saved_outfits").insert({
         user_id: user.id,
@@ -109,14 +114,19 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
         item_ids: outfit.item_ids,
         mood: outfit.mood,
         explanation: outfit.explanation,
+        is_favorite: opts.favorite,
       });
       if (error) throw error;
-      setSavedIds((prev) => new Set(prev).add(`${outfit.name}::${outfit.item_ids.join(",")}`));
-      toast.success("Outfit saved!");
+      setSavedState((prev) => {
+        const next = new Map(prev);
+        next.set(`${outfit.name}::${outfit.item_ids.join(",")}`, mode);
+        return next;
+      });
+      toast.success(opts.favorite ? "Saved & favorited ❤️" : "Outfit saved!");
     } catch (e: any) {
       toast.error(e?.message || "Failed to save outfit");
     } finally {
-      setSavingIdx(null);
+      setSavingState(null);
     }
   };
 
@@ -128,7 +138,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
     setCustomOccasion("");
     setWeather("");
     setOutfits([]);
-    setSavedIds(new Set());
+    setSavedState(new Map());
   };
 
   return (
@@ -221,7 +231,13 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
         {!loading && outfits.length > 0 && (
           <div className="space-y-5 pb-6">
             {outfits.map((outfit, idx) => {
-              const isSaved = savedIds.has(outfitKey(outfit));
+              const key = outfitKey(outfit);
+              const savedMode = savedState.get(key);
+              const isSaved = !!savedMode;
+              const isFavorited = savedMode === "favorited";
+              const isSavingThis = savingState?.idx === idx;
+              const isSavingFavorite = isSavingThis && savingState?.mode === "favorited";
+              const isSavingPlain = isSavingThis && savingState?.mode === "saved";
               return (
                 <div key={idx} className="rounded-xl border bg-card p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -236,12 +252,32 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        disabled={isSaved || savingIdx === idx}
-                        onClick={() => saveOutfit(outfit, idx)}
+                        title={isFavorited ? "Saved & favorited" : "Save & favorite"}
+                        disabled={isSaved || isSavingThis}
+                        onClick={() => saveOutfit(outfit, idx, { favorite: true })}
                       >
-                        {isSaved ? (
+                        {isSavingFavorite ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Heart
+                            className={cn(
+                              "h-4 w-4",
+                              isFavorited ? "fill-primary text-primary" : "text-muted-foreground",
+                            )}
+                          />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title={isSaved ? "Saved" : "Save"}
+                        disabled={isSaved || isSavingThis}
+                        onClick={() => saveOutfit(outfit, idx, { favorite: false })}
+                      >
+                        {isSaved && !isSavingPlain ? (
                           <Check className="h-4 w-4 text-primary" />
-                        ) : savingIdx === idx ? (
+                        ) : isSavingPlain ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Bookmark className="h-4 w-4" />

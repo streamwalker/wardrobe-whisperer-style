@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff, Upload, Shirt, AlertCircle } from "lucide-react";
+import { ArrowLeft, Bookmark, Check, Loader2, Sparkles, ImageOff, Upload, Shirt, AlertCircle, Heart } from "lucide-react";
 import { type WardrobeItem, type ConceptPiece, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +44,8 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
   const [rationale, setRationale] = useState<string>(outfit.explanation);
   const [conceptPieces, setConceptPieces] = useState<ConceptPiece[]>([]);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<false | "saved" | "favorited">(false);
+  const [savingMode, setSavingMode] = useState<null | "saved" | "favorited">(null);
   /** Picked replacements by concept index (chosen from existing wardrobe). */
   const [replacedConcepts, setReplacedConcepts] = useState<Record<number, WardrobeItem>>({});
   const [pickerForConcept, setPickerForConcept] = useState<number | null>(null);
@@ -103,7 +104,7 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
     return () => { cancelled = true; };
   }, [outfit.name]);
 
-  const handleSave = async () => {
+  const handleSave = async (opts: { favorite: boolean } = { favorite: false }) => {
     if (!user) {
       toast.error("Sign in to save outfits");
       return;
@@ -111,7 +112,9 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
     const replacedItems = Object.values(replacedConcepts);
     const allRealItems = [...existingItems, ...replacedItems];
     if (allRealItems.length === 0) return;
+    const mode: "saved" | "favorited" = opts.favorite ? "favorited" : "saved";
     setSaving(true);
+    setSavingMode(mode);
     try {
       const { error } = await supabase.from("saved_outfits").insert({
         user_id: user.id,
@@ -119,19 +122,26 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
         item_ids: allRealItems.map((i) => i.id),
         mood: outfit.mood,
         explanation: rationale,
+        is_favorite: opts.favorite,
       });
       if (error) throw error;
-      setSaved(true);
+      setSaved(mode);
       const remainingConcepts = unresolvedConceptIdxs.length;
+      const baseMsg = opts.favorite
+        ? "Saved & favorited ❤️"
+        : "Outfit saved!";
       toast.success(
         remainingConcepts > 0
-          ? `Saved! ${remainingConcepts} concept piece${remainingConcepts > 1 ? "s" : ""} still missing — add them anytime.`
-          : "Outfit saved with all real pieces!"
+          ? `${baseMsg} ${remainingConcepts} concept piece${remainingConcepts > 1 ? "s" : ""} still missing — add them anytime.`
+          : opts.favorite
+            ? "Saved & favorited with all real pieces ❤️"
+            : "Outfit saved with all real pieces!"
       );
     } catch (e: any) {
       toast.error(e?.message || "Failed to save");
     } finally {
       setSaving(false);
+      setSavingMode(null);
     }
   };
 
@@ -312,22 +322,42 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
         <p className="text-sm leading-relaxed italic text-card-foreground/90">{rationale}</p>
       </div>
 
-      <div className="flex gap-2 pt-1">
-        <Button variant="outline" onClick={onBack} className="flex-1">
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button variant="outline" onClick={onBack} className="flex-1 min-w-[88px]">
           Back
         </Button>
         <Button
-          onClick={handleSave}
-          disabled={saving || saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
-          className="flex-1 gap-2"
+          onClick={() => handleSave({ favorite: false })}
+          disabled={saving || !!saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
+          variant={saved === "saved" ? "secondary" : "default"}
+          className="flex-1 min-w-[140px] gap-2"
           title={(existingItems.length + Object.keys(replacedConcepts).length) === 0 ? "Need at least one real wardrobe piece to save" : undefined}
         >
-          {saved ? (
+          {saved === "saved" || saved === "favorited" ? (
             <><Check className="h-4 w-4" /> Saved</>
-          ) : saving ? (
+          ) : savingMode === "saved" ? (
             <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
           ) : (
             <><Bookmark className="h-4 w-4" /> Save this look</>
+          )}
+        </Button>
+        <Button
+          onClick={() => handleSave({ favorite: true })}
+          disabled={saving || !!saved || (existingItems.length + Object.keys(replacedConcepts).length) === 0}
+          variant={saved === "favorited" ? "secondary" : "default"}
+          className="flex-1 min-w-[160px] gap-2"
+          title={
+            (existingItems.length + Object.keys(replacedConcepts).length) === 0
+              ? "Need at least one real wardrobe piece to save"
+              : "Save and mark as favorite"
+          }
+        >
+          {saved === "favorited" ? (
+            <><Heart className="h-4 w-4 fill-current" /> Favorited</>
+          ) : savingMode === "favorited" ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+          ) : (
+            <><Heart className="h-4 w-4" /> Save + Favorite</>
           )}
         </Button>
       </div>
