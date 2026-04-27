@@ -529,5 +529,6 @@ export default function Outfits() {
 
       {inspireSheetAndDrawer}
     </div>
+    </LcarsSection>
   );
 }
