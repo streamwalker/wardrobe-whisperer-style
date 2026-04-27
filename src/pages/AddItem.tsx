@@ -178,8 +178,31 @@ export default function AddItem() {
   };
 
   const handleSave = async () => {
-    if (!name || !category || !primaryColor) {
-      toast({ title: "Missing fields", description: "Please fill in name, category, and color.", variant: "destructive" });
+    setTriedSave(true);
+    if (!formValid) {
+      // Find first invalid section and scroll to it
+      const target =
+        !typeOk ? typeSectionRef.current
+        : !colorOk ? colorSectionRef.current
+        : !tagsOk ? tagsSectionRef.current
+        : null;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const missing = [
+        !typeOk && (intakeType ? "confirm item type" : "item type"),
+        !colorOk && "primary color",
+        !tagsOk && "at least one style tag",
+      ].filter(Boolean).join(", ");
+      toast({
+        title: "Intake blocked",
+        description: `Required: ${missing}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const dbCategory = INTAKE_TYPES.find((t) => t.value === intakeType)?.category;
+    if (!dbCategory) {
+      toast({ title: "Invalid type", description: "Please re-select an item type.", variant: "destructive" });
       return;
     }
 
@@ -205,15 +228,18 @@ export default function AddItem() {
       if (photoFile) photoUrl = await uploadPhoto(photoFile);
       if (backPhotoFile) photoBackUrl = await uploadPhoto(backPhotoFile, "-back");
 
+      // Default a name if user left it blank — keeps the form lean per intake spec.
+      const finalName = name.trim() || `${intakeType?.toUpperCase()} · ${primaryColor.trim()}`;
+
       const { data: inserted, error: insertError } = await supabase
         .from("wardrobe_items")
         .insert({
           user_id: user!.id,
-          name,
+          name: finalName,
           description: description || null,
-          category,
-          subcategory: (category === "shoes" || category === "accessories") && subcategory ? subcategory : null,
-          primary_color: primaryColor,
+          category: dbCategory,
+          subcategory: intakeType === "shoes" && subcategory ? subcategory : null,
+          primary_color: primaryColor.trim(),
           color_hex: colorHex,
           style_tags: styleTags,
           pattern: pattern || null,
