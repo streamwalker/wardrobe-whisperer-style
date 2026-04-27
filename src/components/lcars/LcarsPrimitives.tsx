@@ -21,6 +21,12 @@ const COLOR_MAP = {
   cyan: "bg-lcars-cyan text-black",
   yellow: "bg-lcars-yellow text-black",
   bronze: "bg-lcars-bronze text-black",
+  // Picard-era cool tones
+  slate: "bg-titan-slate text-titan-frost",
+  steel: "bg-titan-steel text-titan-frost",
+  rail: "bg-titan-rail text-titan-frost",
+  teal: "bg-titan-teal text-black",
+  amber: "bg-titan-amber text-black",
 } as const;
 
 export type LcarsColor = keyof typeof COLOR_MAP;
@@ -48,12 +54,12 @@ export function LcarsHeader({
       <div className={cn("lcars-pill-l px-4 flex items-center", COLOR_MAP[color])}>
         <span className="lcars-label text-xs">LCARS</span>
       </div>
-      <div className="flex-1 flex items-center bg-black border-y border-lcars-orange/30 px-4 gap-3">
-        <h2 className="font-display text-lg sm:text-xl text-lcars-peach uppercase tracking-widest leading-none">
+      <div className="flex-1 flex items-center bg-titan-rail border-y border-titan-steel/50 px-4 gap-3">
+        <h2 className="font-display text-lg sm:text-xl text-titan-frost uppercase tracking-widest leading-none">
           {title}
         </h2>
         {subtitle && (
-          <span className="lcars-mono text-[10px] text-lcars-cyan uppercase">
+          <span className="lcars-mono text-[10px] text-titan-teal uppercase">
             ⌁ {subtitle}
           </span>
         )}
@@ -71,17 +77,27 @@ interface LcarsFrameProps {
   topColor?: LcarsColor;
   sideColor?: LcarsColor;
   bottomColor?: LcarsColor;
+  /** "blocks" = TNG-era colored elbow strips; "rounded" = Picard-era thin double-stroke panel. */
+  variant?: "blocks" | "rounded";
   className?: string;
 }
 
 /** Wraps page content in the iconic LCARS L-shape elbow frame. */
 export function LcarsFrame({
   children,
-  topColor = "orange",
-  sideColor = "lavender",
-  bottomColor = "salmon",
+  topColor = "steel",
+  sideColor = "amber",
+  bottomColor = "slate",
+  variant = "blocks",
   className,
 }: LcarsFrameProps) {
+  if (variant === "rounded") {
+    return (
+      <div className={cn("lcars-frame-rounded p-4 sm:p-5", className)}>
+        {children}
+      </div>
+    );
+  }
   return (
     <div className={cn("relative", className)}>
       {/* Top elbow row */}
@@ -147,7 +163,7 @@ export function LcarsTicker({ className }: { className?: string }) {
     "EPS 54-2", "MOD II2-70", "84-644", "72-209", "50 IA 17", "10 01 09",
   ];
   return (
-    <div className={cn("overflow-hidden whitespace-nowrap text-[10px] text-lcars-cyan/70 lcars-mono", className)}>
+    <div className={cn("overflow-hidden whitespace-nowrap text-[10px] text-titan-teal/70 lcars-mono", className)}>
       <div className="inline-block animate-lcars-marquee">
         {codes.concat(codes).map((c, i) => (
           <span key={i} className="mx-4">⌁ {c}</span>
@@ -157,11 +173,156 @@ export function LcarsTicker({ className }: { className?: string }) {
   );
 }
 
-/** A small LCARS status pill showing a serial code. */
-export function LcarsCodeChip({ code, color = "lavender", className }: { code: string; color?: LcarsColor; className?: string }) {
+/** A small LCARS status pill showing a serial code. Defaults to slate (Picard-era). */
+export function LcarsCodeChip({
+  code,
+  color = "slate",
+  variant = "slate",
+  className,
+}: {
+  code: string;
+  color?: LcarsColor;
+  /** "slate" = thin Picard chip; "block" = colored TNG-era pill. */
+  variant?: "slate" | "block";
+  className?: string;
+}) {
+  if (variant === "block") {
+    return (
+      <span className={cn("lcars-pill px-2 py-0.5 lcars-numerals text-[10px]", COLOR_MAP[color], className)}>
+        {code}
+      </span>
+    );
+  }
+  // Picard slate chip; map a few colors onto chip variants
+  const chipVariant =
+    color === "amber" || color === "orange" || color === "yellow" ? "lcars-chip--amber"
+    : color === "teal" || color === "cyan" || color === "blue" ? "lcars-chip--teal"
+    : color === "red" ? "lcars-chip--alert"
+    : color === "rail" ? "lcars-chip--rail"
+    : color === "slate" ? "lcars-chip--slate"
+    : "";
+  return <span className={cn("lcars-chip", chipVariant, className)}>{code}</span>;
+}
+
+/** Dotted tick row (Picard-era panel divider). */
+export function LcarsTickRow({
+  dense = false,
+  className,
+}: {
+  dense?: boolean;
+  className?: string;
+}) {
+  return <div className={cn("lcars-tick-row", dense && "lcars-tick-row--dense", className)} aria-hidden />;
+}
+
+/** A vertical column of slate code chips — fills empty rail space the Picard way. */
+export function LcarsChipRail({
+  codes,
+  accentEvery = 4,
+  className,
+}: {
+  codes: string[];
+  accentEvery?: number;
+  className?: string;
+}) {
   return (
-    <span className={cn("lcars-pill px-2 py-0.5 lcars-numerals text-[10px]", COLOR_MAP[color], className)}>
-      {code}
-    </span>
+    <div className={cn("flex flex-col gap-1", className)} aria-hidden>
+      {codes.map((c, i) => {
+        const variant =
+          i % accentEvery === 0 ? "lcars-chip--amber"
+          : i % (accentEvery * 2) === 1 ? "lcars-chip--teal"
+          : "lcars-chip--slate";
+        return (
+          <span key={`${c}-${i}`} className={cn("lcars-chip text-[10px] py-0.5", variant)}>
+            {c}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Vertical 0–100 level gauge with tick marks and a colored fill wedge. */
+export function LcarsLevelGauge({
+  value,
+  max = 100,
+  label,
+  tone = "amber",
+  className,
+}: {
+  value: number;
+  max?: number;
+  label?: string;
+  tone?: "amber" | "alert" | "teal";
+  className?: string;
+}) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  const fillColor =
+    tone === "alert" ? "hsl(var(--lcars-red))"
+    : tone === "teal" ? "hsl(var(--titan-teal))"
+    : "hsl(var(--titan-amber))";
+  return (
+    <div className={cn("inline-flex flex-col items-stretch gap-1", className)} aria-label={label}>
+      {label && <span className="lcars-chip lcars-chip--rail text-[9px] text-center">{label}</span>}
+      <div className="flex items-stretch gap-1 h-40">
+        {/* Tick scale */}
+        <div className="flex flex-col justify-between text-[8px] lcars-numerals text-titan-frost/80 pr-0.5 select-none">
+          {[100, 80, 60, 40, 20, 0].map((n) => (
+            <span key={n}>{n.toString().padStart(2, "0")}</span>
+          ))}
+        </div>
+        {/* Gauge bar */}
+        <div className="relative w-4 bg-titan-rail border border-titan-steel/60 overflow-hidden">
+          <div
+            className="absolute left-0 right-0 bottom-0"
+            style={{ height: `${pct}%`, background: fillColor }}
+          />
+          {/* Slim ticks */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[20, 40, 60, 80].map((n) => (
+              <div
+                key={n}
+                className="absolute left-0 right-0 h-px bg-titan-frost/25"
+                style={{ bottom: `${n}%` }}
+              />
+            ))}
+          </div>
+          {/* Indicator wedge */}
+          <div
+            className="absolute -left-1 w-2 h-1.5"
+            style={{ bottom: `calc(${pct}% - 3px)`, background: fillColor }}
+          />
+        </div>
+      </div>
+      <span className="lcars-numerals text-[10px] text-titan-frost text-center">
+        {Math.round(pct)}
+      </span>
+    </div>
+  );
+}
+
+/** Full-width "ALERT: CONDITION RED" banner styled after image 4. */
+export function LcarsAlertBanner({
+  title = "ALERT: CONDITION RED",
+  subtitle,
+  className,
+}: {
+  title?: string;
+  subtitle?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-stretch gap-1 mb-3", className)}>
+      <div className="bg-lcars-red w-3" />
+      <div className="bg-lcars-red flex-1 lcars-pill-r px-4 py-2 flex items-center justify-between">
+        <span className="font-display text-base sm:text-lg text-white uppercase tracking-widest">
+          {title}
+        </span>
+        {subtitle && (
+          <span className="lcars-mono text-[10px] text-white/85 uppercase">{subtitle}</span>
+        )}
+        <span className="bg-white/90 w-2 h-6 ml-3" />
+      </div>
+    </div>
   );
 }
