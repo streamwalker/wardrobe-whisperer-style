@@ -8,6 +8,7 @@ import { useSubscription, STRIPE_PLANS } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LcarsSection } from "@/components/lcars/LcarsSection";
 
 const FREE_FEATURES = [
   "Up to 20 wardrobe items",
