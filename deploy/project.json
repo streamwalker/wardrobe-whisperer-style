@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "project": "Drip Slayer",
+  "environment": "production",
+  "canonical_url": "https://dripslayer.streamwalkers.com",
+  "provider": "unverified; existing deployment injects Lovable/Cloudflare metadata",
+  "source": {
+    "location": "https://github.com/streamwalker/wardrobe-whisperer-style",
+    "revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
+    "subdirectory": "."
+  },
+  "build": {
+    "commands": [
+      "npm ci",
+      "npm run typecheck",
+      "npm test",
+      "npm run build"
+    ],
+    "output_directory": "dist"
+  },
+  "target": {
+    "account_ref": "",
+    "site_ref": "",
+    "remote_directory": "",
+    "identity_verified": false
+  },
+  "access": {
+    "method": "",
+    "credential_ref": "",
+    "host_key_ref": ""
+  },
+  "persistent_paths": [],
+  "database": {
+    "present": true,
+    "backup_ref": "",
+    "migration_plan": "No SQL migrations in this change. New delete-account and check-app-subscription Edge Functions require deployment and staging verification."
+  },
+  "verification": {
+    "paths": [
+      "/",
+      "/auth",
+      "/wardrobe",
+      "/pricing",
+      "/privacy",
+      "/terms"
+    ],
+    "release_evidence": "deploy/readiness.json"
+  },
+  "rollback": {
+    "method": "Restore previous provider release; target and access not verified",
+    "backup_ref": ""
+  }
+}

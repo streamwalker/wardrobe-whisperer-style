@@ -1,3 +1,4 @@
+import { exportFile } from "./export-file";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
@@ -113,7 +114,7 @@ export async function exportOutfitsPdf(outfits: PdfOutfit[]) {
       heightLeft -= pageHeight;
     }
 
-    pdf.save(`outfits-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    await exportFile(pdf.output("blob"), `outfits-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   } finally {
     document.body.removeChild(container);
   }

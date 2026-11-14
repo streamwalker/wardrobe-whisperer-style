@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
           Privacy Policy
         </h1>
 
-        <p className="text-sm text-muted-foreground">Last updated: March 9, 2026</p>
+        <p className="text-sm text-muted-foreground">Last updated: November 14, 2026</p>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-foreground/90">
           <section>
@@ -67,7 +67,8 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground">4. AI Processing & Third-Party Services</h2>
-            <p>When you use AI features (outfit matching, image analysis, occasion suggestions), your wardrobe data and uploaded images may be processed by third-party AI models. This data is transmitted securely, used solely for generating responses, and is not retained by AI providers beyond the processing session. We do not sell your data to any third party.</p>
+            <p>When you use AI features (outfit matching, image analysis, occasion suggestions), your wardrobe data, uploaded images, and relevant style profile information are sent through Lovable AI to Google Gemini to produce results. Provider processing and retention are subject to their applicable terms. We do not sell your data to any third party.</p>
+            <p>On iOS, Apple processes subscription purchases. RevenueCat receives your account identifier and purchase information to verify and restore Pro access. We do not receive your full payment card details. Deleting your Drip Slayer account does not cancel an Apple subscription; manage it through your Apple account subscription settings.</p>
           </section>
 
           <section>
@@ -78,7 +79,7 @@ export default function PrivacyPolicy() {
               <li>Row-Level Security (RLS) policies ensuring data isolation between users</li>
               <li>JWT-based authentication for all API requests</li>
               <li>Input validation and sanitization on all endpoints</li>
-              <li>Regular security audits and monitoring</li>
+
             </ul>
           </section>
 

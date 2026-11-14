@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
       setLoading(true);
       try {
         const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
-        const { data, error } = await supabase.functions.invoke("complete-look", {
+        const { data, error } = await invokeAI("complete-look", {
           body: {
             outfit: {
               name: outfit.name,

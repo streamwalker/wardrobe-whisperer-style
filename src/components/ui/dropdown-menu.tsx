@@ -17,7 +17,7 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
 const itemBase =
-  "relative flex cursor-default select-none items-center px-3 py-1.5 lcars-label text-[11px] text-lcars-peach outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-lcars-orange focus:text-black";
+  "relative flex cursor-default select-none items-center px-3 py-1.5 lcars-label text-[11px] text-foreground outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-lcars-orange focus:text-black";
 
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
@@ -43,7 +43,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "z-50 min-w-[8rem] overflow-hidden bg-black border-2 border-lcars-orange p-0 text-lcars-peach data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "z-50 min-w-[8rem] overflow-hidden bg-card border border-border p-0 text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
     {...props}
@@ -60,7 +60,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[10rem] overflow-hidden bg-black border-2 border-lcars-orange p-0 text-lcars-peach data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "z-50 min-w-[10rem] overflow-hidden bg-card border border-border p-0 text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className,
       )}
       {...props}

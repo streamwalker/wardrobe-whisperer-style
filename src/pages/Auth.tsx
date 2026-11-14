@@ -45,14 +45,18 @@ export default function Auth() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: "https://dripslayer.streamwalkers.com/auth" },
         });
         if (error) throw error;
         if (data.user) {
           await recordConsent(data.user.id);
         }
-        toast.success("Account created! Signing you in…");
-        navigate("/wardrobe");
+        if (data.session) {
+          toast.success("Welcome to Drip Slayer!");
+          navigate("/wardrobe");
+        } else {
+          toast.success("Check your email to confirm your account, then sign in.");
+        }
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -64,7 +68,7 @@ export default function Auth() {
   return (
     <LcarsStandaloneShell
       title="AUTHORIZATION"
-      subtitle={isLogin ? "ACCESS GRANT" : "CREW INTAKE"}
+      subtitle={isLogin ? "Sign in" : "Create account"}
       headerColor="orange"
       topColor="orange"
       sideColor="lavender"
@@ -76,24 +80,23 @@ export default function Auth() {
           <h1 className="font-display text-3xl font-bold text-lcars-peach uppercase tracking-widest">
             Drip Slayer
           </h1>
-          <p className="mt-2 lcars-mono text-[11px] text-lcars-cyan/80 uppercase">
-            ⌁ Stardate · {new Date().toISOString().slice(0, 10).replace(/-/g, ".")}
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Wear what makes you feel like you.</p>
         </div>
 
-        <div className="border-2 border-lcars-orange/60 bg-black/60 p-5 space-y-4">
+        <div className="glass-card p-5 space-y-4">
           <div className="lcars-label text-[10px] text-lcars-orange flex items-center justify-between">
-            <span>{isLogin ? "RETURNING OFFICER" : "NEW APPLICATION"}</span>
-            <span className="lcars-numerals">FORM-2-{isLogin ? "01" : "02"}</span>
+            <span>{isLogin ? "WELCOME BACK" : "MAKE IT YOURS"}</span>
+
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="lcars-label text-[10px] text-lcars-cyan">
-                Email Channel
+                Email
               </Label>
               <Input
                 id="email"
+                autoComplete="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -102,10 +105,11 @@ export default function Auth() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="lcars-label text-[10px] text-lcars-cyan">
-                Access Code
+                Password
               </Label>
               <Input
                 id="password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -151,7 +155,7 @@ export default function Auth() {
               className="w-full"
               disabled={loading || (!isLogin && !agreedToTerms)}
             >
-              {loading ? "..." : isLogin ? "ENGAGE" : "INITIATE"}
+              {loading ? "..." : isLogin ? "Sign in" : "Create account"}
             </Button>
           </form>
 
@@ -162,7 +166,7 @@ export default function Auth() {
                 setIsLogin(!isLogin);
                 setAgreedToTerms(false);
               }}
-              className="font-medium text-lcars-yellow underline-offset-4 hover:underline"
+              className="font-medium text-primary underline-offset-4 hover:underline"
             >
               {isLogin ? "Sign up" : "Sign in"}
             </button>

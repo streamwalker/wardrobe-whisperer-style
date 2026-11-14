@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useRef, useMemo } from "react";
 import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,7 @@ export default function Shop() {
 
       setUploadedPhotoUrl(urlData.publicUrl);
 
-      const { data, error } = await supabase.functions.invoke("analyze-clothing", {
+      const { data, error } = await invokeAI("analyze-clothing", {
         body: { imageUrl: urlData.publicUrl },
       });
 
@@ -149,7 +150,7 @@ export default function Shop() {
       };
 
       const stripped = wardrobeItems.map(({ photo, ...rest }) => rest);
-      const { data, error } = await supabase.functions.invoke("match-outfit", {
+      const { data, error } = await invokeAI("match-outfit", {
         body: {
           selectedItem: fakeWardrobeItem,
           wardrobeItems: [...stripped, fakeWardrobeItem],

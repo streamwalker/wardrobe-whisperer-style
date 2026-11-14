@@ -1,3 +1,4 @@
+import { exportFile } from "@/lib/export-file";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, Loader2, AlertTriangle, Copy } from "lucide-react";
@@ -57,7 +58,7 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
   const [skipDuplicates, setSkipDuplicates] = useState(true);
 
   // ... keep existing code (handleExport)
-  const handleExport = () => {
+  const handleExport = async () => {
     const payload: ExportPayload = {
       version: 1,
       exportedAt: new Date().toISOString(),
@@ -74,13 +75,12 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = `wardrobe-export-${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      await exportFile(blob, `wardrobe-export-${new Date().toISOString().slice(0, 10)}.json`);
+    } catch {
+      toast.error("Unable to export wardrobe. Please try again.");
+      return;
+    }
     toast.success(`Exported ${payload.items.length} items`);
   };
 
