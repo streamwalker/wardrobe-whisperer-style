@@ -1,6 +1,6 @@
 # Drip Slayer
 
-Wardrobe and outfit assistant with a shared React web app and bundled Capacitor iOS app.
+Wardrobe and outfit assistant with a shared React web app and bundled Capacitor iOS app. The interface uses full-screen locally bundled video, minimal navigation, and text overlays throughout. See [motion design notes](docs/MOTION-DESIGN.md) and [the recorded preview](artifacts/motion-walkthrough.mp4).
 
 The iOS project is prepared for configuration and device testing; it is not signed or submitted. See [the submission handoff](docs/IOS-SUBMISSION.md) for Apple/RevenueCat setup, deployment gaps, listing copy, and required verification.
 

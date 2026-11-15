@@ -42,21 +42,7 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      {/* LCARS modal header bar */}
-      <div className="flex items-stretch h-8 shrink-0">
-        <div className="bg-lcars-orange w-12 lcars-pill-l" />
-        <div className="flex-1 bg-card border-t-2 border-b-2 border-lcars-orange flex items-center px-3">
-          <span className="lcars-label text-[10px] text-foreground">SUBSPACE PANEL</span>
-          <span className="lcars-numerals text-[10px] text-lcars-cyan ml-auto mr-3">04-0490</span>
-        </div>
-        <DialogPrimitive.Close
-          className="bg-lcars-red text-white px-4 lcars-pill-r flex items-center gap-1 lcars-label text-[10px] hover:brightness-110 transition-[filter] focus:outline-none focus:ring-2 focus:ring-lcars-cyan disabled:pointer-events-none"
-        >
-          <X className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">DISMISS</span>
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </div>
+      <DialogPrimitive.Close className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-card/80 text-foreground focus-visible:ring-2 focus-visible:ring-ring" aria-label="Close"><X className="h-5 w-5" /></DialogPrimitive.Close>
 
       <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
         {children}

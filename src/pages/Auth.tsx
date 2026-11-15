@@ -76,12 +76,7 @@ export default function Auth() {
       maxWidth="md"
     >
       <div className="space-y-6 py-2">
-        <div className="text-center">
-          <h1 className="font-display text-3xl font-bold text-lcars-peach uppercase tracking-widest">
-            Drip Slayer
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Wear what makes you feel like you.</p>
-        </div>
+        <p className="text-sm text-muted-foreground">Sign in to your wardrobe. Step into your style.</p>
 
         <div className="glass-card p-5 space-y-4">
           <div className="lcars-label text-[10px] text-lcars-orange flex items-center justify-between">

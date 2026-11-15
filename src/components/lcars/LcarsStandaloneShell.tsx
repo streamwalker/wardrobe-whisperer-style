@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import CinemaHeader from "@/components/cinema/CinemaHeader";
+import VideoBackdrop from "@/components/cinema/VideoBackdrop";
 import { type LcarsColor } from "./LcarsPrimitives";
 import { LcarsSection } from "./LcarsSection";
 import { cn } from "@/lib/utils";
@@ -47,10 +48,9 @@ export default function LcarsStandaloneShell({
   children,
   variant = "rounded",
 }: LcarsStandaloneShellProps & { variant?: "blocks" | "rounded" }) {
-  const navigate = useNavigate();
-
-  return <div className="min-h-screen bg-background">
-    <header className="app-header border-b border-border px-5 py-5"><button onClick={() => navigate("/wardrobe")} className="min-h-11 text-xl font-semibold tracking-tight">drip slayer<span className="text-primary">.</span></button></header>
-    <main className={cn("px-4 py-8 pb-16 sm:px-8", className)}><div className={cn("mx-auto", MAX_W[maxWidth])}><LcarsSection title={title} rightSlot={rightSlot}>{children}</LcarsSection></div></main>
+  return <div className="cinema-workspace cinema-standalone">
+    <VideoBackdrop film="street" fixed shade="workspace" />
+    <CinemaHeader />
+    <main id="main-content" className={cn("cinema-workspace-content", className)}><div className={cn("mx-auto", MAX_W[maxWidth])}><LcarsSection title={title} rightSlot={rightSlot}>{children}</LcarsSection></div></main>
   </div>;
 }

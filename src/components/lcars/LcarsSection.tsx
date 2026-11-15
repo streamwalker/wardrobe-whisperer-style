@@ -44,11 +44,16 @@ export function LcarsSection({
 }: LcarsSectionProps) {
   const labels: Record<string, string> = {
     "WARDROBE": "Your wardrobe", "MY WARDROBE": "Your wardrobe", "TIER UPGRADE": "Choose your plan",
-    "AUTHORIZATION": "Welcome to Drip Slayer", "PROFILE": "Your style profile",
+    "AUTHORIZATION": "Make it yours.", "PROFILE": "Your style profile",
+    "CREW DOSSIER": "Your style profile", "SPECIMEN INTAKE": "Add a piece",
+    "BATCH UPLINK": "Bring it all together", "ACQUISITIONS": "Find your next favorite",
+    "STYLE LIBRARY": "Looks to live in", "DIRECTIVE 010 · TERMS OF SERVICE": "Terms of service",
+    "DIRECTIVE 011 · PRIVACY POLICY": "Your privacy", "GUEST ACCESS": "Shared wardrobe",
+    "ACCESS DENIED": "This link is unavailable",
   };
-  return <section className={cn("space-y-6", className)}>
+  return <section className={cn("cinema-section space-y-6", className)}>
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Curated by you</p><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{labels[title] ?? title.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase())}</h1></div>
+      <div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Your style, your rules</p><h1 className="cinema-page-title">{labels[title] ?? title.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase())}</h1></div>
       {rightSlot && <div className="flex max-w-full flex-wrap items-center gap-2">{rightSlot}</div>}
     </header>
     {mobileActions && <div className="flex flex-wrap gap-2 md:hidden">{mobileActions}</div>}

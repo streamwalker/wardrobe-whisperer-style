@@ -1,0 +1,16 @@
+Drip Slayer cinematic interface footage
+
+street.mp4, street-mobile.mp4, street.jpg
+Source: https://www.pexels.com/video/woman-walking-and-modelling-in-the-street-5901089/
+
+closet.mp4, closet-mobile.mp4, closet.jpg
+Source: https://www.pexels.com/video/woman-looking-clothes-on-a-clothing-rack-5743177/
+
+city.mp4, city-mobile.mp4, city.jpg
+Source: https://www.pexels.com/video/a-man-walking-while-looking-at-camera-9251265/
+
+License: Pexels License, https://www.pexels.com/license/
+Retrieved November 14, 2026 (America/Chicago).
+Edited for this app: duration trimming, resolution, frame rate, portrait crops, audio removal, and poster extraction.
+Stock imagery illustrates personal style. The depicted people do not endorse Drip Slayer.
+Do not redistribute these files as standalone stock footage.

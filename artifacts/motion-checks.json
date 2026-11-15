@@ -1,0 +1,202 @@
+[
+  {
+    "device": "desktop",
+    "route": "/",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/wardrobe",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/closet.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/auth",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/outfits",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/city.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/shop",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/profile",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/pricing",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/wardrobe/add",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/wardrobe/batch",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/privacy",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "route": "/terms",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street.mp4",
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "pauseWorks": true
+  },
+  {
+    "device": "desktop",
+    "offscreenPaused": true
+  },
+  {
+    "device": "iphone",
+    "route": "/",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/wardrobe",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/closet-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/auth",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/outfits",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/city-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/shop",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/profile",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/pricing",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/wardrobe/add",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/wardrobe/batch",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/privacy",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "route": "/terms",
+    "overflow": false,
+    "videoAdvances": true,
+    "src": "/motion/street-mobile.mp4",
+    "errors": []
+  },
+  {
+    "device": "iphone",
+    "pauseWorks": true
+  },
+  {
+    "reducedMotion": true,
+    "noVideoLoaded": true,
+    "playControlVisible": true
+  },
+  {
+    "device": "iphone",
+    "offscreenPaused": true,
+    "pausePersisted": true,
+    "focusReturned": true,
+    "failedVideoPosterVisible": true
+  }
+]
