@@ -3,7 +3,7 @@
   "project": "Drip Slayer",
   "environment": "production",
   "canonical_url": "https://dripslayer.streamwalkers.com",
-  "provider": "unverified; existing deployment injects Lovable/Cloudflare metadata",
+  "provider": "Lovable",
   "source": {
     "location": "https://github.com/streamwalker/wardrobe-whisperer-style",
     "revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
@@ -19,14 +19,14 @@
     "output_directory": "dist"
   },
   "target": {
-    "account_ref": "",
-    "site_ref": "",
+    "account_ref": "Streamwalkers Corporation / CIUY1SdKxk4R8u5HkI7p",
+    "site_ref": "7a0ace2b-6614-44c5-a39d-036c8e22e68b",
     "remote_directory": "",
-    "identity_verified": false
+    "identity_verified": true
   },
   "access": {
-    "method": "",
-    "credential_ref": "",
+    "method": "Lovable MCP for hosting; code transfer to public GitHub pending explicit approval",
+    "credential_ref": "connected Lovable and GitHub accounts",
     "host_key_ref": ""
   },
   "persistent_paths": [],
@@ -49,5 +49,13 @@
   "rollback": {
     "method": "Restore previous provider release; target and access not verified",
     "backup_ref": ""
+  },
+  "hosting_evidence": {
+    "editor_url": "https://lovable.dev/projects/7a0ace2b-6614-44c5-a39d-036c8e22e68b",
+    "observed_hosted_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
+    "project_visibility": "workspace_edit",
+    "publish_audience": "public",
+    "github_visibility": "public",
+    "custom_domain_mapping": "Matched by prior live commit metadata; provider domain mapping not exposed by connector"
   }
 }

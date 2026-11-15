@@ -19,7 +19,7 @@
     "Apple team signing and app/product registration",
     "RevenueCat configuration and secret setup",
     "Supabase Edge Function deployment and disposable-account verification",
-    "Hosting target/access verification",
+    "Public GitHub review branch approval; Lovable project identified",
     "Verified support and privacy contact/legal operator",
     "Native device/TestFlight tests and store screenshots",
     "Review existing server-side Pro quota enforcement before paid launch"
@@ -89,5 +89,6 @@
     "icons/icon-192.png": "725b630645b7a4b0e53958f56f4bcad9506607ed2213ddf593270f1d77930f5c",
     "icons/icon-512.png": "a804f142b158eaf69980f906dc29d5606080da2fb43e3a89bd6317405db0b9d2"
   },
-  "design_revision": "full-screen-motion"
+  "design_revision": "full-screen-motion",
+  "design_approved": true
 }
