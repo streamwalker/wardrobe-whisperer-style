@@ -25,7 +25,7 @@
     "identity_verified": true
   },
   "access": {
-    "method": "Lovable MCP for hosting; GitHub review branch authorized by user",
+    "method": "Connected Lovable hosting and GitHub; production release authorized by user",
     "credential_ref": "connected Lovable and GitHub accounts",
     "host_key_ref": ""
   },
@@ -33,7 +33,8 @@
   "database": {
     "present": true,
     "backup_ref": "",
-    "migration_plan": "No SQL migrations in this change. New delete-account and check-app-subscription Edge Functions require deployment and staging verification."
+    "migration_plan": "No SQL migrations in this change. New delete-account and check-app-subscription Edge Functions require deployment and staging verification.",
+    "state": "paused (Lovable Cloud status, 2026-11-16 UTC)"
   },
   "verification": {
     "paths": [
@@ -47,8 +48,8 @@
     "release_evidence": "deploy/readiness.json"
   },
   "rollback": {
-    "method": "Restore previous provider release; target and access not verified",
-    "backup_ref": ""
+    "method": "Restore reviewed source revision 1371ef1caa5be8784667648c1ddf490f0cd7006d through GitHub/Lovable and republish; no data/schema mutation is planned.",
+    "backup_ref": "local git bundle: /workspace/dripslayer-prelaunch-backup.bundle"
   },
   "hosting_evidence": {
     "editor_url": "https://lovable.dev/projects/7a0ace2b-6614-44c5-a39d-036c8e22e68b",

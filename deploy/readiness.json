@@ -1,12 +1,12 @@
 {
-  "status": "prepared_not_deployed_or_submitted",
+  "status": "release_authorized_backend_paused",
   "date": "2026-11-14",
   "canonical_url": "https://dripslayer.streamwalkers.com",
   "base_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
   "bundle_id_proposed": "com.streamwalkers.dripslayer",
   "checks": {
     "typecheck": "passed",
-    "unit_tests": "7 passed",
+    "unit_tests": "12 passed, including account deletion authorization, paginated photos and failure handling",
     "web_build": "passed; large bundle warning",
     "capacitor_sync_ios": "passed; Xcode project generated, no native compilation",
     "browser_mobile": "Desktop 1440x960 and iPhone 393x852: 11 public routes, advancing video, no page errors or overflow; pause/resume, offscreen pause, session persistence, reduced motion, menu focus, and error poster fallback passed. Authenticated flows not exercised.",
@@ -16,6 +16,7 @@
     "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout"
   },
   "blockers": [
+    "Resume existing Lovable Cloud database; currently paused",
     "Apple team signing and app/product registration",
     "RevenueCat configuration and secret setup",
     "Supabase Edge Function deployment and disposable-account verification",
@@ -91,5 +92,6 @@
   "design_revision": "full-screen-motion",
   "design_approved": true,
   "review_branch": "rebuild/ios-submission-prep",
-  "public_source_push_approved": true
+  "public_source_push_approved": true,
+  "production_release_authorized": true
 }
