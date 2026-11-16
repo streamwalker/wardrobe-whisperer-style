@@ -22,7 +22,17 @@ Deno.serve(async req => {
       const { error: removeError } = await bucket.remove(files.map(file => `${data.user!.id}/${file.name}`));
       if (removeError) throw removeError;
     }
-    // Schema foreign keys cascade profile, wardrobe, outfits, shares, and consents.
+    // These legacy tables do not have foreign keys to auth.users. Remove only
+    // the verified caller's records before deleting the identity. Failures leave
+    // the identity in place so the caller can sign in and retry cleanup.
+    for (const table of ["wardrobe_shares", "style_signals", "dismissed_outfits"]) {
+      const { error: cleanupError } = await client.from(table).delete().eq("user_id", data.user.id);
+      if (cleanupError) throw cleanupError;
+    }
+    const { error: transferError } = await client.from("wardrobe_transfers").delete()
+      .or(`sender_id.eq.${data.user.id},redeemed_by.eq.${data.user.id}`);
+    if (transferError) throw transferError;
+    // Foreign keys cascade profiles, wardrobe items, saved outfits and consents.
     const { error: deleteError } = await client.auth.admin.deleteUser(data.user.id);
     if (deleteError) throw deleteError;
     return reply(200, { deleted: true });

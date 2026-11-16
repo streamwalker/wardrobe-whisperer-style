@@ -8,8 +8,8 @@ Status: source and native project prepared; **not signed, uploaded, deployed, or
 - Display name: Drip Slayer. Version/build: 1.0 / 1.
 - Apple Team ID and signing identity are not configured. Select the correct team in Xcode.
 - Source: `streamwalker/wardrobe-whisperer-style`, based on commit `1371ef1caa5be8784667648c1ddf490f0cd7006d`, which matches the live site's deployment metadata.
-- Website target: https://dripslayer.streamwalkers.com. Hosting project and publish access remain unverified.
-- Supabase project reference: `zpctyufmvrvavnidovtp`. No production writes or database migrations were performed.
+- Website target: https://dripslayer.streamwalkers.com. Verified Lovable project: `7a0ace2b-6614-44c5-a39d-036c8e22e68b` in Streamwalkers Corporation. GitHub main syncs to the editor; production publication is a separate action.
+- Supabase project reference: `zpctyufmvrvavnidovtp`, managed by Lovable Cloud. The launch check found this database paused. Resume the existing database in Lovable → More → Database → Manage → Settings, then verify auth, storage and functions. No production data or schema changes have been performed.
 
 ## Apple subscriptions through RevenueCat
 
@@ -27,7 +27,7 @@ The original app's server functions do not centrally enforce all advertised Pro 
 
 ## Account deletion and data
 
-Deploy `delete-account` before releasing this frontend. It verifies the caller, requires explicit confirmation, removes the caller's wardrobe-photo folder, and deletes the Auth user so the schema's foreign-key cascades remove app records. Test with a disposable account in staging, including more than 100 photos, failed storage removal, shares, saved outfits, consents, and rejected/expired tokens. This endpoint has not been exercised against the connected production backend.
+Deploy `delete-account` before releasing this frontend. It verifies the caller, requires explicit confirmation, removes the caller's wardrobe-photo folder, explicitly removes legacy shares/style signals/dismissed outfits/transfers that lack foreign keys, and deletes the Auth user so foreign-key cascades remove profiles, wardrobe items, saved outfits and consents. Local handler tests cover authorization, confirmation, 101 photos, caller-only cleanup, and keeping the identity for retry after storage/database failures. Test with a disposable account against the actual backend, including saved outfits, consents, and rejected/expired tokens. This endpoint has not been exercised against the connected production backend.
 
 Deletion does not cancel Apple billing. The confirmation explains that users must cancel their subscription in Apple Settings. RevenueCat/Apple transaction retention is separate from app profile deletion; confirm a documented retention/deletion process and update the privacy policy accordingly.
 
@@ -38,6 +38,8 @@ AI calls request session-scoped permission before sending clothing photos, wardr
 ## Build on a Mac
 
 Current Capacitor docs require Xcode 26+; recheck Apple's current upload SDK requirements when submitting. This generated project uses Swift Package Manager.
+
+`.github/workflows/ios-validation.yml` compiles an unsigned simulator build on GitHub's Mac runner. It uses placeholder backend settings for compilation only and does not create a distributable archive or submit anything to Apple. A passing job must not be reported as signing or App Store validation.
 
 ```sh
 npm ci
