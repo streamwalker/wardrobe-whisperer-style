@@ -1,0 +1,2 @@
+- [ ] Backend live account tests — blocked: no safe admin way to create test users
+- [x] Lock in (publish) current version
