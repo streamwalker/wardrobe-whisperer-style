@@ -1,0 +1,27 @@
+{
+  "status": "live_verified",
+  "checked_at_utc": "2026-11-16",
+  "canonical_url": "https://dripslayer.streamwalkers.com",
+  "project_id": "7a0ace2b-6614-44c5-a39d-036c8e22e68b",
+  "deployment_id": "02c28ab8-884f-455c-a296-efa0ead9ef1d",
+  "published_revision": "7107d1b41fa0f5c0fcbf267ae5ca5032104bb39e",
+  "previous_live_revision": "68125d09b9010f29c4bede61074302209c6cad30",
+  "change": "Offset hero tagline by the same top safe area as the native header.",
+  "assets": {
+    "/assets/index-CBx3TsUL.js": {
+      "sha256": "db358384b2362c8d7b6e4b7435e74fb1f4cf9c9e830e887338aa4ab93ff605c8",
+      "bytes": 1543730,
+      "status": 200
+    },
+    "/assets/index-CUqOuyHo.css": {
+      "sha256": "9c7a3a62de0ae9fa27f27900832305eb9c364e875b6355a192c2f2d40a6b8323",
+      "bytes": 104391,
+      "status": 200
+    }
+  },
+  "browser_evidence": "artifacts/live-safe-area-checks.json",
+  "browser_summary": "Production header/tagline spacing and menu passed with iPhone62px, iPad24px and desktop0px top safe-area overrides; no horizontal overflow or page errors.",
+  "native_capture_pending": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43802942625",
+  "backend_changes": "none",
+  "rollback": "Restore source revision 68125d09b9010f29c4bede61074302209c6cad30 and republish, preserving database and uploads."
+}

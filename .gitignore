@@ -32,3 +32,6 @@ dist-ssr
 *.p12
 *.mobileprovision
 __pycache__/
+
+# Full-resolution native preview captures are retained as GitHub workflow artifacts.
+artifacts/native-preview/

@@ -4,6 +4,8 @@ The website is live. Apple Team ID `32N9W9HZ54` is configured. The automation be
 
 The current task has no Apple/RevenueCat credential bindings or connected browser-control tool. The GitHub connection can publish source, but reading repository secret settings returned `403 Resource not accessible by integration`. Credentials must be supplied through a secure account/environment connection; a Team ID does not grant account access. Never paste private keys or passwords into chat or commit them.
 
+The workflows were also attempted against the actual repository on 2026-11-16. The [signing preflight](https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803616432) reported all seven required release settings missing and stopped before building/signing. The [RevenueCat setup attempt](https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803650188) passed its automation tests, then stopped before API requests because `REVENUECAT_V2_API_KEY` was absent. No Apple or RevenueCat records were created by those attempts. See [the recorded access check](../deploy/account-access.json).
+
 ## RevenueCat catalog
 
 `deploy/apple-release.json` is the source of product IDs, entitlement `pro`, offering `default`, and monthly/annual packages. Preview the configuration with:

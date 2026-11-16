@@ -1,0 +1,30 @@
+{
+  "checked_at_utc": "2026-11-16T04:22:00Z",
+  "source_revision": "7107d1b41fa0f5c0fcbf267ae5ca5032104bb39e",
+  "status": "credentials_missing_in_release_workflows",
+  "signing_preflight": {
+    "workflow_url": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803616432",
+    "result": "Stopped before dependency installation, signing or upload",
+    "missing": [
+      "IOS_DISTRIBUTION_P12_BASE64",
+      "IOS_DISTRIBUTION_P12_PASSWORD",
+      "IOS_PROVISIONING_PROFILE_BASE64",
+      "ASC_API_KEY_ID",
+      "ASC_ISSUER_ID",
+      "ASC_PRIVATE_KEY_BASE64",
+      "VITE_REVENUECAT_APPLE_API_KEY"
+    ],
+    "upload_requested": false,
+    "signed_archive_created": false
+  },
+  "revenuecat_setup": {
+    "workflow_url": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803650188",
+    "automation_tests": "passed",
+    "result": "Stopped before account API requests",
+    "missing": ["REVENUECAT_V2_API_KEY"],
+    "account_records_created": false
+  },
+  "secret_settings_access": "GitHub integration returned HTTP403 Resource not accessible by integration",
+  "secure_setup_documentation": "docs/RELEASE-AUTOMATION.md",
+  "app_review_submission": "not performed"
+}

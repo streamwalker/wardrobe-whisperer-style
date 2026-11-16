@@ -1,0 +1,32 @@
+[
+  {
+    "name": "iPhone",
+    "safeAreaTop": 62,
+    "headerBottom": 138,
+    "taglineTop": 163,
+    "gap": 25,
+    "overflow": false,
+    "errors": [],
+    "menuPassed": true
+  },
+  {
+    "name": "iPad",
+    "safeAreaTop": 24,
+    "headerBottom": 112,
+    "taglineTop": 148,
+    "gap": 36,
+    "overflow": false,
+    "errors": [],
+    "menuPassed": true
+  },
+  {
+    "name": "desktop",
+    "safeAreaTop": 0,
+    "headerBottom": 88,
+    "taglineTop": 124,
+    "gap": 36,
+    "overflow": false,
+    "errors": [],
+    "menuPassed": true
+  }
+]
