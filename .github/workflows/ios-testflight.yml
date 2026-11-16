@@ -1,0 +1,64 @@
+name: iOS signed build and TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Unique positive build number for App Store Connect
+        required: true
+        type: string
+      upload:
+        description: Upload the validated build to App Store Connect for TestFlight
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dripslayer-ios-release
+  cancel-in-progress: false
+
+jobs:
+  signed-release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Validate required release configuration
+        run: node scripts/release/preflight.mjs
+        env:
+          RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          VITE_REVENUECAT_APPLE_API_KEY: ${{ secrets.VITE_REVENUECAT_APPLE_API_KEY }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:release
+      - name: Bundle the release app
+        run: npm run ios:sync
+        env:
+          VITE_REVENUECAT_APPLE_API_KEY: ${{ secrets.VITE_REVENUECAT_APPLE_API_KEY }}
+      - name: Sign, validate and optionally upload
+        run: bash scripts/release/archive-and-upload.sh
+        env:
+          RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+          UPLOAD_TO_TESTFLIGHT: ${{ inputs.upload }}
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          VITE_REVENUECAT_APPLE_API_KEY: ${{ secrets.VITE_REVENUECAT_APPLE_API_KEY }}

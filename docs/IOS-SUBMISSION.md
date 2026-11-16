@@ -38,6 +38,8 @@ AI calls request session-scoped permission before sending clothing photos, wardr
 
 ## Build on a Mac
 
+Automated catalog setup, signed Mac-runner builds and TestFlight upload are prepared in [RELEASE-AUTOMATION.md](RELEASE-AUTOMATION.md). They still require secure account credentials and store configuration; they have not performed a signed upload.
+
 Current Capacitor docs require Xcode 26+; recheck Apple's current upload SDK requirements when submitting. This generated project uses Swift Package Manager.
 
 `.github/workflows/ios-validation.yml` compiles an unsigned simulator build on GitHub's Mac runner. It uses placeholder backend settings for compilation only and does not create a distributable archive or submit anything to Apple. A passing job must not be reported as signing or App Store validation.

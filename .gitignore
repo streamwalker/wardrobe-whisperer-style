@@ -26,3 +26,9 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Local signing material and release tooling caches
+*.p8
+*.p12
+*.mobileprovision
+__pycache__/

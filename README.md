@@ -4,6 +4,8 @@ Wardrobe and outfit assistant with a shared React web app and bundled Capacitor 
 
 The iOS project is prepared for configuration and device testing; it is not signed or submitted. See [the submission handoff](docs/IOS-SUBMISSION.md) for Apple/RevenueCat setup, deployment gaps, listing copy, and required verification.
 
+[Release automation](docs/RELEASE-AUTOMATION.md) can configure the RevenueCat catalog and sign/validate/upload iOS builds once secure account credentials are connected.
+
 ```sh
 cp .env.example .env.local
 # Populate the public Supabase values and RevenueCat Apple SDK key.

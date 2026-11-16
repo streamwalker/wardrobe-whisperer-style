@@ -1,0 +1,26 @@
+{
+  "name": "Drip Slayer",
+  "team_id": "32N9W9HZ54",
+  "bundle_id": "com.streamwalkers.dripslayer",
+  "version": "1.0",
+  "revenuecat_project_name": "Drip Slayer",
+  "entitlement": "pro",
+  "offering": "default",
+  "subscription_group": "Drip Slayer Pro",
+  "products": [
+    {
+      "id": "com.streamwalkers.dripslayer.pro.monthly",
+      "name": "Drip Slayer Pro Monthly",
+      "package": "$rc_monthly",
+      "duration": "ONE_MONTH",
+      "suggested_us_price": "4.99"
+    },
+    {
+      "id": "com.streamwalkers.dripslayer.pro.annual",
+      "name": "Drip Slayer Pro Annual",
+      "package": "$rc_annual",
+      "duration": "ONE_YEAR",
+      "suggested_us_price": "39.99"
+    }
+  ]
+}

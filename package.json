@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:release": "node scripts/release/release.test.mjs && python3 scripts/release/test_profile.py",
+    "ios:release:check": "node scripts/release/preflight.mjs",
+    "revenuecat:setup": "node scripts/release/revenuecat.mjs",
     "ios:sync": "npm run build && cap sync ios",
     "ios:open": "cap open ios",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
