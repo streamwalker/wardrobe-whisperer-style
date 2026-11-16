@@ -1,6 +1,6 @@
 # Drip Slayer iOS release preparation
 
-Status: source and native project prepared; **not signed, uploaded, deployed, or submission-ready yet**.
+Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The native project compiles successfully for the iOS simulator under Xcode 26.6, but is **not signed, uploaded to TestFlight, or submitted for App Review**.
 
 ## Identity and accounts
 
@@ -9,7 +9,8 @@ Status: source and native project prepared; **not signed, uploaded, deployed, or
 - Apple Team ID and signing identity are not configured. Select the correct team in Xcode.
 - Source: `streamwalker/wardrobe-whisperer-style`, based on commit `1371ef1caa5be8784667648c1ddf490f0cd7006d`, which matches the live site's deployment metadata.
 - Website target: https://dripslayer.streamwalkers.com. Verified Lovable project: `7a0ace2b-6614-44c5-a39d-036c8e22e68b` in Streamwalkers Corporation. GitHub main syncs to the editor; production publication is a separate action.
-- Supabase project reference: `zpctyufmvrvavnidovtp`, managed by Lovable Cloud. The launch check found this database paused. Resume the existing database in Lovable → More → Database → Manage → Settings, then verify auth, storage and functions. No production data or schema changes have been performed.
+- Supabase project reference: `zpctyufmvrvavnidovtp`, managed by Lovable Cloud. The owner resumed the database during release. Authentication health and database REST probes now return 200. The two new Edge Functions are deployed. No production data or schema changes were performed.
+- Production builds have public Supabase URL/key fallbacks in `vite.config.ts`; the gitignored `.env` is not supplied by Lovable's production build. Never replace the public key with a service-role key.
 
 ## Apple subscriptions through RevenueCat
 
@@ -20,14 +21,14 @@ The iOS app uses native purchases, localized store prices, Restore Purchases, an
 3. Add the iOS app in RevenueCat with the registered bundle ID and the Apple credentials required by its current setup guide. Import both products, attach them to the **`pro` entitlement**, and create a current/default offering with monthly and annual packages.
 4. Use RevenueCat's **keep purchases with the original App User ID** restore/transfer policy unless the account transfer behavior is deliberately redesigned. The SDK uses the authenticated Supabase UUID, not an anonymous identity. Test a second Drip Slayer login against the same Apple account to confirm the intended ownership behavior.
 5. Set the public Apple SDK key in `VITE_REVENUECAT_APPLE_API_KEY` in the build environment. Store `REVENUECAT_SECRET_API_KEY` in Supabase Edge Function secrets; never put it in frontend variables or source control. The backend uses RevenueCat's v1 subscriber endpoint.
-6. Deploy and test `check-app-subscription`. It verifies the Supabase access token and checks `pro` on the server using that verified user's UUID. It never trusts entitlement claims or an account ID supplied by the app.
+6. `check-app-subscription` is deployed and rejects signed-out callers with 401. Complete signed-in verification after configuring RevenueCat. It verifies the Supabase access token and checks `pro` on the server using that verified user's UUID. It never trusts entitlement claims or an account ID supplied by the app.
 7. Test successful purchase, restore after reinstall, purchase cancellation, pending approval, expiration, billing retry/grace period, offline failure, account switching, and backend verification failure with Apple sandbox/TestFlight. Confirm a paid user can actually use every advertised Pro feature.
 
 The original app's server functions do not centrally enforce all advertised Pro quotas. Client gating is not a billing-security boundary. Server-side quota/entitlement enforcement and agreement on the limits must be reviewed before charging users at launch.
 
 ## Account deletion and data
 
-Deploy `delete-account` before releasing this frontend. It verifies the caller, requires explicit confirmation, removes the caller's wardrobe-photo folder, explicitly removes legacy shares/style signals/dismissed outfits/transfers that lack foreign keys, and deletes the Auth user so foreign-key cascades remove profiles, wardrobe items, saved outfits and consents. Local handler tests cover authorization, confirmation, 101 photos, caller-only cleanup, and keeping the identity for retry after storage/database failures. Test with a disposable account against the actual backend, including saved outfits, consents, and rejected/expired tokens. This endpoint has not been exercised against the connected production backend.
+`delete-account` is deployed and rejects signed-out callers with 401. It verifies the caller, requires explicit confirmation, removes the caller's wardrobe-photo folder, explicitly removes legacy shares/style signals/dismissed outfits/transfers that lack foreign keys, and deletes the Auth user so foreign-key cascades remove profiles, wardrobe items, saved outfits and consents. The live schema's foreign-key coverage was reviewed. Local handler tests cover authorization, confirmation, 101 photos, caller-only cleanup, and keeping the identity for retry after storage/database failures. Test with a disposable account against the actual backend, including saved outfits, consents, and rejected/expired tokens. Authenticated deletion has not been exercised: the connected tools lack supported Auth-admin test-user creation, and normal sign-up sends email. No test accounts were created and email confirmation was left enabled.
 
 Deletion does not cancel Apple billing. The confirmation explains that users must cancel their subscription in Apple Settings. RevenueCat/Apple transaction retention is separate from app profile deletion; confirm a documented retention/deletion process and update the privacy policy accordingly.
 
@@ -82,6 +83,6 @@ Replace or verify existing `privacy@dripslayer.com` and `dpo@dripslayer.com` con
 
 ## Validation already performed
 
-Production web build, TypeScript checking, purchase UI tests, Capacitor asset/plugin sync, and local browser layout checks. Full lint has 130 errors and 10 warnings; the unchanged baseline has the same counts. These are inherited typing/style issues, not a passing lint gate. No authenticated end-to-end or native Xcode verification has been completed here.
+Production web build, TypeScript checking, 12 unit tests, and Capacitor asset/plugin sync passed. GitHub's Mac runner compiled the unsigned simulator app with Xcode 26.6 (see `deploy/native-validation.json`). Live desktop/mobile checks covered nine routes: all returned 200, videos advanced, menus and pause controls worked, and there were no page errors or horizontal overflow. Full lint has 130 errors and 10 warnings; the unchanged baseline has the same counts. These are inherited typing/style issues, not a passing lint gate. Authenticated end-to-end tests, signed archives, native-device interactions and purchase sandbox tests remain incomplete.
 
 References: https://developer.apple.com/app-store/review/guidelines/ ; https://capacitorjs.com/docs/ios ; https://www.revenuecat.com/docs/getting-started/installation/capacitor

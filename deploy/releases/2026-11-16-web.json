@@ -1,0 +1,44 @@
+{
+  "status": "live_verified",
+  "checked_at_utc": "2026-11-16",
+  "canonical_url": "https://dripslayer.streamwalkers.com",
+  "provider": "Lovable",
+  "project_id": "7a0ace2b-6614-44c5-a39d-036c8e22e68b",
+  "published_revision": "68125d09b9010f29c4bede61074302209c6cad30",
+  "approved_merge_revision": "08a4a4154cdf7082c412a5abf2ee391c32590c8a",
+  "previous_live_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
+  "assets": {
+    "/assets/index-GR_bWN0g.js": {
+      "sha256": "4458bab90e6a3fb1ea5d7bed38be4ecb6043639e7b127dc143ea9c351a87aac9",
+      "bytes": 1543730,
+      "status": 200
+    },
+    "/assets/index-WWv4xO3s.css": {
+      "sha256": "6bbe8bccbb864ca1d2ce27b748102e244c47ac415365843a57eeef79e49219f5",
+      "bytes": 104317,
+      "status": 200
+    },
+    "/motion/street-mobile.mp4": {
+      "sha256": "d0cc044f96b07e4f812db399cadad3147e30f4ec41e25cddcdc117d12d56f5ca",
+      "bytes": 1207228,
+      "status": 200
+    }
+  },
+  "browser_evidence": "artifacts/live-checks.json",
+  "browser_summary": "Nine routes on desktop and iPhone viewport: HTTP 200, advancing video, no page errors or horizontal overflow; menu and pause passed.",
+  "backend": {
+    "auth_health": "200",
+    "database_rest": "200, zero-row probes only",
+    "delete_account": "deployed; signed-out 401; live FK coverage reviewed",
+    "check_app_subscription": "deployed; signed-out 401; RevenueCat key/setup still required",
+    "authenticated_e2e": "not run; no supported admin test-user creation; no confirmation emails sent"
+  },
+  "schema_migrations": "none",
+  "backup": {
+    "code_bundle_verified": true,
+    "source_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d"
+  },
+  "rollback": "Restore the previous source revision through GitHub/Lovable and republish; preserve database and uploads. Do not restore data over new user writes.",
+  "release_issue_resolved": "Initial deployment lacked the public Supabase URL and failed startup. Public browser-config fallbacks were added, rebuilt without environment values, republished and verified.",
+  "apple_status": "Unsigned simulator compile passed; no signed archive, TestFlight upload or App Review submission."
+}

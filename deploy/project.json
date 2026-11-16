@@ -6,7 +6,7 @@
   "provider": "Lovable",
   "source": {
     "location": "https://github.com/streamwalker/wardrobe-whisperer-style",
-    "revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
+    "revision": "68125d09b9010f29c4bede61074302209c6cad30",
     "subdirectory": "."
   },
   "build": {
@@ -45,7 +45,7 @@
       "/privacy",
       "/terms"
     ],
-    "release_evidence": "deploy/readiness.json"
+    "release_evidence": "deploy/releases/2026-11-16-web.json"
   },
   "rollback": {
     "method": "Restore reviewed source revision 1371ef1caa5be8784667648c1ddf490f0cd7006d through GitHub/Lovable and republish; no data/schema mutation is planned.",
@@ -53,7 +53,7 @@
   },
   "hosting_evidence": {
     "editor_url": "https://lovable.dev/projects/7a0ace2b-6614-44c5-a39d-036c8e22e68b",
-    "observed_hosted_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
+    "observed_hosted_revision": "68125d09b9010f29c4bede61074302209c6cad30",
     "project_visibility": "workspace_edit",
     "publish_audience": "public",
     "github_visibility": "public",

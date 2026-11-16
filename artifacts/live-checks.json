@@ -1,0 +1,182 @@
+{
+  "checkedAt": "2026-11-16T03:21:38.030Z",
+  "url": "https://dripslayer.streamwalkers.com",
+  "routes": [
+    {
+      "device": "iphone",
+      "route": "/",
+      "status": 200,
+      "title": "Less deciding.\nMore living.",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": [],
+      "revision": "68125d09b9010f29c4bede61074302209c6cad30"
+    },
+    {
+      "device": "iphone",
+      "route": "/auth",
+      "status": 200,
+      "title": "Make it yours.",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/wardrobe",
+      "status": 200,
+      "title": "Your wardrobe",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/outfits",
+      "status": 200,
+      "title": "Looks to live in",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/shop",
+      "status": 200,
+      "title": "Find your next favorite",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/profile",
+      "status": 200,
+      "title": "Your style profile",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Choose your plan",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/privacy",
+      "status": 200,
+      "title": "Your privacy",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "iphone",
+      "route": "/terms",
+      "status": 200,
+      "title": "Terms of service",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/",
+      "status": 200,
+      "title": "Less deciding.\nMore living.",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": [],
+      "revision": "68125d09b9010f29c4bede61074302209c6cad30"
+    },
+    {
+      "device": "desktop",
+      "route": "/auth",
+      "status": 200,
+      "title": "Make it yours.",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/wardrobe",
+      "status": 200,
+      "title": "Your wardrobe",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/outfits",
+      "status": 200,
+      "title": "Looks to live in",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/shop",
+      "status": 200,
+      "title": "Find your next favorite",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/profile",
+      "status": 200,
+      "title": "Your style profile",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Choose your plan",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/privacy",
+      "status": 200,
+      "title": "Your privacy",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    },
+    {
+      "device": "desktop",
+      "route": "/terms",
+      "status": 200,
+      "title": "Terms of service",
+      "overflow": false,
+      "videoAdvances": true,
+      "errors": []
+    }
+  ],
+  "controls": [
+    {
+      "device": "iphone",
+      "menuClosed": true,
+      "paused": true
+    },
+    {
+      "device": "desktop",
+      "menuClosed": true,
+      "paused": true
+    }
+  ]
+}
