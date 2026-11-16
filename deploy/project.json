@@ -25,7 +25,7 @@
     "identity_verified": true
   },
   "access": {
-    "method": "Lovable MCP for hosting; code transfer to public GitHub pending explicit approval",
+    "method": "Lovable MCP for hosting; GitHub review branch authorized by user",
     "credential_ref": "connected Lovable and GitHub accounts",
     "host_key_ref": ""
   },

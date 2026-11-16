@@ -2,6 +2,9 @@
   "design": "full-screen motion video with minimal overlay navigation",
   "approved_source_revision": "17ca7ad10760cd83102fbdc725fd2a69e7c24d67",
   "user_approval": "Let\u2019s go with this. I like it.",
-  "scope": "Visual design approval. Public source publishing and store account configuration remain pending.",
-  "status": "approved_design_release_preparation"
+  "scope": "Visual design and public GitHub review-branch push approved by the user. Store account configuration remains pending.",
+  "status": "approved_design_release_preparation",
+  "public_source_push_approved": true,
+  "public_source_destination": "https://github.com/streamwalker/wardrobe-whisperer-style",
+  "public_source_branch": "rebuild/ios-submission-prep"
 }
