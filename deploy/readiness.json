@@ -13,14 +13,15 @@
     "lint": "130 errors and 10 warnings; same as unchanged source baseline",
     "native_archive": "Xcode 26.6 unsigned simulator compilation passed; signed archive not created",
     "backend_integration": "Auth health and database REST read probes 200. Both new functions deployed, signed-out requests rejected 401. Live FK coverage reviewed. Authenticated end-to-end tests not run: no supported admin test-user creation access.",
-    "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout"
+    "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout",
+    "billing_enforcement": "Source audit completed; free item/match quotas and advertised paid feature restrictions are not centrally enforced. See docs/BILLING-READINESS.md."
   },
   "blockers": [
     "Apple signing credentials/provisioning and app/product registration",
     "RevenueCat configuration and secret setup",
     "Verified support and privacy contact/legal operator",
     "Native device/TestFlight tests and store screenshots",
-    "Review existing server-side Pro quota enforcement before paid launch",
+    "Implement and verify server-side Pro quota enforcement before paid launch (docs/BILLING-READINESS.md)",
     "Disposable-account authenticated verification, including deletion and subscription checks"
   ],
   "artifact_sha256": {
@@ -98,5 +99,18 @@
   "apple_team_id": "32N9W9HZ54",
   "apple_team_id_source": "supplied by owner",
   "apple_signing_status": "Team configured for Debug/Release automatic signing; certificate, provisioning and account access not verified",
-  "revenuecat_setup_status": "not configured, confirmed by owner"
+  "revenuecat_setup_status": "not configured, confirmed by owner",
+  "automation": {
+    "documentation": "docs/RELEASE-AUTOMATION.md",
+    "signed_ios_workflow": ".github/workflows/ios-testflight.yml",
+    "revenuecat_workflow": ".github/workflows/revenuecat-setup.yml",
+    "native_preview_workflow": ".github/workflows/ios-native-preview.yml",
+    "release_tests": "6 Node checks and 3 Python checks passed",
+    "account_access": "No Apple/RevenueCat credentials bound to this session; no browser-control tool exposed; GitHub secret-settings read returned HTTP403",
+    "catalog_setup_attempt": "Stopped before network mutations because REVENUECAT_V2_API_KEY was absent",
+    "signed_upload": "not performed",
+    "app_review_submission": "not performed",
+    "native_preview_run": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43801257055",
+    "native_preview_status": "Compilation passed; simulator capture in progress; not yet visually verified"
+  }
 }

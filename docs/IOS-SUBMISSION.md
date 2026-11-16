@@ -24,7 +24,7 @@ The iOS app uses native purchases, localized store prices, Restore Purchases, an
 6. `check-app-subscription` is deployed and rejects signed-out callers with 401. Complete signed-in verification after configuring RevenueCat. It verifies the Supabase access token and checks `pro` on the server using that verified user's UUID. It never trusts entitlement claims or an account ID supplied by the app.
 7. Test successful purchase, restore after reinstall, purchase cancellation, pending approval, expiration, billing retry/grace period, offline failure, account switching, and backend verification failure with Apple sandbox/TestFlight. Confirm a paid user can actually use every advertised Pro feature.
 
-The original app's server functions do not centrally enforce all advertised Pro quotas. Client gating is not a billing-security boundary. Server-side quota/entitlement enforcement and agreement on the limits must be reviewed before charging users at launch.
+The original app's server functions do not centrally enforce all advertised Pro quotas. Client gating is not a billing-security boundary. The [billing enforcement review](BILLING-READINESS.md) records the specific gaps and required verification. Enforcement, paid-feature claims and sandbox purchase tests must be completed before charging users at launch.
 
 ## Account deletion and data
 
