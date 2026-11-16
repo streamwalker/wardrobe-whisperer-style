@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -111,7 +112,7 @@ export default function AddItem() {
       const frontUrl = await uploadOne(file);
       const backUrl = backFile ? await uploadOne(backFile, "-back-analyze") : null;
 
-      const { data, error } = await supabase.functions.invoke("analyze-clothing", {
+      const { data, error } = await invokeAI("analyze-clothing", {
         body: { imageUrl: frontUrl, backImageUrl: backUrl ?? undefined },
       });
 

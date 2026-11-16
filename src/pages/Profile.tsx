@@ -1,3 +1,6 @@
+import { exportFile } from "@/lib/export-file";
+import { isIOSApp } from "@/lib/platform";
+import NativeSubscriptions from "@/components/NativeSubscriptions";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
@@ -229,7 +232,7 @@ export default function Profile() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Subscription</p>
           {isPro && <Badge className="neon-gradient-cyan-pink text-white border-0 gap-1"><Crown className="h-3 w-3" /> Pro</Badge>}
         </div>
-        {isPro ? (
+        {isIOSApp() ? <NativeSubscriptions /> : isPro ? (
           <div className="space-y-3">
             <p className="text-sm text-card-foreground">
               You're on the <span className="font-semibold capitalize">{currentPlan}</span> plan.
@@ -482,12 +485,7 @@ export default function Profile() {
                 ]);
                 const exportData = { profile: profileData, wardrobe_items: items, saved_outfits: outfits, exported_at: new Date().toISOString() };
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `drip-slayer-data-${new Date().toISOString().slice(0, 10)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
+                await exportFile(blob, `drip-slayer-data-${new Date().toISOString().slice(0, 10)}.json`);
                 toast.success("Data exported successfully");
               } catch {
                 toast.error("Failed to export data");
@@ -502,20 +500,16 @@ export default function Profile() {
             variant="destructive"
             className="gap-1.5"
             onClick={async () => {
-              if (!window.confirm("Are you sure you want to permanently delete your account and all data? This action cannot be undone.")) return;
+              if (!window.confirm("Permanently delete your account, wardrobe, outfits, and photos? This cannot be undone. Deleting your account does not cancel an Apple subscription; cancel it first in Apple Settings → Subscriptions.")) return;
               try {
-                await Promise.all([
-                  supabase.from("saved_outfits").delete().eq("user_id", user!.id),
-                  supabase.from("wardrobe_items").delete().eq("user_id", user!.id),
-                  supabase.from("wardrobe_shares").delete().eq("user_id", user!.id),
-                  supabase.from("profiles").delete().eq("user_id", user!.id),
-                ]);
+                const { error } = await supabase.functions.invoke("delete-account", { body: { confirmation: "DELETE" } });
+                if (error) throw error;
                 await supabase.auth.signOut();
                 queryClient.clear();
-                toast.success("Account data deleted");
+                toast.success("Your account has been deleted");
                 navigate("/auth");
               } catch {
-                toast.error("Failed to delete account data");
+                toast.error("Account deletion could not be completed. Please try again.");
               }
             }}
           >
@@ -580,7 +574,7 @@ function ShareSection({ userId }: { userId?: string }) {
   });
 
   const shareUrl = activeShare
-    ? `${window.location.origin}/shared/${activeShare.share_token}`
+    ? `https://dripslayer.streamwalkers.com/shared/${activeShare.share_token}`
     : "";
 
   const copyLink = async () => {

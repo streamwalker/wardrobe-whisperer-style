@@ -1,3 +1,30 @@
+# Drip Slayer
+
+Wardrobe and outfit assistant with a shared React web app and bundled Capacitor iOS app. The interface uses full-screen locally bundled video, minimal navigation, and text overlays throughout. See [motion design notes](docs/MOTION-DESIGN.md) and [the recorded preview](artifacts/motion-walkthrough.mp4).
+
+The iOS project is prepared for configuration and device testing; it is not signed or submitted. See [the submission handoff](docs/IOS-SUBMISSION.md) for Apple/RevenueCat setup, deployment gaps, listing copy, and required verification.
+
+```sh
+cp .env.example .env.local
+# Populate the public Supabase values and RevenueCat Apple SDK key.
+npm ci
+npm run dev
+```
+
+```sh
+npm run typecheck
+npm test
+npm run build
+npm run ios:sync
+npm run ios:open
+```
+
+Signing requires a Mac with Xcode and the Apple Developer team. Backend secrets belong in Supabase, never frontend environment variables. Deploy the new Edge Functions and verify deletion/purchases before releasing the changed frontend.
+
+Original project instructions follow.
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info

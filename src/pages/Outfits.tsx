@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useMemo, useRef } from "react";
 import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -161,7 +162,7 @@ export default function Outfits() {
       // Strip photos from wardrobe payload
       const stripped = allItems.map(({ photo, photo_back, ...rest }) => rest);
 
-      const { data, error } = await supabase.functions.invoke("inspire-outfit", {
+      const { data, error } = await invokeAI("inspire-outfit", {
         body: { imageUrl: publicUrl, wardrobeItems: stripped },
       });
       if (error) throw error;

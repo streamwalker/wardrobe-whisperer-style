@@ -36,27 +36,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 flex flex-col w-[calc(100%-2rem)] max-w-lg max-h-[90vh] sm:max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-black border-2 border-lcars-orange duration-200",
+        "fixed left-[50%] top-[50%] z-50 flex flex-col w-[calc(100%-2rem)] max-w-lg max-h-[90vh] sm:max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-card border border-border duration-200",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className,
       )}
       {...props}
     >
-      {/* LCARS modal header bar */}
-      <div className="flex items-stretch h-8 shrink-0">
-        <div className="bg-lcars-orange w-12 lcars-pill-l" />
-        <div className="flex-1 bg-black border-t-2 border-b-2 border-lcars-orange flex items-center px-3">
-          <span className="lcars-label text-[10px] text-lcars-peach">SUBSPACE PANEL</span>
-          <span className="lcars-numerals text-[10px] text-lcars-cyan ml-auto mr-3">04-0490</span>
-        </div>
-        <DialogPrimitive.Close
-          className="bg-lcars-red text-white px-4 lcars-pill-r flex items-center gap-1 lcars-label text-[10px] hover:brightness-110 transition-[filter] focus:outline-none focus:ring-2 focus:ring-lcars-cyan disabled:pointer-events-none"
-        >
-          <X className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">DISMISS</span>
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </div>
+      <DialogPrimitive.Close className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-card/80 text-foreground focus-visible:ring-2 focus-visible:ring-ring" aria-label="Close"><X className="h-5 w-5" /></DialogPrimitive.Close>
 
       <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
         {children}
@@ -82,7 +68,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("font-display text-xl uppercase tracking-widest text-lcars-peach leading-none", className)}
+    className={cn("font-display text-xl uppercase tracking-widest text-foreground leading-none", className)}
     {...props}
   />
 ));
@@ -92,7 +78,7 @@ const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-lcars-peach/70 font-sans", className)} {...props} />
+  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-foreground/70 font-sans", className)} {...props} />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 

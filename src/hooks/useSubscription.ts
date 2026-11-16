@@ -1,3 +1,4 @@
+import { isIOSApp } from "@/lib/platform";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +34,7 @@ export function useSubscription() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["subscription", user?.id],
     queryFn: async (): Promise<SubscriptionData> => {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
+      const { data, error } = await supabase.functions.invoke(isIOSApp() ? "check-app-subscription" : "check-subscription");
       if (error) throw error;
       return data as SubscriptionData;
     },
@@ -44,7 +45,7 @@ export function useSubscription() {
 
   const isPro = data?.subscribed ?? false;
 
-  const currentPlan = isPro
+  const currentPlan = isPro && isIOSApp() ? "Apple subscription" : isPro
     ? data?.price_id === STRIPE_PLANS.annual.price_id
       ? "annual"
       : "monthly"

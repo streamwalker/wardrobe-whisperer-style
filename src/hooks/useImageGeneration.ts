@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,7 +46,7 @@ export function useImageGeneration(items: WardrobeItem[], concurrency = DEFAULT_
 
     const generateOne = async (item: WardrobeItem) => {
       try {
-        const { data, error } = await supabase.functions.invoke("generate-clothing-image", {
+        const { data, error } = await invokeAI("generate-clothing-image", {
           body: { name: item.name, category: item.category, primary_color: item.primary_color },
         });
         if (error) throw error;

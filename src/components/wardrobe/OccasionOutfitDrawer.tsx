@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +80,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
 
     try {
       const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
-      const { data, error } = await supabase.functions.invoke("suggest-occasion-outfit", {
+      const { data, error } = await invokeAI("suggest-occasion-outfit", {
         body: {
           occasion: activeOccasion,
           weather: weather || undefined,
