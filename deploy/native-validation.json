@@ -1,0 +1,20 @@
+{
+  "status": "unsigned_simulator_build_passed",
+  "checked_at_utc": "2026-11-16",
+  "source_revision": "992ad2a297a65e63cef30c6ce0cbfddb3b9d9ea4",
+  "workflow_url": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43796590227",
+  "xcode": "26.6 (17F113)",
+  "checks": {
+    "npm_ci": "passed",
+    "typescript": "passed",
+    "unit_tests": "12 passed",
+    "web_bundle_and_capacitor_sync": "passed",
+    "ios_simulator_compile": "BUILD SUCCEEDED"
+  },
+  "signing": "disabled for compilation check",
+  "backend_configuration": "placeholder values for compilation only",
+  "store_archive": "not created",
+  "testflight_upload": "not performed",
+  "app_review_submission": "not performed",
+  "device_and_purchase_tests": "not performed"
+}

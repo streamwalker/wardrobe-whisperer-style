@@ -33,8 +33,8 @@
   "database": {
     "present": true,
     "backup_ref": "",
-    "migration_plan": "No SQL migrations in this change. New delete-account and check-app-subscription Edge Functions require deployment and staging verification.",
-    "state": "paused (Lovable Cloud status, 2026-11-16 UTC)"
+    "migration_plan": "No schema migrations. New delete-account and check-app-subscription Edge Functions deployed; live authenticated disposable-account verification still required.",
+    "state": "active; auth and database REST health checks passed 2026-11-16 UTC"
   },
   "verification": {
     "paths": [

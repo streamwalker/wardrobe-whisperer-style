@@ -1,6 +1,6 @@
 {
-  "status": "release_authorized_backend_paused",
-  "date": "2026-11-14",
+  "status": "web_release_in_progress_ios_unsigned",
+  "date": "2026-11-16",
   "canonical_url": "https://dripslayer.streamwalkers.com",
   "base_revision": "1371ef1caa5be8784667648c1ddf490f0cd7006d",
   "bundle_id_proposed": "com.streamwalkers.dripslayer",
@@ -11,18 +11,17 @@
     "capacitor_sync_ios": "passed; Xcode project generated, no native compilation",
     "browser_mobile": "Desktop 1440x960 and iPhone 393x852: 11 public routes, advancing video, no page errors or overflow; pause/resume, offscreen pause, session persistence, reduced motion, menu focus, and error poster fallback passed. Authenticated flows not exercised.",
     "lint": "130 errors and 10 warnings; same as unchanged source baseline",
-    "native_archive": "not run; Xcode/signing unavailable",
-    "backend_integration": "not run; backend deployment and staging account required",
+    "native_archive": "Xcode 26.6 unsigned simulator compilation passed; signed archive not created",
+    "backend_integration": "Auth health and database REST read probes 200. Both new functions deployed, signed-out requests rejected 401. Live FK coverage reviewed. Authenticated end-to-end tests not run: no supported admin test-user creation access.",
     "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout"
   },
   "blockers": [
-    "Resume existing Lovable Cloud database; currently paused",
     "Apple team signing and app/product registration",
     "RevenueCat configuration and secret setup",
-    "Supabase Edge Function deployment and disposable-account verification",
     "Verified support and privacy contact/legal operator",
     "Native device/TestFlight tests and store screenshots",
-    "Review existing server-side Pro quota enforcement before paid launch"
+    "Review existing server-side Pro quota enforcement before paid launch",
+    "Disposable-account authenticated verification, including deletion and subscription checks"
   ],
   "artifact_sha256": {
     "sw.js": "8d0dcc0bc6fa992e9ea9fb912d4b4a7abe9ec33954a514033af6ede263a8cf07",
