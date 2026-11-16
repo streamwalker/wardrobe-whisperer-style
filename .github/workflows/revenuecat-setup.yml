@@ -1,0 +1,36 @@
+name: Configure Drip Slayer RevenueCat catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dripslayer-revenuecat-setup
+  cancel-in-progress: false
+
+jobs:
+  configure:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate automation behavior
+        run: node scripts/release/release.test.mjs
+      - name: Configure the catalog
+        run: node scripts/release/revenuecat.mjs --apply --write-sdk-env
+        env:
+          REVENUECAT_V2_API_KEY: ${{ secrets.REVENUECAT_V2_API_KEY }}
+          REVENUECAT_PROJECT_ID: ${{ vars.REVENUECAT_PROJECT_ID }}
+      - name: Save only the public SDK configuration
+        uses: actions/upload-artifact@v4
+        with:
+          name: revenuecat-public-sdk-config
+          path: .env.production.local
+          include-hidden-files: true
+          retention-days: 7

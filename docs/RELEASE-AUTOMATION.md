@@ -18,6 +18,8 @@ With a RevenueCat **v2** API key bound as `REVENUECAT_V2_API_KEY`, run:
 npm run revenuecat:setup -- --apply --write-sdk-env
 ```
 
+Alternatively, store that key in the repository secret `REVENUECAT_V2_API_KEY` and run the **Configure Drip Slayer RevenueCat catalog** GitHub workflow. It consumes the key inside the runner without revealing it. Its artifact contains only the public Apple SDK configuration, which can then be used for the native build. `REVENUECAT_PROJECT_ID` may be supplied as a repository variable when targeting an existing project.
+
 The key needs project-configuration read/write permissions for projects, apps, products, entitlements, offerings and packages. `REVENUECAT_PROJECT_ID` can identify an existing Drip Slayer project explicitly. The command finds or creates the project and iOS app, adds both subscription catalog entries, links them to `pro`, creates the monthly/annual packages, and makes the offering current after linking. It reuses matching objects on subsequent runs. Ambiguous identities, archived records, and conflicting current offerings/package assignments stop the process.
 
 `--write-sdk-env` saves only the public Apple SDK key into the gitignored `.env.production.local`. It preserves existing settings and stops if a different Apple SDK key is already configured. The private v2 key is never written into frontend files or printed. HTTP mutations are not automatically retried; after an interrupted operation, rerunning first reads the catalog to find objects already created.
@@ -54,5 +56,7 @@ This performs an upload request, not an App Review submission. Verify Apple's pr
 - Three Python checks cover exact distribution-profile identity, wrong team/wildcard rejection, and expired/development-profile rejection.
 - Shell syntax and workflow YAML checks passed.
 - Actual signed Xcode execution, RevenueCat API mutations and Apple upload remain untested because credentials are unavailable.
+
+The separate **iOS native simulator preview** workflow builds with the public production backend configuration and captures signed-out iPhone/iPad home screens plus a short motion recording. It does not access private accounts or test subscriptions. Its images must be visually reviewed before use as store screenshots.
 
 Implementation references: [GitHub's signing guidance](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications), [Apple upload methods](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds), [RevenueCat API v2](https://www.revenuecat.com/docs/api-v2).
