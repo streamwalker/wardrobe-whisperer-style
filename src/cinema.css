@@ -34,7 +34,7 @@ a,button { touch-action: manipulation; }
 .cinema-menu-trigger { display: flex; gap: 12px; align-items: center; min-height: 44px; font-size: 12px; }
 .film-scene { position: relative; isolation: isolate; min-height: 100svh; overflow: hidden; display: flex; align-items: center; padding: 140px 8vw 140px; }
 .scene-opening { align-items: flex-end; justify-content: center; padding-bottom: 132px; }
-.scene-topline { position: absolute; top: 124px; left: 4vw; right: 4vw; display: flex; justify-content: space-between; font-size: 9px; letter-spacing: .2em; opacity: .8; }
+.scene-topline { position: absolute; top: calc(124px + env(safe-area-inset-top,0px)); left: 4vw; right: 4vw; display: flex; justify-content: space-between; font-size: 9px; letter-spacing: .2em; opacity: .8; }
 .scene-copy { position: relative; max-width: 850px; }
 .hero-copy { text-align: center; }
 .cinema-eyebrow { text-transform: uppercase; letter-spacing: .23em; font-size: 10px; font-weight: 500; margin-bottom: 26px; }
@@ -89,7 +89,7 @@ a,button { touch-action: manipulation; }
   .cinema-menu-trigger { gap: 8px; }
   .film-scene { padding: 120px 26px 140px; min-height: 100svh; }
   .scene-opening { padding-bottom: 145px; }
-  .scene-topline { top: 101px; left: 26px; right: 26px; font-size: 8px; }
+  .scene-topline { top: calc(101px + env(safe-area-inset-top,0px)); left: 26px; right: 26px; font-size: 8px; }
   .scene-topline span:last-child { display: none; }
   .cinema-eyebrow { font-size: 9px; margin-bottom: 22px; letter-spacing: .18em; }
   .scene-copy h1 { font-size: clamp(48px,13.8vw,80px); margin-bottom: 22px; line-height: 1.03; }
