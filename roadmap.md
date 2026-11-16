@@ -1,0 +1,2 @@
+- [ ] Backend release validation (read-only)
+- [ ] Lock in (publish) current version
