@@ -6,15 +6,15 @@ Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The
 
 - Proposed bundle ID: `com.streamwalkers.dripslayer`. Register this in Apple Developer and use the same explicit identifier in App Store Connect. Availability has not been verified.
 - Display name: Drip Slayer. Version/build: 1.0 / 1.
-- Apple Team ID and signing identity are not configured. Select the correct team in Xcode.
-- Source: `streamwalker/wardrobe-whisperer-style`, based on commit `1371ef1caa5be8784667648c1ddf490f0cd7006d`, which matches the live site's deployment metadata.
+- Apple Team ID: `32N9W9HZ54`, supplied by the owner and configured for both Debug and Release with automatic signing. Certificates, provisioning, and access to this team still need verification on the owner's Mac; the identifier itself does not grant Apple account access.
+- Source: `streamwalker/wardrobe-whisperer-style`. The verified web release and asset hashes are recorded in `deploy/releases/2026-11-16-web.json`.
 - Website target: https://dripslayer.streamwalkers.com. Verified Lovable project: `7a0ace2b-6614-44c5-a39d-036c8e22e68b` in Streamwalkers Corporation. GitHub main syncs to the editor; production publication is a separate action.
 - Supabase project reference: `zpctyufmvrvavnidovtp`, managed by Lovable Cloud. The owner resumed the database during release. Authentication health and database REST probes now return 200. The two new Edge Functions are deployed. No production data or schema changes were performed.
 - Production builds have public Supabase URL/key fallbacks in `vite.config.ts`; the gitignored `.env` is not supplied by Lovable's production build. Never replace the public key with a service-role key.
 
 ## Apple subscriptions through RevenueCat
 
-The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. Apple products are not yet configured or tested.
+The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. The owner confirmed RevenueCat is not set up yet; Apple products and RevenueCat configuration are not verified or tested.
 
 1. Create one auto-renewable subscription group, “Drip Slayer Pro”. Suggested product IDs: `com.streamwalkers.dripslayer.pro.monthly` and `com.streamwalkers.dripslayer.pro.annual`. Suggested existing web price equivalents: $4.99/month and $39.99/year; choose actual Apple pricing and territories in App Store Connect.
 2. Supply localized subscription names/descriptions, review screenshots, tax/banking agreements, availability, and review information.
@@ -50,7 +50,9 @@ npm run ios:sync
 npm run ios:open
 ```
 
-In Xcode open `ios/App/App.xcodeproj`, select App → Signing & Capabilities, select the Apple team, verify the Bundle ID, and enable the account's purchase capability as required. Let Swift packages resolve. Run on iPhone and iPad (the generated target currently supports both), then Product → Archive → Validate App → Distribute App → App Store Connect. Never commit certificates, provisioning profiles, or API private keys.
+In Xcode → Settings → Accounts, sign in to the Apple Developer account that belongs to team `32N9W9HZ54`. Open `ios/App/App.xcodeproj`, select App → Signing & Capabilities, and confirm this team is selected with automatic signing. Verify/register Bundle ID `com.streamwalkers.dripslayer` and enable the account's purchase capability as required. Let Swift packages resolve. Run on iPhone and iPad (the generated target currently supports both).
+
+Once subscriptions are configured and device tests pass, select Any iOS Device as the destination, then Product → Archive. In Organizer choose Validate App, then Distribute App → App Store Connect → Upload. Uploading makes the build available for TestFlight; App Review submission is a separate step in App Store Connect after completing listing, privacy, review and subscription details. Never commit certificates, provisioning profiles, or API private keys.
 
 The app bundles `dist`; it does not load the production website as its application shell. Camera/photo descriptions, native file exports/share sheets, a 1024px opaque icon, branded launch art, and a file timestamp privacy reason are prepared. Inspect Xcode's combined SDK privacy report before upload; the app's manifest does not replace the App Store privacy questionnaire.
 

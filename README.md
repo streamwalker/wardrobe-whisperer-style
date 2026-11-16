@@ -19,7 +19,7 @@ npm run ios:sync
 npm run ios:open
 ```
 
-Signing requires a Mac with Xcode and the Apple Developer team. Backend secrets belong in Supabase, never frontend environment variables. Deploy the new Edge Functions and verify deletion/purchases before releasing the changed frontend.
+Signing requires a Mac with Xcode and an Apple Developer account belonging to configured team `32N9W9HZ54`. Backend secrets belong in Supabase, never frontend environment variables. The website and new Edge Functions are live; authenticated deletion and Apple purchase testing still need completion before the iOS release.
 
 Original project instructions follow.
 

@@ -8,7 +8,7 @@
     "typecheck": "passed",
     "unit_tests": "12 passed, including account deletion authorization, paginated photos and failure handling",
     "web_build": "Passed; clean build with empty backend environment matches published JS/CSS/media hashes. Large bundle warning remains.",
-    "capacitor_sync_ios": "passed; Xcode project generated, no native compilation",
+    "capacitor_sync_ios": "passed; unsigned Xcode simulator compile passed separately (deploy/native-validation.json)",
     "browser_mobile": "Live desktop1440x960 and iPhone393x852:9 public routes, advancing video, HTTP200, no page errors or overflow; menu and pause controls passed. Authenticated flows not exercised.",
     "lint": "130 errors and 10 warnings; same as unchanged source baseline",
     "native_archive": "Xcode 26.6 unsigned simulator compilation passed; signed archive not created",
@@ -16,7 +16,7 @@
     "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout"
   },
   "blockers": [
-    "Apple team signing and app/product registration",
+    "Apple signing credentials/provisioning and app/product registration",
     "RevenueCat configuration and secret setup",
     "Verified support and privacy contact/legal operator",
     "Native device/TestFlight tests and store screenshots",
@@ -94,5 +94,9 @@
   "public_source_push_approved": true,
   "production_release_authorized": true,
   "live_revision": "68125d09b9010f29c4bede61074302209c6cad30",
-  "release_evidence": "deploy/releases/2026-11-16-web.json"
+  "release_evidence": "deploy/releases/2026-11-16-web.json",
+  "apple_team_id": "32N9W9HZ54",
+  "apple_team_id_source": "supplied by owner",
+  "apple_signing_status": "Team configured for Debug/Release automatic signing; certificate, provisioning and account access not verified",
+  "revenuecat_setup_status": "not configured, confirmed by owner"
 }
