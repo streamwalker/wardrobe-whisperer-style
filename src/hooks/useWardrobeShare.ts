@@ -36,7 +36,7 @@ export function useWardrobeShare(userId: string | undefined) {
         token = newShare.share_token;
       }
 
-      setShareLink(`${window.location.origin}/shared/${token}`);
+      setShareLink(`https://dripslayer.streamwalkers.com/shared/${token}`);
       setLinkCopied(false);
       setShareDialogOpen(true);
     } catch (err: any) {

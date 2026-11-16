@@ -1,4 +1,4 @@
-import { LcarsHeader, LcarsFrame, LcarsTickRow, type LcarsColor, lcarsCode } from "./LcarsPrimitives";
+import { type LcarsColor } from "./LcarsPrimitives";
 import { cn } from "@/lib/utils";
 
 interface LcarsSectionProps {
@@ -42,39 +42,21 @@ export function LcarsSection({
   className,
   children,
 }: LcarsSectionProps) {
-  return (
-    <section className={cn("space-y-2", className)}>
-      {tickRows && <LcarsTickRow className="opacity-70" />}
-      <LcarsHeader
-        title={title}
-        subtitle={subtitle}
-        code={code ?? lcarsCode(title)}
-        color={headerColor}
-        rightSlot={
-          rightSlot ? (
-            <div className="hidden md:flex items-stretch gap-1">{rightSlot}</div>
-          ) : undefined
-        }
-      />
-      {mobileActions && (
-        <div className="md:hidden flex items-stretch gap-1 overflow-x-auto pb-1 scrollbar-none">
-          {mobileActions}
-        </div>
-      )}
-      {rightSlot && (
-        <div className="md:hidden flex items-stretch gap-1 overflow-x-auto pb-1 scrollbar-none">
-          {rightSlot}
-        </div>
-      )}
-      <LcarsFrame
-        topColor={topColor}
-        sideColor={sideColor}
-        bottomColor={bottomColor}
-        variant={variant}
-      >
-        <div className={variant === "rounded" ? "" : "px-1 sm:px-2"}>{children}</div>
-      </LcarsFrame>
-      {tickRows && <LcarsTickRow className="opacity-50" dense />}
-    </section>
-  );
+  const labels: Record<string, string> = {
+    "WARDROBE": "Your wardrobe", "MY WARDROBE": "Your wardrobe", "TIER UPGRADE": "Choose your plan",
+    "AUTHORIZATION": "Make it yours.", "PROFILE": "Your style profile",
+    "CREW DOSSIER": "Your style profile", "SPECIMEN INTAKE": "Add a piece",
+    "BATCH UPLINK": "Bring it all together", "ACQUISITIONS": "Find your next favorite",
+    "STYLE LIBRARY": "Looks to live in", "DIRECTIVE 010 · TERMS OF SERVICE": "Terms of service",
+    "DIRECTIVE 011 · PRIVACY POLICY": "Your privacy", "GUEST ACCESS": "Shared wardrobe",
+    "ACCESS DENIED": "This link is unavailable",
+  };
+  return <section className={cn("cinema-section space-y-6", className)}>
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Your style, your rules</p><h1 className="cinema-page-title">{labels[title] ?? title.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase())}</h1></div>
+      {rightSlot && <div className="flex max-w-full flex-wrap items-center gap-2">{rightSlot}</div>}
+    </header>
+    {mobileActions && <div className="flex flex-wrap gap-2 md:hidden">{mobileActions}</div>}
+    <div>{children}</div>
+  </section>;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   CATEGORIES,
   TONE_FILTERS,
@@ -275,9 +275,16 @@ export default function Wardrobe() {
         sideColor="lavender"
         bottomColor="salmon"
         rightSlot={
-          <LcarsCodeChip code={`UNITS-${wardrobeWithPhotos.length.toString().padStart(3, "0")}`} color="cyan" />
+          <span className="rounded-full bg-secondary px-3 py-2 text-xs text-secondary-foreground">{wardrobeWithPhotos.length} items</span>
         }
       >
+      {!user && <div className="glass-card flex flex-col items-start gap-4 p-6 sm:p-8">
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">A little less “what should I wear?”</span>
+        <h2 className="max-w-lg text-3xl font-semibold leading-tight">Great outfits start with what you already own.</h2>
+        <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">Bring your wardrobe together, discover colors that work, and save looks you love. Sign in to make it yours.</p>
+        <Button asChild><Link to="/auth">Build my wardrobe <Sparkles className="h-4 w-4" /></Link></Button>
+      </div>}
+      {user && wardrobeWithPhotos.length === 0 && <div className="glass-card space-y-3 p-6"><h2 className="text-xl font-semibold">Your next great outfit starts here.</h2><p className="text-sm text-muted-foreground">Add a photo of your first piece to begin building your wardrobe.</p><Button asChild><Link to="/wardrobe/add">Add your first item</Link></Button></div>}
       <div className="space-y-2 sm:space-y-3">
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
           {imageGen.itemsMissingPhotos.length > 0 && (
@@ -353,11 +360,11 @@ export default function Wardrobe() {
       )}
 
       {/* Category tabs (mobile only) */}
-      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] md:hidden">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
         <button
           onClick={() => setActiveCategory("all")}
           className={cn(
-            "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
+            "shrink-0 rounded-full px-3 sm:px-4 min-h-11 py-2 text-xs sm:text-sm font-medium transition-colors",
             activeCategory === "all"
               ? "neon-gradient-cyan-pink text-white shadow-neon"
               : "glass-card text-secondary-foreground hover:border-neon-cyan/30",
@@ -370,7 +377,7 @@ export default function Wardrobe() {
             key={cat.value}
             onClick={() => setActiveCategory(cat.value)}
             className={cn(
-              "shrink-0 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors",
+              "shrink-0 rounded-full px-3 sm:px-4 min-h-11 py-2 text-xs sm:text-sm font-medium transition-colors",
               activeCategory === cat.value
                 ? "neon-gradient-cyan-pink text-white shadow-neon"
                 : "glass-card text-secondary-foreground hover:border-neon-cyan/30",
@@ -391,7 +398,7 @@ export default function Wardrobe() {
             key={t.value}
             onClick={() => filters.toggleTone(t.value)}
             className={cn(
-              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 min-h-11 py-2 text-xs font-medium transition-colors",
               filters.activeTones.has(t.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground",
@@ -408,7 +415,7 @@ export default function Wardrobe() {
             key={s.value}
             onClick={() => filters.toggleStyle(s.value)}
             className={cn(
-              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 min-h-11 py-2 text-xs font-medium transition-colors",
               filters.activeStyles.has(s.value)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground",
@@ -425,7 +432,7 @@ export default function Wardrobe() {
             key={p}
             onClick={() => filters.togglePattern(p)}
             className={cn(
-              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 min-h-11 py-2 text-xs font-medium capitalize transition-colors",
               filters.activePatterns.has(p)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground",
@@ -442,7 +449,7 @@ export default function Wardrobe() {
             key={t}
             onClick={() => filters.toggleTexture(t)}
             className={cn(
-              "shrink-0 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium capitalize transition-colors",
+              "shrink-0 rounded-full px-2.5 sm:px-3 min-h-11 py-2 text-xs font-medium capitalize transition-colors",
               filters.activeTextures.has(t)
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground",

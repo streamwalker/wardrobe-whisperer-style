@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, ImageIcon, Loader2, Sparkles, X, Check } from "lucide-react";
@@ -184,7 +185,7 @@ export default function BatchAddItems() {
         .from("wardrobe-photos")
         .getPublicUrl(filePath);
 
-      const { data, error } = await supabase.functions.invoke("analyze-clothing", {
+      const { data, error } = await invokeAI("analyze-clothing", {
         body: { imageUrl: urlData.publicUrl },
       });
       if (error) throw error;

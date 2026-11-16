@@ -1,3 +1,4 @@
+import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -137,7 +138,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
         body.selectedItems = strippedSelected;
       }
 
-      const { data, error } = await supabase.functions.invoke("match-outfit", { body });
+      const { data, error } = await invokeAI("match-outfit", { body });
 
       if (error) throw error;
 

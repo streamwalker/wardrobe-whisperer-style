@@ -1,3 +1,5 @@
+import { isIOSApp } from "@/lib/platform";
+import NativeSubscriptions from "@/components/NativeSubscriptions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Loader2, Crown, Zap } from "lucide-react";
@@ -34,6 +36,7 @@ export default function Pricing() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleCheckout = async (planKey: "monthly" | "annual") => {
+    if (isIOSApp()) return;
     if (!user) {
       navigate("/auth");
       return;
@@ -96,6 +99,7 @@ export default function Pricing() {
         </ul>
       </div>
 
+      {isIOSApp() ? <NativeSubscriptions /> : <>
       {/* Pro Tier */}
       <div className="glass-card gradient-border rounded-2xl p-5 space-y-5 relative overflow-hidden">
         <div className="absolute top-0 right-0">
@@ -160,6 +164,7 @@ export default function Pricing() {
           </div>
         )}
       </div>
+      </>}
     </div>
     </LcarsSection>
   );
