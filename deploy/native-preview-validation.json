@@ -1,0 +1,60 @@
+{
+  "status": "unsigned_native_home_capture_visually_verified",
+  "checked_at_utc": "2026-11-16",
+  "source_revision": "7107d1b41fa0f5c0fcbf267ae5ca5032104bb39e",
+  "workflow_url": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43802942625",
+  "artifact_id": 14197438144,
+  "artifact_sha256": "4168999263ddd9be36d8b4b1586c211d074b7a8d5806eb6513acdefdf21af79e",
+  "artifact_expires_at": "2026-11-23T04:31:12Z",
+  "devices": [
+    {
+      "family": "iPhone",
+      "name": "iPhone 17 Pro Max",
+      "udid": "5277349A-B219-4ED4-853A-8AE666B9F5B1",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+    },
+    {
+      "family": "iPad",
+      "name": "iPad Pro 13-inch (M5)",
+      "udid": "9F9B4A17-4195-40F0-8B46-728F6A6AA8EB",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+    }
+  ],
+  "screenshots": {
+    "iPhone": {
+      "screenshot": "artifacts/native-home-iphone.png",
+      "capture_file": "iPhone-home-later.png",
+      "width": 1320,
+      "height": 2868,
+      "sha256": "2d6afd437ccf0f2f82b7c6cfc8fdb98dce69b0b02b5adcfb856717adeb1b8695",
+      "successive_frame_mean_difference": 48.3213
+    },
+    "iPad": {
+      "screenshot": "artifacts/native-home-ipad.png",
+      "capture_file": "iPad-home.png",
+      "width": 2064,
+      "height": 2752,
+      "sha256": "30439e0bc5f0bd86031e974596b30a4e653c9ab36fc008aea755a9ef5647e79c",
+      "successive_frame_mean_difference": 32.1047
+    }
+  },
+  "checks": {
+    "release_automation_tests": "passed",
+    "production_backend_bundle": "passed",
+    "unsigned_xcode_compile": "passed",
+    "simulator_install_and_launch": "passed on both devices",
+    "visual_home_layout": "Logo, tagline, menu, title, CTA and motion control visible; corrected iPhone tagline/header overlap verified",
+    "motion": "Successive iPhone/iPad screenshots differ; iPhone H.264 recording visually inspected at 1s and 4s, duration 6.391667 seconds",
+    "production_browser_safe_area": "iPhone62px, iPad24px, desktop0px inset checks passed; see artifacts/live-safe-area-checks.json"
+  },
+  "limitations": [
+    "Signed-out home screens only; navigation interactions tested in browser, not native automation",
+    "No authenticated wardrobe, account deletion or purchase tests",
+    "Unsigned simulator build; not an App Store archive or a TestFlight build",
+    "Screenshots are verification captures. Review final store screenshot selection after functional testing; moving video capture can show rendering artifacts.",
+    "The short recording verifies motion and is not an App Store preview video"
+  ],
+  "signing": "not performed",
+  "testflight_upload": "not performed",
+  "app_review_submission": "not performed"
+}

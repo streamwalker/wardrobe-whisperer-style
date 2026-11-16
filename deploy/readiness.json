@@ -15,13 +15,14 @@
     "backend_integration": "Auth health and database REST read probes 200. Both new functions deployed, signed-out requests rejected 401. Live FK coverage reviewed. Authenticated end-to-end tests not run: no supported admin test-user creation access.",
     "changed_design_lint": "0 errors, 0 warnings in new cinema components, Index, AppLayout",
     "billing_enforcement": "Source audit completed; free item/match quotas and advertised paid feature restrictions are not centrally enforced. See docs/BILLING-READINESS.md.",
-    "safe_area_layout": "Production iPhone/iPad/desktop safe-area spacing and menu checks passed; corrected tagline/header overlap found in first native preview."
+    "safe_area_layout": "Production iPhone/iPad/desktop safe-area spacing and menu checks passed; corrected tagline/header overlap found in first native preview.",
+    "native_home_preview": "Passed actual iPhone17 Pro Max/iPad Pro13-inch iOS26.5 simulator launch and visual home/motion checks; safe-area fix verified. See deploy/native-preview-validation.json."
   },
   "blockers": [
     "Apple signing credentials/provisioning and app/product registration",
     "RevenueCat configuration and secret setup",
     "Verified support and privacy contact/legal operator",
-    "Native device/TestFlight tests and store screenshots",
+    "Authenticated native device/TestFlight tests, purchase tests and final store screenshot selection",
     "Implement and verify server-side Pro quota enforcement before paid launch (docs/BILLING-READINESS.md)",
     "Disposable-account authenticated verification, including deletion and subscription checks"
   ],
@@ -112,8 +113,9 @@
     "signed_upload": "not performed",
     "app_review_submission": "not performed",
     "native_preview_run": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43802942625",
-    "native_preview_status": "First native capture succeeded and showed advancing video. Safe-area fix passed production browser checks; native recapture running.",
+    "native_preview_status": "Passed; actual native home screenshots visually reviewed and motion verified",
     "signing_preflight_attempt": "GitHub run 43803616432 stopped before signing: all seven release settings absent",
-    "account_access_evidence": "deploy/account-access.json"
+    "account_access_evidence": "deploy/account-access.json",
+    "native_preview_evidence": "deploy/native-preview-validation.json"
   }
 }

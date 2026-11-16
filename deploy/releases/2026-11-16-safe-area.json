@@ -21,7 +21,7 @@
   },
   "browser_evidence": "artifacts/live-safe-area-checks.json",
   "browser_summary": "Production header/tagline spacing and menu passed with iPhone62px, iPad24px and desktop0px top safe-area overrides; no horizontal overflow or page errors.",
-  "native_capture_pending": "https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43802942625",
   "backend_changes": "none",
-  "rollback": "Restore source revision 68125d09b9010f29c4bede61074302209c6cad30 and republish, preserving database and uploads."
+  "rollback": "Restore source revision 68125d09b9010f29c4bede61074302209c6cad30 and republish, preserving database and uploads.",
+  "native_capture_evidence": "deploy/native-preview-validation.json"
 }
