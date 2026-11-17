@@ -19,7 +19,7 @@
     "native_home_preview": "Passed actual iPhone17 Pro Max/iPad Pro13-inch iOS26.5 simulator launch and visual home/motion checks; safe-area fix verified. See deploy/native-preview-validation.json."
   },
   "blockers": [
-    "Apple signing credentials/provisioning and app/product registration",
+    "Apple signing credentials/provisioning, subscription pricing/availability and build upload",
     "RevenueCat configuration and secret setup",
     "Verified support and privacy contact/legal operator",
     "Authenticated native device/TestFlight tests, purchase tests and final store screenshot selection",
@@ -117,5 +117,8 @@
     "signing_preflight_attempt": "GitHub run 43803616432 stopped before signing: all seven release settings absent",
     "account_access_evidence": "deploy/account-access.json",
     "native_preview_evidence": "deploy/native-preview-validation.json"
-  }
+  },
+  "apple_app_id": "6835746469",
+  "apple_account_setup_evidence": "deploy/apple-account-setup.json",
+  "apple_browser_access": "Authenticated Apple browser session verified; team32N9W9HZ54 confirmed"
 }

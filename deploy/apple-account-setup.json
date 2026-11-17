@@ -1,0 +1,48 @@
+{
+  "status": "apple_app_and_subscription_drafts_prepared_not_submitted",
+  "team_id": "32N9W9HZ54",
+  "team_name": "Phillip Russell",
+  "membership": "active, verified in Developer portal",
+  "app_id": "6835746469",
+  "bundle_id": "com.streamwalkers.dripslayer",
+  "app_url": "https://appstoreconnect.apple.com/apps/6835746469/appstore/info",
+  "version": "1.0",
+  "app_status": "Prepare for Submission",
+  "subtitle": "Your everyday style companion",
+  "primary_category": "Lifestyle",
+  "subscription_group_id": "22587801",
+  "products": [
+    {
+      "id": "com.streamwalkers.dripslayer.pro.monthly",
+      "name": "Drip Slayer Pro Monthly",
+      "package": "$rc_monthly",
+      "duration": "ONE_MONTH",
+      "suggested_us_price": "4.99",
+      "apple_id": "6835749244",
+      "apple_status": "draft; pricing and availability pending"
+    },
+    {
+      "id": "com.streamwalkers.dripslayer.pro.annual",
+      "name": "Drip Slayer Pro Annual",
+      "package": "$rc_annual",
+      "duration": "ONE_YEAR",
+      "suggested_us_price": "39.99",
+      "apple_id": "6835749947",
+      "apple_status": "draft; pricing and availability pending"
+    }
+  ],
+  "sku": "requested dripslayer-ios-001; not independently verified",
+  "verification_run": "b8d03d0f-5bd2-4c27-b052-d377f5bd9e01",
+  "setup_run": "54a29a82-1adf-40d1-afe5-40bdc283d5df",
+  "subscription_run": "f51ffa0f-5747-4dc8-abd3-e908e7d617c3",
+  "existing_identifier_note": "com.dripslayer.app registration was preserved. Apple rejected an app creation attempt with that ID as already used; prepared com.streamwalkers.dripslayer was registered and verified on app6835746469.",
+  "remaining": [
+    "RevenueCat setup and secure keys",
+    "Signing credentials and signed build upload",
+    "Subscription pricing/availability and review assets",
+    "Billing enforcement and authenticated purchase tests",
+    "Privacy, age rating, content rights, support/reviewer details"
+  ],
+  "app_review_submission": "not performed",
+  "public_app_store_release": "not performed"
+}

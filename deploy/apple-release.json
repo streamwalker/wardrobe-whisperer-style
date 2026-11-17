@@ -13,14 +13,21 @@
       "name": "Drip Slayer Pro Monthly",
       "package": "$rc_monthly",
       "duration": "ONE_MONTH",
-      "suggested_us_price": "4.99"
+      "suggested_us_price": "4.99",
+      "apple_id": "6835749244",
+      "apple_status": "draft; pricing and availability pending"
     },
     {
       "id": "com.streamwalkers.dripslayer.pro.annual",
       "name": "Drip Slayer Pro Annual",
       "package": "$rc_annual",
       "duration": "ONE_YEAR",
-      "suggested_us_price": "39.99"
+      "suggested_us_price": "39.99",
+      "apple_id": "6835749947",
+      "apple_status": "draft; pricing and availability pending"
     }
-  ]
+  ],
+  "apple_app_id": "6835746469",
+  "apple_subscription_group_id": "22587801",
+  "bundle_registration_status": "registered and independently verified in App Store Connect"
 }

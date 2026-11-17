@@ -4,7 +4,7 @@ Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The
 
 ## Identity and accounts
 
-- Proposed bundle ID: `com.streamwalkers.dripslayer`. Register this in Apple Developer and use the same explicit identifier in App Store Connect. Availability has not been verified.
+- Registered bundle ID: `com.streamwalkers.dripslayer`. Verified on App Store Connect app `6835746469`, version 1.0, Prepare for Submission. See `deploy/apple-account-setup.json` for current account setup evidence.
 - Display name: Drip Slayer. Version/build: 1.0 / 1.
 - Apple Team ID: `32N9W9HZ54`, supplied by the owner and configured for both Debug and Release with automatic signing. Certificates, provisioning, and access to this team still need verification on the owner's Mac; the identifier itself does not grant Apple account access.
 - Source: `streamwalker/wardrobe-whisperer-style`. The verified web release and asset hashes are recorded in `deploy/releases/2026-11-16-web.json`.
@@ -14,7 +14,7 @@ Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The
 
 ## Apple subscriptions through RevenueCat
 
-The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. The owner confirmed RevenueCat is not set up yet; Apple products and RevenueCat configuration are not verified or tested.
+The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. The owner confirmed RevenueCat is not set up yet; Apple monthly/annual product drafts now exist in group `22587801`; pricing, availability, RevenueCat configuration and purchase tests remain incomplete.
 
 1. Create one auto-renewable subscription group, “Drip Slayer Pro”. Suggested product IDs: `com.streamwalkers.dripslayer.pro.monthly` and `com.streamwalkers.dripslayer.pro.annual`. Suggested existing web price equivalents: $4.99/month and $39.99/year; choose actual Apple pricing and territories in App Store Connect.
 2. Supply localized subscription names/descriptions, review screenshots, tax/banking agreements, availability, and review information.
