@@ -114,7 +114,7 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground">17. Contact</h2>
-            <p>For questions about these Terms, contact us at: <span className="text-primary">legal@dripslayer.com</span></p>
+            <p>For questions about these Terms, contact us at: <a className="text-primary underline" href="mailto:Support@streamwalkers.com">Support@streamwalkers.com</a></p>
           </section>
         </div>
       </div>

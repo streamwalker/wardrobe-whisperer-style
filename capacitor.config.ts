@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // Provisional: replace with the existing App Store Connect Bundle ID before signing.
+  // Matches App Store Connect app 6835746469.
   appId: 'com.streamwalkers.dripslayer',
   appName: 'Drip Slayer',
   webDir: 'dist',

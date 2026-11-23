@@ -17,6 +17,7 @@ import NotFound from "@/pages/NotFound";
 import SharedWardrobe from "@/pages/SharedWardrobe";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Support from "@/pages/Support";
 import Index from "@/pages/Index";
 import { MotionProvider, MotionControl } from "@/components/cinema/MotionContext";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/shared/:token" element={<SharedWardrobe />} />
             <Route path="/" element={<Index />} />
             <Route element={<AppLayout />}>

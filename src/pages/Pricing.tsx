@@ -26,7 +26,6 @@ const PRO_FEATURES = [
   "Shopping Mode (AI analyze & match)",
   "Occasion-based suggestions",
   "Export outfits as PDF",
-  "Priority AI processing",
 ];
 
 export default function Pricing() {

@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
               <li><strong>Objection:</strong> Object to processing based on legitimate interests</li>
               <li><strong>Withdraw Consent:</strong> Withdraw consent at any time without affecting prior processing</li>
             </ul>
-            <p>You can exercise your data export and account deletion rights directly from your Profile page. For other requests, contact us at <span className="text-primary">privacy@dripslayer.com</span>.</p>
+            <p>You can exercise your data export and account deletion rights directly from your Profile page. For other requests, contact us at <a className="text-primary underline" href="mailto:Support@streamwalkers.com">Support@streamwalkers.com</a>.</p>
           </section>
 
           <section>
@@ -125,8 +125,8 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground">12. Contact Us</h2>
-            <p>For privacy-related inquiries: <span className="text-primary">privacy@dripslayer.com</span></p>
-            <p>Data Protection Officer: <span className="text-primary">dpo@dripslayer.com</span></p>
+            <p>For privacy-related inquiries: <a className="text-primary underline" href="mailto:Support@streamwalkers.com">Support@streamwalkers.com</a></p>
+            <p>Privacy support: <a className="text-primary underline" href="mailto:Support@streamwalkers.com">Support@streamwalkers.com</a></p>
           </section>
         </div>
       </div>
