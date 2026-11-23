@@ -55,7 +55,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
   ({ side = "right", className, children, ...props }, ref) => (
     <SheetPortal>
       <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+      <SheetPrimitive.Content ref={ref} className={cn("adaptive-sheet", sheetVariants({ side }), className)} {...props}>
         {/* LCARS header strip */}
         <div className="flex items-stretch h-9 shrink-0">
           <div className="bg-lcars-orange w-12 lcars-pill-l" />
@@ -69,7 +69,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         </div>
-        <div className="flex-1 overflow-auto p-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-auto p-6">{children}</div>
       </SheetPrimitive.Content>
     </SheetPortal>
   ),

@@ -73,6 +73,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground">5. Data Storage & Security</h2>
+            <p>If you choose Use with Siri in the iOS app, Drip Slayer stores the selected outfit name and clothing list locally on that device. Siri can read this selection aloud, including through a compatible home device. The selection expires after 24 hours and is cleared when you sign out or switch accounts in the app. You can also clear it from Your outfits. This feature does not copy your photos, body measurements, or authentication credentials into Siri storage. Apple processes Siri requests under your Apple privacy settings.</p>
             <p>Your data is stored in secure, encrypted databases. We implement industry-standard security measures including:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Encryption in transit (TLS/HTTPS) and at rest</li>

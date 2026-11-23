@@ -20,6 +20,11 @@ export default function Support() {
           <h2 className="text-xl font-semibold">Your account and data</h2>
           <p>Use Profile → Data &amp; Privacy to export your data or delete your account. If you cannot sign in or need help with a privacy request, contact our support email above.</p>
         </section>
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">Apple devices and Siri</h2>
+          <p>The iOS app adapts to iPhone and iPad windows, including folding and resizing. On iPhone, open Your outfits and choose Use with Siri on a saved outfit. Then say “Read my outfit in Drip Slayer.” This selected outfit is available for 24 hours; Clear Siri selection removes it sooner.</p>
+          <p>HomePod requires Personal Requests and the associated iPhone. Siri availability on HomePod and HomeView depends on your Apple setup and software. On HomeView, you can also open dripslayer.streamwalkers.com in Safari and sign in to use the web wardrobe. Drip Slayer is not a standalone HomeView app.</p>
+        </section>
         <nav aria-label="Support links" className="flex flex-wrap gap-6 underline underline-offset-4">
           <Link to="/">Drip Slayer home</Link>
           <Link to="/privacy">Privacy policy</Link>

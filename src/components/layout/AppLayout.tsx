@@ -5,7 +5,7 @@ import VideoBackdrop, { type Film } from '@/components/cinema/VideoBackdrop';
 export default function AppLayout() {
   const { pathname } = useLocation();
   const film: Film = pathname.startsWith('/wardrobe') ? 'closet' : pathname === '/outfits' ? 'city' : 'street';
-  return <div className="cinema-workspace">
+  return <div className="cinema-workspace cinema-app-layout">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:bg-background focus:p-4">Skip to content</a>
     <VideoBackdrop key={film} film={film} fixed shade="workspace" />
     <CinemaHeader />

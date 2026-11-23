@@ -5,6 +5,6 @@ const config: CapacitorConfig = {
   appId: 'com.streamwalkers.dripslayer',
   appName: 'Drip Slayer',
   webDir: 'dist',
-  ios: { contentInset: 'automatic', backgroundColor: '#101014' },
+  ios: { contentInset: 'never', backgroundColor: '#101014' },
 };
 export default config;

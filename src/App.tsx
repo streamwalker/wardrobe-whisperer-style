@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import AppLayout from "@/components/layout/AppLayout";
+import VoiceAccountSync from "@/components/VoiceAccountSync";
 import Wardrobe from "@/pages/Wardrobe";
 import AddItem from "@/pages/AddItem";
 import BatchAddItems from "@/pages/BatchAddItems";
@@ -27,6 +28,7 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false} disableTransitionOnChange>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <VoiceAccountSync />
         <Toaster />
         <Sonner />
         <BrowserRouter>

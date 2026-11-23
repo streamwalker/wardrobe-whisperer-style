@@ -1,5 +1,6 @@
 import { exportFile } from "@/lib/export-file";
 import { isIOSApp } from "@/lib/platform";
+import { clearVoiceOutfit } from "@/lib/outfit-voice";
 import NativeSubscriptions from "@/components/NativeSubscriptions";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -58,6 +59,7 @@ export default function Profile() {
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
 
   const handleLogout = async () => {
+    await clearVoiceOutfit();
     await supabase.auth.signOut();
     queryClient.clear();
     navigate("/auth");
@@ -502,6 +504,7 @@ export default function Profile() {
             onClick={async () => {
               if (!window.confirm("Permanently delete your account, wardrobe, outfits, and photos? This cannot be undone. Deleting your account does not cancel an Apple subscription; cancel it first in Apple Settings → Subscriptions.")) return;
               try {
+                await clearVoiceOutfit();
                 const { error } = await supabase.functions.invoke("delete-account", { body: { confirmation: "DELETE" } });
                 if (error) throw error;
                 await supabase.auth.signOut();

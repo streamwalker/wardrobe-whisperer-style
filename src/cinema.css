@@ -118,3 +118,63 @@ a,button { touch-action: manipulation; }
 }
 @media(prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .cinema-cta:hover,.cinema-menu-links>a:hover .menu-label { transform: none; } }
 @media(max-width: 700px) { .film-city .film-poster { object-position: 68% center; } }
+
+/* Size by the current window, including Duo folds and iPad multitasking. The
+   native host also bounds the web surface around active reserved regions. */
+.cinema-header {
+  padding-left: max(23px, 4vw, env(safe-area-inset-left, 0px));
+  padding-right: max(23px, 4vw, env(safe-area-inset-right, 0px));
+}
+.cinema-workspace-content {
+  min-width: 0;
+  padding-left: max(22px, 5vw, env(safe-area-inset-left, 0px));
+  padding-right: max(22px, 5vw, env(safe-area-inset-right, 0px));
+  overflow-wrap: anywhere;
+}
+.cinema-menu-panel {
+  padding-left: max(26px, 7vw, env(safe-area-inset-left, 0px));
+  padding-right: max(26px, 7vw, env(safe-area-inset-right, 0px));
+  max-height: 100dvh;
+}
+.cinema-menu-top,.cinema-menu-footer { flex-shrink: 0; }
+.menu-label { min-width: 0; }
+.adaptive-dialog { max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+.adaptive-sheet { max-height: 100dvh; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.motion-control { right: max(22px, 4vw, env(safe-area-inset-right, 0px)); }
+.cinema-mobile-nav { left: max(22px, env(safe-area-inset-left, 0px)); }
+
+/* A persistent side rail gives expanded phone and compact tablet windows the
+   same destinations without squeezing the centered desktop header. */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .cinema-app-layout .cinema-desktop-nav { display: none; }
+  .cinema-app-layout .cinema-workspace-content { padding-left: max(150px, calc(env(safe-area-inset-left, 0px) + 132px)); }
+  .cinema-app-layout .cinema-mobile-nav {
+    display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+    position: fixed; z-index: 41; top: 140px; bottom: auto;
+    padding: 10px; width: 104px; max-width: none;
+    border: 1px solid #ffffff30; border-radius: 22px;
+    background: #111111c0; backdrop-filter: blur(18px); font-size: 12px;
+  }
+  .cinema-mobile-nav a { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .cinema-mobile-nav a[aria-current] { background: #ffffff20; border-radius: 12px; }
+}
+@media (max-width: 699px) {
+  .cinema-header-actions { gap: 16px; }
+  .cinema-start { display: none; }
+  .cinema-mobile-nav { display: flex; position: fixed; z-index: 41; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); gap: 16px; padding: 0 14px; max-width: calc(100% - 100px); border: 1px solid #ffffff30; border-radius: 50px; background: #111111c0; backdrop-filter: blur(18px); font-size: 11px; }
+  .cinema-mobile-nav a { min-height: 44px; display: flex; align-items: center; }
+  .cinema-mobile-nav a[aria-current] { text-decoration: underline; text-underline-offset: 5px; }
+  .motion-control span { display: none; }
+}
+@media (max-height: 540px) {
+  .cinema-header { height: calc(60px + env(safe-area-inset-top, 0px)); }
+  .cinema-workspace-content { padding-top: calc(84px + env(safe-area-inset-top, 0px)); }
+  .cinema-menu-links { padding: 18px 0; }
+  .cinema-menu-links>a { padding: 10px 0; }
+  .menu-label { font-size: 23px; }
+  .cinema-app-layout .cinema-mobile-nav { top: 84px; }
+  .film-scene { min-height: 100svh; padding-top: 100px; }
+}
+@media (max-height: 540px) and (max-width: 699px) {
+  .cinema-app-layout .cinema-mobile-nav { top: auto; }
+}

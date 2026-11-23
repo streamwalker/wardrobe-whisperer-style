@@ -1,4 +1,6 @@
 import { invokeAI } from "@/lib/invoke-ai";
+import { isIOSApp } from "@/lib/platform";
+import { clearVoiceOutfit, selectVoiceOutfit } from "@/lib/outfit-voice";
 import { useState, useMemo, useRef } from "react";
 import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +60,18 @@ export default function Outfits() {
   const queryClient = useQueryClient();
   const [activeMood, setActiveMood] = useState("all");
   const [exporting, setExporting] = useState(false);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+
+  const useWithSiri = async (outfit: SavedOutfit) => {
+    if (!user) return;
+    setVoiceBusy(true);
+    try {
+      await selectVoiceOutfit(user.id, outfit.name, outfit.item_ids.map(id => getItemById(id)?.name ?? '').filter(Boolean));
+      toast.success('Ready for Siri for 24 hours. Say: “Read my outfit in Drip Slayer.”');
+    } catch {
+      toast.error('Could not save your Siri selection. Please try again.');
+    } finally { setVoiceBusy(false); }
+  };
 
   // Inspire-mode state
   const [inspireSheetOpen, setInspireSheetOpen] = useState(false);
@@ -123,6 +137,7 @@ export default function Outfits() {
 
   const deleteOutfit = useMutation({
     mutationFn: async (id: string) => {
+      await clearVoiceOutfit();
       const { error } = await supabase.from("saved_outfits").delete().eq("id", id);
       if (error) throw error;
     },
@@ -422,6 +437,15 @@ export default function Outfits() {
 
       {renderInspireCta}
 
+      {isIOSApp() && <section className="rounded-xl border border-white/20 p-4 space-y-2" aria-label="Siri outfit selection">
+        <h2 className="text-lg">Your outfit, spoken aloud</h2>
+        <p className="text-sm text-muted-foreground">Choose Use with Siri on an outfit below, then say “Read my outfit in Drip Slayer.” Siri can read its name and clothing list for 24 hours, including through HomePod Personal Requests. People nearby may hear it.</p>
+        <Button variant="outline" onClick={async () => {
+          try { await clearVoiceOutfit(); toast.success('Siri selection cleared.'); }
+          catch { toast.error('Could not clear your Siri selection.'); }
+        }}>Clear Siri selection</Button>
+      </section>}
+
       <div data-tour="outfits-mood-filter" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {MOOD_FILTERS.map((f) => (
           <button
@@ -447,7 +471,7 @@ export default function Outfits() {
 
       {filteredOutfits.map((outfit) => (
         <div key={outfit.id} className="rounded-xl glass-card gradient-border hover-lift p-4 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-display text-base font-semibold text-card-foreground">
               {outfit.name}
             </h3>
@@ -519,6 +543,7 @@ export default function Outfits() {
           {outfit.explanation && (
             <p className="text-sm leading-relaxed text-muted-foreground">{outfit.explanation}</p>
           )}
+          {isIOSApp() && <Button variant="outline" disabled={voiceBusy} onClick={() => useWithSiri(outfit)}>Use with Siri</Button>}
         </div>
       ))}
 
