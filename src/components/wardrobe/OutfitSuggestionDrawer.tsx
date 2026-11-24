@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -392,7 +393,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
                             style={{ backgroundColor: repItem.color_hex }}
                           >
                             {repItem.photo && (
-                              <img
+                              <WardrobePhoto compact
                                 src={repItem.photo}
                                 alt={repItem.name}
                                 className="h-full w-full object-cover"

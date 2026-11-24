@@ -1,6 +1,6 @@
 # Automated iOS release operations
 
-The website is live. Apple Team ID `32N9W9HZ54` is configured. The automation below is prepared and locally tested; the workflows have **not** signed a release archive, uploaded to TestFlight, or submitted to App Review. RevenueCat project `0862e3bd` was created manually on November 23; its Apple credentials/catalog remain incomplete.
+The website is live. Apple Team ID `32N9W9HZ54` is configured. The automation below is prepared and locally tested; the workflows have **not** signed a release archive, uploaded to TestFlight, or submitted to App Review. RevenueCat project `0862e3bd` was created manually on November 23; its Apple purchase credentials and catalog were configured manually on November 24 and verified in RevenueCat. These account changes do not populate GitHub Actions credentials.
 
 The November 16 workflow attempts had no Apple/RevenueCat credential bindings. Later preparation used the owner's browser and Mac; these do not automatically populate GitHub Actions secrets. The GitHub connection can publish source, but reading repository secret settings returned `403 Resource not accessible by integration`. Credentials must be supplied through a secure account/environment connection; a Team ID does not grant account access. Never paste private keys or passwords into chat or commit them.
 
@@ -26,7 +26,7 @@ The key needs project-configuration read/write permissions for projects, apps, p
 
 `--write-sdk-env` saves only the public Apple SDK key into the gitignored `.env.production.local`. It preserves existing settings and stops if a different Apple SDK key is already configured. The private v2 key is never written into frontend files or printed. HTTP mutations are not automatically retried; after an interrupted operation, rerunning first reads the catalog to find objects already created.
 
-Creating RevenueCat catalog entries does **not** create or price Apple products. Apple store credentials, App Store Connect product registration/pricing/review metadata, and the original-app-user restore policy still require verification with account access. The runtime function also needs `REVENUECAT_SECRET_API_KEY`, a suitable RevenueCat **v1** server key, in Lovable/Supabase secrets. Do not substitute the catalog's v2 management key or put any private key in `VITE_*` variables.
+Creating RevenueCat catalog entries does **not** create or price Apple products. Apple store credentials, App Store Connect product registration/pricing/review metadata, and the original-app-user restore policy still require verification with account access. The runtime subscriber lookup is configured using the verified public Apple SDK key under the existing deployed function's legacy `REVENUECAT_SECRET_API_KEY` setting. RevenueCat v1 GET subscriber supports this public app key; no additional administrative key was created. Do not substitute the catalog's v2 management key or put any private key in `VITE_*` variables.
 
 ## Signed build and TestFlight
 

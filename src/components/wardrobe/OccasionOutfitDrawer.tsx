@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { invokeAI } from "@/lib/invoke-ai";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -301,7 +302,7 @@ export default function OccasionOutfitDrawer({ allWardrobeItems, open, onOpenCha
                             style={{ backgroundColor: wi.color_hex }}
                           >
                             {wi.photo && (
-                              <img
+                              <WardrobePhoto compact
                                 src={wi.photo}
                                 alt={wi.name}
                                 className="h-full w-full object-cover"

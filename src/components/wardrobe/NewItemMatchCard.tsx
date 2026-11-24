@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { describeOutfitPalette } from "@/lib/color-theory";
@@ -45,7 +46,7 @@ function PieceTile({
         style={{ backgroundColor: item.color_hex }}
       >
         {item.photo ? (
-          <img
+          <WardrobePhoto compact
             src={item.photo}
             alt={item.name}
             className="h-full w-full object-contain p-1"

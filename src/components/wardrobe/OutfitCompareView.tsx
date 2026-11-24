@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { useState } from "react";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
 import { ArrowRight, Check, ZoomIn } from "lucide-react";
@@ -75,7 +76,7 @@ function Tile({
         style={{ backgroundColor: item.color_hex }}
       >
         {hasPhoto ? (
-          <img
+          <WardrobePhoto compact
             src={item.photo}
             alt={item.name}
             className="h-full w-full object-contain p-2"

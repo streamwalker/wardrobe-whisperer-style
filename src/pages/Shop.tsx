@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { invokeAI } from "@/lib/invoke-ai";
 import { useState, useRef, useMemo } from "react";
 import { Camera, Upload, Loader2, Sparkles, X, ImageIcon, Plus, Check, Crown, Lock } from "lucide-react";
@@ -399,7 +400,7 @@ export default function Shop() {
                     <div key={id} className="shrink-0 w-20 rounded-lg overflow-hidden glass-card">
                       <div className="aspect-square w-full overflow-hidden" style={{ backgroundColor: wi.color_hex }}>
                         {wi.photo && (
-                          <img src={wi.photo} alt={wi.name} className="h-full w-full object-cover" loading="lazy" />
+                          <WardrobePhoto compact src={wi.photo} alt={wi.name} className="h-full w-full object-cover" loading="lazy" />
                         )}
                       </div>
                       <p className="truncate px-1.5 py-1 text-[10px] font-medium text-card-foreground">

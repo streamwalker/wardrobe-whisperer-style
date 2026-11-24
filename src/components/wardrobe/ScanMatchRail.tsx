@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import type { ScoredMatch } from "@/lib/catalog-match";
 import { LcarsCodeChip } from "@/components/lcars/LcarsPrimitives";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,7 @@ export default function ScanMatchRail({ label, icon, matches, emptyHint, onItemC
                   style={{ backgroundColor: it.color_hex }}
                 >
                   {it.photo ? (
-                    <img
+                    <WardrobePhoto compact
                       src={it.photo}
                       alt={it.name}
                       className="h-full w-full object-contain p-1"

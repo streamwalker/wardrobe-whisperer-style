@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { invokeAI } from "@/lib/invoke-ai";
 import { isIOSApp } from "@/lib/platform";
 import { clearVoiceOutfit, selectVoiceOutfit } from "@/lib/outfit-voice";
@@ -536,7 +537,7 @@ export default function Outfits() {
                       style={{ backgroundColor: wi.color_hex }}
                     >
                       {wi.photo && (
-                        <img
+                        <WardrobePhoto compact
                           src={wi.photo}
                           alt={wi.name}
                           className="h-full w-full object-cover"

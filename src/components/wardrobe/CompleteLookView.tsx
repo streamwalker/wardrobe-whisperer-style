@@ -1,3 +1,4 @@
+import WardrobePhoto from "@/components/wardrobe/WardrobePhoto";
 import { invokeAI } from "@/lib/invoke-ai";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -184,7 +185,7 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
               style={{ backgroundColor: item.color_hex }}
             >
               {item.photo && (
-                <img src={item.photo} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                <WardrobePhoto compact src={item.photo} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
               )}
               <span className="absolute top-1.5 left-1.5 rounded-full bg-primary/90 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary-foreground">
                 Owned
@@ -398,7 +399,7 @@ export default function CompleteLookView({ outfit, existingItems, allWardrobeIte
                       style={{ backgroundColor: item.color_hex }}
                     >
                       {item.photo && (
-                        <img src={item.photo} alt={item.name} className="h-full w-full object-contain p-1.5" loading="lazy" />
+                        <WardrobePhoto compact src={item.photo} alt={item.name} className="h-full w-full object-contain p-1.5" loading="lazy" />
                       )}
                     </div>
                     <div className="px-2 py-1.5">

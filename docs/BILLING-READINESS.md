@@ -1,6 +1,6 @@
 # Billing enforcement review
 
-Reviewed source and live database schema on 2026-11-24. This is a source audit, not an authenticated production test. The Apple purchase path is prepared, but paid iOS launch remains blocked by the gaps below as well as account configuration and sandbox purchase testing.
+Reviewed source and live database schema on 2026-11-24. This includes source/schema review and an authenticated live matching failure reproduction; purchase scenarios remain untested. The Apple purchase path is prepared, but paid iOS launch remains blocked by the gaps below as well as account configuration and sandbox purchase testing.
 
 | Advertised behavior | Current implementation | Remaining work |
 | --- | --- | --- |
@@ -14,6 +14,6 @@ Reviewed source and live database schema on 2026-11-24. This is a source audit, 
 
 The enforcement change needs a server-owned entitlement source, verified Stripe/RevenueCat state, expiration/revocation handling, and database protections that clients cannot edit. Provider outages must produce an explicit verification-unavailable response instead of silently treating an existing paid customer as free. Never invalidate existing web subscribers while adding Apple billing.
 
-Release verification must include concurrent requests at the free limits; direct database/API attempts; successful, pending, canceled, expired and restored Apple purchases; existing Stripe subscribers; provider outages; and account deletion. Use disposable accounts and sandbox purchases. These tests have not been run in the current session because account access and billing configuration are unavailable.
+Release verification must include concurrent requests at the free limits; direct database/API attempts; successful, pending, canceled, expired and restored Apple purchases; existing Stripe subscribers; provider outages; and account deletion. Use disposable accounts and sandbox purchases. These tests have not been run in the current session because sandbox identities and complete Apple product availability/review metadata are not yet prepared. RevenueCat credentials, catalog and backend lookup configuration are now saved.
 
 Subscription screens now distinguish checking, unavailable, verified free and verified Pro. Unknown state does not advertise a Free current plan or offer a duplicate purchase. Account-keyed queries and purchase-result guards prevent a previous account response being displayed as current access. These UI protections do not replace the server quota/entitlement work above.
