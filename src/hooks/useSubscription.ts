@@ -21,7 +21,7 @@ export const STRIPE_PLANS = {
   },
 } as const;
 
-interface SubscriptionData {
+export interface SubscriptionData {
   subscribed: boolean;
   product_id?: string | null;
   price_id?: string | null;
@@ -29,13 +29,17 @@ interface SubscriptionData {
 }
 
 export function useSubscription() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const provider = isIOSApp() ? "apple" : "stripe";
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["subscription", user?.id],
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["subscription", user?.id, provider],
     queryFn: async (): Promise<SubscriptionData> => {
       const { data, error } = await supabase.functions.invoke(isIOSApp() ? "check-app-subscription" : "check-subscription");
       if (error) throw error;
+      if (!data || typeof data.subscribed !== "boolean") {
+        throw new Error("Subscription verification unavailable");
+      }
       return data as SubscriptionData;
     },
     enabled: !!user,
@@ -43,7 +47,10 @@ export function useSubscription() {
     staleTime: 30_000,
   });
 
-  const isPro = data?.subscribed ?? false;
+  // Missing/failed verification is never evidence that an account is free.
+  const status = authLoading ? "checking" : !user ? "signed-out" : isError ? "unavailable"
+    : isLoading || !data ? "checking" : data.subscribed ? "pro" : "free";
+  const isPro = status === "pro";
 
   const currentPlan = isPro && isIOSApp() ? "Apple subscription" : isPro
     ? data?.price_id === STRIPE_PLANS.annual.price_id
@@ -53,7 +60,9 @@ export function useSubscription() {
 
   return {
     isPro,
-    isLoading,
+    status,
+    isLoading: status === "checking",
+    isUnavailable: status === "unavailable",
     subscription: data ?? null,
     currentPlan,
     refetch,

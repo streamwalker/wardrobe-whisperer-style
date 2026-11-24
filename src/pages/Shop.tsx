@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { useQueryClient } from "@tanstack/react-query";
 import { type WardrobeItem } from "@/lib/wardrobe-data";
@@ -47,7 +48,7 @@ export default function Shop() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { isPro } = useSubscription();
+  const { isPro, isLoading: subscriptionLoading, isUnavailable, refetch } = useSubscription();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -243,7 +244,7 @@ export default function Shop() {
       </div>
 
       {/* Pro gate */}
-      {!isPro ? (
+      {subscriptionLoading || isUnavailable ? <SubscriptionStatus checking={subscriptionLoading} retry={refetch} /> : !isPro ? (
         <div className="flex flex-col items-center justify-center gap-5 py-12 text-center">
           <div className="empty-state-blob">
             <div className="flex h-20 w-20 items-center justify-center rounded-full glass-card relative z-10">

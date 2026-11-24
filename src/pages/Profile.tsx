@@ -4,6 +4,7 @@ import { clearVoiceOutfit } from "@/lib/outfit-voice";
 import NativeSubscriptions from "@/components/NativeSubscriptions";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isPro, currentPlan, subscription } = useSubscription();
+  const { isPro, currentPlan, subscription, isLoading: subscriptionLoading, isUnavailable, refetch } = useSubscription();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -234,7 +235,7 @@ export default function Profile() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Subscription</p>
           {isPro && <Badge className="neon-gradient-cyan-pink text-white border-0 gap-1"><Crown className="h-3 w-3" /> Pro</Badge>}
         </div>
-        {isIOSApp() ? <NativeSubscriptions /> : isPro ? (
+        {isIOSApp() ? <NativeSubscriptions /> : subscriptionLoading || isUnavailable ? <SubscriptionStatus checking={subscriptionLoading} retry={refetch} /> : isPro ? (
           <div className="space-y-3">
             <p className="text-sm text-card-foreground">
               You're on the <span className="font-semibold capitalize">{currentPlan}</span> plan.

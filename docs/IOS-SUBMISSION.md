@@ -1,6 +1,6 @@
 # Drip Slayer iOS release preparation
 
-Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The native project compiles successfully for the iOS simulator under Xcode 26.6, but is **not signed, uploaded to TestFlight, or submitted for App Review**.
+Status as of 24 November 2026: the website is live; device support compiled with Xcode 27.2 on November 23. No TestFlight upload or App Review submission is verified. A signed archive and App Store distribution IPA were exported locally on November 24; the IPA signature and exact distribution profile passed local checks. It is a preparation build without production RevenueCat configuration, not an upload-ready release. See the dated local release checkpoint for signing evidence, and [the review packet](APP-REVIEW-PACKET.md) for privacy/age-rating evidence and remaining gates.
 
 ## Identity and accounts
 
@@ -14,7 +14,7 @@ Status: the rebuilt website is live at https://dripslayer.streamwalkers.com. The
 
 ## Apple subscriptions through RevenueCat
 
-The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. The owner confirmed RevenueCat is not set up yet; Apple monthly/annual product drafts now exist in group `22587801`; pricing, availability, RevenueCat configuration and purchase tests remain incomplete.
+The iOS app uses native purchases, localized store prices, Restore Purchases, and Apple subscription management. Web checkout remains on the website. RevenueCat project `0862e3bd` exists but Apple app/credential/catalog setup remains incomplete; Apple monthly/annual product drafts now exist in group `22587801`; monthly USD $4.99 and annual USD $39.99 base prices and equal service level 1 were saved November 23. Availability, RevenueCat configuration and purchase tests remain incomplete.
 
 1. Create one auto-renewable subscription group, “Drip Slayer Pro”. Suggested product IDs: `com.streamwalkers.dripslayer.pro.monthly` and `com.streamwalkers.dripslayer.pro.annual`. Suggested existing web price equivalents: $4.99/month and $39.99/year; choose actual Apple pricing and territories in App Store Connect.
 2. Supply localized subscription names/descriptions, review screenshots, tax/banking agreements, availability, and review information.
@@ -68,13 +68,13 @@ The app bundles `dist`; it does not load the production website as its applicati
 - Description: Drip Slayer brings your wardrobe together in one place. Add clothing photos, organize pieces by category, explore color and style matches, and save outfits you love. Use AI clothing analysis and occasion suggestions to discover new ways to wear what you own. Personalize recommendations with optional style preferences and sizing information. Drip Slayer Pro adds unlimited wardrobe items and AI outfit matching, shopping analysis, occasion suggestions, and PDF outfit exports. Pro is an optional auto-renewing subscription. Pricing is displayed before purchase. Manage or cancel in your Apple account settings.
 - Privacy URL: https://dripslayer.streamwalkers.com/privacy (publish updated policy first)
 - Marketing URL: https://dripslayer.streamwalkers.com
-- Support URL: **needs a verified support page/contact**
-- Copyright/legal entity: **owner must confirm**
+- Support URL: https://dripslayer.streamwalkers.com/support — published and verified November 23; contact Support@streamwalkers.com.
+- Copyright listing saved November 23: 2026 Streamwalkers Corporation.
 - Review notes draft: Account required for personal wardrobe storage. Supply a working reviewer account through App Store Connect. Add items using the + button; save and match outfits from Wardrobe and Outfits. Pro subscriptions can be purchased and restored from Profile or Pricing. Account deletion is in Profile → Data & Privacy. AI processing requests permission before first use each session.
 
 Complete the current age-rating questionnaire honestly; do not infer a rating from this draft. Privacy labels likely need email/user ID, user photos/content, style/profile data, and purchase history linked to the user for app functionality. Assess optional skin tone, measurements, diagnostics, and SDK collection using Apple's definitions and the actual production configuration. Do not select “Data Not Collected”. No advertising SDK was added.
 
-Replace or verify existing `privacy@dripslayer.com` and `dpo@dripslayer.com` contacts; these came from the original app and have not been verified. Review the Terms for the actual legal operator, subscription terms, and any outdated web-only claims. Apple's standard EULA link is included on the native paywall.
+The original unverified dripslayer.com contacts were replaced with the owner-supplied Support@streamwalkers.com on November 23. Review the Terms for the actual legal operator, subscription terms, and any outdated web-only claims. Apple's standard EULA link is included on the native paywall.
 
 ## Required evidence before submission
 

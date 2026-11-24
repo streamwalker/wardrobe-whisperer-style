@@ -1,8 +1,8 @@
 # Automated iOS release operations
 
-The website is live. Apple Team ID `32N9W9HZ54` is configured. The automation below is prepared and locally tested; it has **not** created a RevenueCat project, signed a release archive, uploaded to TestFlight, or submitted to App Review.
+The website is live. Apple Team ID `32N9W9HZ54` is configured. The automation below is prepared and locally tested; the workflows have **not** signed a release archive, uploaded to TestFlight, or submitted to App Review. RevenueCat project `0862e3bd` was created manually on November 23; its Apple credentials/catalog remain incomplete.
 
-The current task has no Apple/RevenueCat credential bindings or connected browser-control tool. The GitHub connection can publish source, but reading repository secret settings returned `403 Resource not accessible by integration`. Credentials must be supplied through a secure account/environment connection; a Team ID does not grant account access. Never paste private keys or passwords into chat or commit them.
+The November 16 workflow attempts had no Apple/RevenueCat credential bindings. Later preparation used the owner's browser and Mac; these do not automatically populate GitHub Actions secrets. The GitHub connection can publish source, but reading repository secret settings returned `403 Resource not accessible by integration`. Credentials must be supplied through a secure account/environment connection; a Team ID does not grant account access. Never paste private keys or passwords into chat or commit them.
 
 The workflows were also attempted against the actual repository on 2026-11-16. The [signing preflight](https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803616432) reported all seven required release settings missing and stopped before building/signing. The [RevenueCat setup attempt](https://github.com/streamwalker/wardrobe-whisperer-style/actions/runs/43803650188) passed its automation tests, then stopped before API requests because `REVENUECAT_V2_API_KEY` was absent. No Apple or RevenueCat records were created by those attempts. See [the recorded access check](../deploy/account-access.json).
 

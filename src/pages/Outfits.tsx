@@ -4,6 +4,7 @@ import { clearVoiceOutfit, selectVoiceOutfit } from "@/lib/outfit-voice";
 import { useState, useMemo, useRef } from "react";
 import { Heart, Trash2, Loader2, LogIn, FileDown, Camera, Sparkles, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useWardrobeItems } from "@/hooks/useWardrobeItems";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { exportOutfitsPdf } from "@/lib/export-outfits-pdf";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
@@ -57,6 +58,8 @@ const moodEmoji: Record<string, string> = {
 
 export default function Outfits() {
   const { user, loading: authLoading } = useAuth();
+  const { refetch: verifySubscription } = useSubscription();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeMood, setActiveMood] = useState("all");
   const [exporting, setExporting] = useState(false);
@@ -87,6 +90,16 @@ export default function Outfits() {
     if (filteredOutfits.length === 0) return;
     setExporting(true);
     try {
+      const verified = await verifySubscription();
+      if (verified.error || !verified.data) {
+        toast.error('Could not verify Pro access. Please try again.');
+        return;
+      }
+      if (!verified.data.subscribed) {
+        toast.info('PDF outfit export is included with Drip Slayer Pro.');
+        navigate('/pricing');
+        return;
+      }
       const pdfOutfits = filteredOutfits.map((outfit) => ({
         name: outfit.name,
         mood: outfit.mood,

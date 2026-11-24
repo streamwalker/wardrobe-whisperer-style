@@ -1,17 +1,19 @@
 # Billing enforcement review
 
-Reviewed source on 2026-11-16. This is a source audit, not an authenticated production test. The Apple purchase path is prepared, but paid iOS launch remains blocked by the gaps below as well as account configuration and sandbox purchase testing.
+Reviewed source and live database schema on 2026-11-24. This is a source audit, not an authenticated production test. The Apple purchase path is prepared, but paid iOS launch remains blocked by the gaps below as well as account configuration and sandbox purchase testing.
 
 | Advertised behavior | Current implementation | Remaining work |
 | --- | --- | --- |
 | Free: 20 wardrobe items | `src/pages/AddItem.tsx`, `src/pages/Shop.tsx`, and `src/hooks/useWardrobeItems.ts` insert directly into `wardrobe_items`. The checked-in insert policy verifies ownership; no subscription count trigger was found. | Enforce the item cap atomically in the database, covering direct inserts, seeding, imports and transfers. Preserve existing wardrobes and allow reads/deletes when a subscription expires. |
 | Free: 3 AI outfit matches/month | `supabase/functions/match-outfit/index.ts` authenticates the caller, then invokes AI. No usage ledger or monthly reservation was found. | Add a server-owned usage ledger and atomic per-user reservation before AI requests. Define the UTC monthly boundary, concurrency behavior and release of failed reservations. Count related matching entry points consistently. |
 | Pro: shopping analysis and occasion suggestions | `src/pages/Shop.tsx` gates the visible UI. `analyze-clothing`, `match-outfit` and `suggest-occasion-outfit` authenticate callers without checking paid eligibility. | Verify eligibility in the server entry points. Clothing analysis used to add ordinary wardrobe items must remain available under the free plan; do not trust a client-supplied paid/free mode to authorize shopping requests. |
-| Pro: PDF exports | `src/pages/Outfits.tsx` calls a local PDF generator without checking Pro. | Reconcile the advertised tier and application behavior. A local UI gate can guide normal use but cannot secure data already downloaded by the user. |
-| Pro: priority AI processing | No priority queue or differentiated AI scheduling was found in the checked-in functions. | Implement the promised behavior or remove that claim from the paid offer before launch. |
+| Pro: PDF exports | `src/pages/Outfits.tsx` now refetches server subscription status before PDF generation; free users open plans and failed verification stops with retry guidance. | Regression tests cover Pro/free/unavailable paths. A local UI gate can guide normal use but cannot secure data already downloaded by the user. |
+| Pro: priority AI processing | No priority queue exists; the unsupported claim was removed from the paid offer on November 23. | Keep this claim absent unless differentiated scheduling is implemented and tested. |
 
 `check-app-subscription` looks up RevenueCat using the verified Supabase user ID and fails closed when its server key is missing. `check-subscription` checks Stripe separately. Neither function currently creates a shared entitlement record consumed by the wardrobe policies or AI endpoints. A client `isPro` flag must never authorize those operations.
 
 The enforcement change needs a server-owned entitlement source, verified Stripe/RevenueCat state, expiration/revocation handling, and database protections that clients cannot edit. Provider outages must produce an explicit verification-unavailable response instead of silently treating an existing paid customer as free. Never invalidate existing web subscribers while adding Apple billing.
 
 Release verification must include concurrent requests at the free limits; direct database/API attempts; successful, pending, canceled, expired and restored Apple purchases; existing Stripe subscribers; provider outages; and account deletion. Use disposable accounts and sandbox purchases. These tests have not been run in the current session because account access and billing configuration are unavailable.
+
+Subscription screens now distinguish checking, unavailable, verified free and verified Pro. Unknown state does not advertise a Free current plan or offer a duplicate purchase. Account-keyed queries and purchase-result guards prevent a previous account response being displayed as current access. These UI protections do not replace the server quota/entitlement work above.

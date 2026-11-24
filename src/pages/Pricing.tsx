@@ -1,5 +1,6 @@
 import { isIOSApp } from "@/lib/platform";
 import NativeSubscriptions from "@/components/NativeSubscriptions";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Loader2, Crown, Zap } from "lucide-react";
@@ -31,7 +32,7 @@ const PRO_FEATURES = [
 export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isPro, currentPlan, isLoading: subLoading } = useSubscription();
+  const { isPro, currentPlan, status, isLoading: subLoading, isUnavailable, refetch } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleCheckout = async (planKey: "monthly" | "annual") => {
@@ -40,6 +41,7 @@ export default function Pricing() {
       navigate("/auth");
       return;
     }
+    if (subLoading || isUnavailable || isPro) return;
     setLoadingPlan(planKey);
     try {
       const plan = STRIPE_PLANS[planKey];
@@ -84,7 +86,7 @@ export default function Pricing() {
             <h3 className="font-display text-lg font-semibold text-foreground">Free</h3>
             <p className="text-2xl font-bold text-foreground">$0</p>
           </div>
-          {!isPro && !subLoading && (
+          {status === 'free' && (
             <Badge variant="secondary">Current Plan</Badge>
           )}
         </div>
@@ -122,7 +124,7 @@ export default function Pricing() {
           ))}
         </ul>
 
-        {isPro ? (
+        {subLoading || isUnavailable ? <SubscriptionStatus checking={subLoading} retry={refetch} /> : isPro ? (
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               You're on the <span className="font-semibold text-foreground capitalize">{currentPlan}</span> plan.
