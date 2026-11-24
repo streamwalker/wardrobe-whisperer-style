@@ -1,3 +1,4 @@
+import { REVENUECAT_APPLE_PUBLIC_KEY } from "../_shared/revenuecat-public.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Content-Type": "application/json" };
 Deno.serve(async req => {
@@ -10,7 +11,7 @@ Deno.serve(async req => {
     const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { data, error } = await client.auth.getUser(token);
     if (error || !data.user) return reply(401, { error: "Unauthorized" });
-    const key = Deno.env.get("REVENUECAT_SECRET_API_KEY");
+    const key = Deno.env.get("REVENUECAT_API_KEY") || Deno.env.get("REVENUECAT_SECRET_API_KEY") || REVENUECAT_APPLE_PUBLIC_KEY;
     if (!key) return reply(503, { error: "Subscriptions unavailable" });
     // Server lookup uses the verified Supabase user ID, never client-supplied entitlement claims.
     const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(data.user.id)}`, { headers: { Authorization: `Bearer ${key}` } });

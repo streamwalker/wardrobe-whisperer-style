@@ -1,3 +1,4 @@
+import WardrobePhoto from "./WardrobePhoto";
 import { useEffect, useState } from "react";
 import { type WardrobeItem, type WardrobeCategory } from "@/lib/wardrobe-data";
 import { Check, ZoomIn, LayoutGrid, Rows3 } from "lucide-react";
@@ -74,7 +75,7 @@ function ItemTile({
       style={{ backgroundColor: item.color_hex }}
     >
       {hasPhoto && (
-        <img
+        <WardrobePhoto
           src={item.photo}
           alt={item.name}
           className="h-full w-full object-contain p-1.5"

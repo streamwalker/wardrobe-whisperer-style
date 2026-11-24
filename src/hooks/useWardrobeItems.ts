@@ -67,5 +67,5 @@ export function useWardrobeItems(userId: string | undefined) {
     photo_back: row.photo_back_url || undefined,
   }));
 
-  return { items, isLoading, rawDbItems: dbItems };
+  return { items, isLoading, rawDbItems: dbItems, error: query.error, refetch: query.refetch };
 }

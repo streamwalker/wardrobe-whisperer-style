@@ -40,30 +40,45 @@ export async function exportOutfitsPdf(outfits: PdfOutfit[]) {
     card.style.cssText =
       "margin:16px 40px;border:1px solid #e5e5e5;border-radius:12px;padding:20px 24px;page-break-inside:avoid;";
 
-    const moodTag = outfit.mood
-      ? `<span style="display:inline-block;background:#f4f4f5;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;margin-left:8px;">${moodEmoji[outfit.mood] || "👔"} ${outfit.mood}</span>`
-      : "";
-
-    const itemsHtml = outfit.items
-      .map(
-        (item) => `
-      <div style="flex-shrink:0;width:110px;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5;">
-        <div style="width:110px;height:110px;${item.photo ? `background-image:url(${item.photo});background-size:cover;background-position:center;` : ""}background-color:${item.photo ? "#f4f4f5" : item.color_hex};"></div>
-        <p style="margin:0;padding:4px 6px;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</p>
-      </div>`
-      )
-      .join("");
-
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;margin-bottom:12px;">
-        <span style="font-size:14px;font-weight:600;">Look ${idx + 1}: ${outfit.name}</span>
-        ${moodTag}
-      </div>
-      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;">
-        ${itemsHtml}
-      </div>
-      ${outfit.explanation ? `<p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#555;">${outfit.explanation}</p>` : ""}
-    `;
+    const title = document.createElement("div");
+    title.style.cssText = "display:flex;align-items:center;margin-bottom:12px;font-size:14px;font-weight:600;";
+    title.textContent = `Look ${idx + 1}: ${outfit.name}`;
+    if (outfit.mood) {
+      const mood = document.createElement("span");
+      mood.style.cssText = "background:#f4f4f5;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;margin-left:8px;";
+      mood.textContent = `${moodEmoji[outfit.mood] || "👔"} ${outfit.mood}`;
+      title.appendChild(mood);
+    }
+    card.appendChild(title);
+    const items = document.createElement("div");
+    items.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;padding-bottom:4px;";
+    for (const item of outfit.items) {
+      const tile = document.createElement("div");
+      tile.style.cssText = "flex-shrink:0;width:110px;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5;";
+      const photo = document.createElement("div");
+      photo.style.cssText = "width:110px;height:110px;background-size:cover;background-position:center;";
+      photo.style.backgroundColor = item.color_hex || "#f4f4f5";
+      if (item.photo) {
+        try {
+          const url = new URL(item.photo, window.location.origin);
+          if (url.protocol === "https:" || (url.protocol === "http:" && url.origin === window.location.origin)) {
+            photo.style.backgroundImage = `url(${JSON.stringify(url.href)})`;
+          }
+        } catch { /* Invalid images leave the item's color swatch visible. */ }
+      }
+      const label = document.createElement("p");
+      label.style.cssText = "margin:0;padding:4px 6px;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+      label.textContent = item.name;
+      tile.append(photo, label);
+      items.appendChild(tile);
+    }
+    card.appendChild(items);
+    if (outfit.explanation) {
+      const explanation = document.createElement("p");
+      explanation.style.cssText = "margin:12px 0 0;font-size:12px;line-height:1.5;color:#555;";
+      explanation.textContent = outfit.explanation;
+      card.appendChild(explanation);
+    }
     container.appendChild(card);
   });
 
@@ -92,7 +107,7 @@ export async function exportOutfitsPdf(outfits: PdfOutfit[]) {
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       backgroundColor: "#ffffff",
     });
 

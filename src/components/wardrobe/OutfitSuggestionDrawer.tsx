@@ -1,5 +1,5 @@
 import { invokeAI } from "@/lib/invoke-ai";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,8 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const requestSequence = useRef(0);
   const [hasLoaded, setHasLoaded] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   // Map of outfitKey → which save mode was used. Absence = unsaved.
@@ -73,27 +75,33 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
   const [completingOutfit, setCompletingOutfit] = useState<OutfitSuggestion | null>(null);
   const [density, setDensity] = useState<BoardDensity>(() => {
     if (typeof window === "undefined") return "full";
-    const stored = window.localStorage.getItem("outfit-board-density");
-    return stored === "compact" ? "compact" : "full";
+    try {
+      const stored = window.localStorage.getItem("outfit-board-density");
+      return stored === "compact" ? "compact" : "full";
+    } catch { return "full"; }
   });
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("outfit-board-density", density);
+      try { window.localStorage.setItem("outfit-board-density", density); } catch { /* Storage can be unavailable in restricted browsing. */ }
     }
   }, [density]);
   const { user } = useAuth();
 
   const isInspireMode = !!inspirationImageUrl;
-  const itemsKey = isInspireMode
+  const selectionKey = isInspireMode
     ? `inspire::${inspirationImageUrl}`
     : items.map((i) => i.id).sort().join(",");
+  const itemsKey = `${user?.id ?? 'signed-out'}::${selectionKey}`;
 
   useEffect(() => {
     if (!open) {
       setCompletingOutfit(null);
+      setLoading(false);
+      setLoadingMore(false);
       return;
     }
     if (hasLoaded === itemsKey) return;
+    setRequestError(null);
 
     // Inspire / prefetched mode: use the supplied outfits directly, no fetch.
     if (prefetchedOutfits) {
@@ -112,9 +120,14 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
       setIncompatible(null);
       fetchSuggestions(items, []);
     }
+    // Closing the panel, switching accounts or changing picks invalidates the
+    // outstanding response so it cannot overwrite the current selection.
+    return () => { requestSequence.current += 1; };
   }, [open, itemsKey, prefetchedOutfits]);
 
   const fetchSuggestions = async (selectedItems: WardrobeItem[], excludeOutfits: string[][]) => {
+    const requestId = ++requestSequence.current;
+    setRequestError(null);
     const isInitial = excludeOutfits.length === 0;
     if (isInitial) {
       setLoading(true);
@@ -124,8 +137,8 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
     }
 
     try {
-      const stripped = allWardrobeItems.map(({ photo, ...rest }) => rest);
-      const strippedSelected = items.map(({ photo, ...rest }) => rest);
+      const stripped = allWardrobeItems.map(({ photo, photo_back, ...rest }) => rest);
+      const strippedSelected = selectedItems.map(({ photo, photo_back, ...rest }) => rest);
 
       const body: any = {
         wardrobeItems: stripped,
@@ -139,17 +152,29 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
       }
 
       const { data, error } = await invokeAI("match-outfit", { body });
+      if (requestId !== requestSequence.current) return;
 
       if (error) throw error;
+      if (!data || typeof data !== 'object') throw new Error('AI styling returned an incomplete response. Please try again.');
 
       // Handle incompatibility response
       if (data.compatible === false) {
+        if (typeof data.reason !== 'string' || !Array.isArray(data.suggested_replacements)) {
+          throw new Error('AI styling returned an incomplete response. Please try again.');
+        }
         setIncompatible(data as IncompatibilityResult);
         setHasLoaded(itemsKey);
         return;
       }
 
-      const newOutfits: OutfitSuggestion[] = data.outfits ?? [];
+      if (!Array.isArray(data.outfits)) throw new Error('AI styling returned an incomplete response. Please try again.');
+      const validIds = new Set(allWardrobeItems.map(item => item.id));
+      const newOutfits: OutfitSuggestion[] = data.outfits.filter((outfit: OutfitSuggestion) =>
+        outfit && typeof outfit.name === 'string' && typeof outfit.explanation === 'string' &&
+        typeof outfit.mood === 'string' && Array.isArray(outfit.item_ids) &&
+        outfit.item_ids.length > 0 && outfit.item_ids.every(id => validIds.has(id)) &&
+        selectedItems.every(item => outfit.item_ids.includes(item.id))
+      );
 
       if (newOutfits.length < 3) {
         setHasMore(false);
@@ -158,11 +183,15 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
       setOutfits((prev) => [...prev, ...newOutfits]);
       setHasLoaded(itemsKey);
     } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message || "Failed to get outfit suggestions");
+      if (requestId !== requestSequence.current) return;
+      const message = e?.message || "Failed to get outfit suggestions. Please try again.";
+      setRequestError(message);
+      toast.error(message);
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestId === requestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
@@ -317,6 +346,16 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </div>
         )}
 
+        {!completingOutfit && !loading && requestError && (
+          <div role="alert" className="my-4 rounded-xl border border-destructive/30 bg-card p-4 space-y-3">
+            <h3 className="font-semibold">Could not generate outfits</h3>
+            <p className="text-sm text-muted-foreground">{requestError}</p>
+            <Button variant="outline" disabled={loadingMore} onClick={() => fetchSuggestions(items, outfits.map(outfit => outfit.item_ids))}>
+              Try again
+            </Button>
+          </div>
+        )}
+
         {/* Incompatibility alert */}
         {!completingOutfit && !loading && incompatible && (
           <div className="space-y-4 pb-6">
@@ -377,7 +416,7 @@ export default function OutfitSuggestionDrawer({ items, allWardrobeItems, open, 
           </div>
         )}
 
-        {!completingOutfit && !loading && !incompatible && outfits.length === 0 && hasLoaded && (
+        {!completingOutfit && !loading && !requestError && !incompatible && outfits.length === 0 && hasLoaded === itemsKey && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {isInspireMode
               ? "No matches found. Try a different inspiration photo."

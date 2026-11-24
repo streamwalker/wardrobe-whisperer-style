@@ -1,3 +1,4 @@
+import { exportWardrobeItems, validImportedItem, importedItemRow } from "@/lib/wardrobe-export";
 import { exportFile } from "@/lib/export-file";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,21 +28,6 @@ interface ExportImportButtonsProps {
   allItems: WardrobeItem[];
 }
 
-interface ExportPayload {
-  version: number;
-  exportedAt: string;
-  items: {
-    name: string;
-    category: string;
-    primary_color: string;
-    color_hex: string;
-    style_tags: string[];
-    is_new: boolean;
-    is_featured: boolean;
-    photo_url: string | null;
-  }[];
-}
-
 interface ParsedImport {
   valid: any[];
   skipped: number;
@@ -59,20 +45,7 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
 
   // ... keep existing code (handleExport)
   const handleExport = async () => {
-    const payload: ExportPayload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      items: allItems.map((item) => ({
-        name: item.name,
-        category: item.category,
-        primary_color: item.primary_color,
-        color_hex: item.color_hex,
-        style_tags: [...item.style_tags],
-        is_new: item.is_new,
-        is_featured: item.is_featured,
-        photo_url: item.photo ?? null,
-      })),
-    };
+    const payload = exportWardrobeItems(allItems);
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     try {
@@ -81,7 +54,7 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
       toast.error("Unable to export wardrobe. Please try again.");
       return;
     }
-    toast.success(`Exported ${payload.items.length} items`);
+    toast.success(`Exported ${payload.items.length} items with front/back photo links. Keep your original photo files; this export does not contain image files.`);
   };
 
   // ... keep existing code (handleFileSelected)
@@ -91,6 +64,7 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
     e.target.value = "";
 
     try {
+      if (file.size > 10 * 1024 * 1024) throw new Error("Choose a wardrobe JSON file smaller than 10 MB.");
       const text = await file.text();
       const parsed = JSON.parse(text);
 
@@ -103,7 +77,8 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
         throw new Error("Invalid wardrobe JSON format");
       }
 
-      const valid = rawItems.filter((item: any) => item.name && item.category && item.primary_color);
+      if (rawItems.length > 5000) throw new Error("Import up to 5,000 items at a time.");
+      const valid = rawItems.filter(validImportedItem);
       const skipped = rawItems.length - valid.length;
 
       if (valid.length === 0) {
@@ -141,17 +116,7 @@ export default function ExportImportButtons({ userId, allItems }: ExportImportBu
       const BATCH = 50;
       let inserted = 0;
       for (let i = 0; i < itemsToInsert.length; i += BATCH) {
-        const batch = itemsToInsert.slice(i, i + BATCH).map((item: any) => ({
-          user_id: userId,
-          name: item.name,
-          category: item.category,
-          primary_color: item.primary_color,
-          color_hex: item.color_hex || null,
-          style_tags: item.style_tags || [],
-          is_new: item.is_new ?? false,
-          is_featured: item.is_featured ?? false,
-          photo_url: item.photo_url || null,
-        }));
+        const batch = itemsToInsert.slice(i, i + BATCH).map(item => importedItemRow(item, userId));
 
         const { error } = await supabase.from("wardrobe_items").insert(batch);
         if (error) throw error;

@@ -1,0 +1,55 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import OutfitSuggestionDrawer from './OutfitSuggestionDrawer';
+import type { WardrobeItem } from '@/lib/wardrobe-data';
+const mocks = vi.hoisted(() => ({ invoke: vi.fn() }));
+vi.mock('@/lib/invoke-ai', () => ({ invokeAI: mocks.invoke }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'user-a' } }) }));
+vi.mock('@/hooks/useStylePreferences', () => ({ useStylePreferences: () => ({ profile: {}, invalidate: vi.fn() }) }));
+vi.mock('@/lib/preference-profile', () => ({ rerankOutfits: (outfits: unknown[]) => outfits }));
+vi.mock('@/lib/style-signals', () => ({ recordSignal: vi.fn(), recordDismissedOutfit: vi.fn(), snapshotFromItems: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
+vi.mock('./OutfitPreviewBoard', () => ({ default: () => null }));
+vi.mock('./OutfitCompareView', () => ({ default: () => null }));
+vi.mock('./CompleteLookView', () => ({ default: () => null }));
+vi.mock('./NewItemMatchCard', () => ({ default: () => null }));
+vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+const shirt: WardrobeItem = { id: 'shirt', name: 'Shirt', category: 'tops', primary_color: 'White', color_hex: '#fff', style_tags: [], is_new: false, is_featured: false, photo: 'https://photos/front', photo_back: 'https://photos/back' };
+const pants: WardrobeItem = { ...shirt, id: 'pants', name: 'Pants', category: 'pants' };
+const props = { items: [shirt], allWardrobeItems: [shirt, pants], open: true, onOpenChange: vi.fn() };
+beforeEach(() => vi.resetAllMocks());
+afterEach(cleanup);
+it('keeps the failure visible and supports a successful manual retry', async () => {
+ mocks.invoke.mockResolvedValueOnce({ data: null, error: new Error('AI service usage limit reached') }).mockResolvedValueOnce({ data: { outfits: [{ name: 'Recovered outfit', item_ids: ['shirt','pants'], mood: 'casual', explanation: 'Balanced' }] }, error: null });
+ render(<OutfitSuggestionDrawer {...props} />);
+ expect(await screen.findByRole('alert')).toHaveTextContent('AI service usage limit reached');
+ fireEvent.click(screen.getByRole('button',{name:'Try again'}));
+ expect(await screen.findByText('Recovered outfit')).toBeInTheDocument();
+ expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+ const payload = mocks.invoke.mock.calls[0][1].body;
+ expect(payload.selectedItem).not.toHaveProperty('photo');
+ expect(payload.selectedItem).not.toHaveProperty('photo_back');
+ expect(payload.wardrobeItems[0]).not.toHaveProperty('photo_back');
+});
+it('ignores a late response for the previous selection', async () => {
+ let finishOld!: (value: unknown) => void;
+ mocks.invoke.mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve; })).mockResolvedValueOnce({ data: { outfits: [] }, error: null });
+ const view=render(<OutfitSuggestionDrawer {...props} />);
+ await waitFor(() => expect(mocks.invoke).toHaveBeenCalledTimes(1));
+ view.rerender(<OutfitSuggestionDrawer {...props} items={[pants]} />);
+ expect(await screen.findByText('No suggestions found. Try different items!')).toBeInTheDocument();
+ await act(async () => finishOld({ data: { outfits: [{ name: 'Stale outfit', item_ids: ['shirt','pants'], mood: 'casual', explanation: 'Old' }] }, error: null }));
+ expect(screen.queryByText('Stale outfit')).not.toBeInTheDocument();
+ expect(mocks.invoke.mock.calls[1][1].body.selectedItem.id).toBe('pants');
+});
+it('rejects an incomplete response without crashing', async () => {
+ mocks.invoke.mockResolvedValue({ data: null, error: null });
+ render(<OutfitSuggestionDrawer {...props} />);
+ expect(await screen.findByRole('alert')).toHaveTextContent('incomplete response');
+});
+it('does not show an outfit that omits the selected item', async () => {
+ mocks.invoke.mockResolvedValue({ data: { outfits: [{ name: 'Wrong selection', item_ids: ['pants'], mood: 'casual', explanation: 'Wrong' }] }, error: null });
+ render(<OutfitSuggestionDrawer {...props} />);
+ expect(await screen.findByText('No suggestions found. Try different items!')).toBeInTheDocument();
+ expect(screen.queryByText('Wrong selection')).not.toBeInTheDocument();
+});

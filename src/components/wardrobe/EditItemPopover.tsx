@@ -1,3 +1,4 @@
+import WardrobePhoto from "./WardrobePhoto";
 import { useState, useRef } from "react";
 import { SHOE_SUBCATEGORIES, ACCESSORY_SUBCATEGORIES } from "@/lib/wardrobe-data";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -161,7 +162,7 @@ export default function EditItemPopover({ item, open, onOpenChange, onSave, chil
                   style={{ backgroundColor: colorHex }}
                 >
                   {displayPhoto ? (
-                    <img src={displayPhoto} alt={name} className="h-full w-full object-cover" />
+                    <WardrobePhoto src={displayPhoto} alt={name} className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
@@ -193,7 +194,7 @@ export default function EditItemPopover({ item, open, onOpenChange, onSave, chil
                 <p className="text-[11px] font-medium text-muted-foreground">Back (optional)</p>
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden border bg-muted/30">
                   {displayBackPhoto ? (
-                    <img src={displayBackPhoto} alt="Back" className="h-full w-full object-cover" />
+                    <WardrobePhoto src={displayBackPhoto} alt="Back" className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-muted-foreground/40" />

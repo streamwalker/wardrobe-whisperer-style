@@ -74,7 +74,7 @@ export default function Wardrobe() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // --- Data, derived state, and concerns extracted to hooks ---
-  const { items: allItems } = useWardrobeItems(user?.id);
+  const { items: allItems, isLoading: wardrobeLoading, error: wardrobeError, refetch: reloadWardrobe } = useWardrobeItems(user?.id);
   const filters = useWardrobeFilters();
   const imageGen = useImageGeneration(allItems);
   const share = useWardrobeShare(user?.id);
@@ -264,6 +264,15 @@ export default function Wardrobe() {
     activeCategory === "all"
       ? filters.applyFilters(wardrobeWithPhotos)
       : filters.applyFilters(wardrobeWithPhotos.filter((i) => i.category === activeCategory));
+
+  if (user && wardrobeError) return (
+    <div role="alert" className="glass-card space-y-3 p-6">
+      <h1 className="text-xl font-semibold">Could not load your wardrobe</h1>
+      <p>Your clothing has not been removed. Check your connection and try again.</p>
+      <Button onClick={() => reloadWardrobe()}>Reload wardrobe</Button>
+    </div>
+  );
+  if (user && wardrobeLoading) return <p role="status" className="p-6">Loading your wardrobe…</p>;
 
   return (
     <div className="space-y-3 sm:space-y-5 pb-24">

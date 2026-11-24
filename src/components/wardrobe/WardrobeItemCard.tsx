@@ -1,3 +1,4 @@
+import WardrobePhoto from "./WardrobePhoto";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { WardrobeItem } from "@/lib/wardrobe-data";
@@ -116,7 +117,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
           style={{ backgroundColor: item.color_hex }}
         >
           {activePhoto && (
-            <img
+            <WardrobePhoto
               src={activePhoto}
               alt={showBack ? `${item.name} (back)` : item.name}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -205,7 +206,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
                 style={{ backgroundColor: item.color_hex }}
               >
                 {item.photo ? (
-                  <img src={item.photo} alt={`${item.name} front`} className="h-full w-full object-contain bg-background/50" />
+                  <WardrobePhoto src={item.photo} alt={`${item.name} front`} className="h-full w-full object-contain bg-background/50" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center">
                     <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
@@ -217,7 +218,7 @@ export default function WardrobeItemCard({ item, selected, highlighted, onClick,
             {hasBack && (
               <div className="flex flex-col gap-1.5">
                 <div className="relative aspect-square w-full rounded-lg overflow-hidden border bg-muted/30">
-                  <img src={item.photo_back!} alt={`${item.name} back`} className="h-full w-full object-contain bg-background/50" />
+                  <WardrobePhoto src={item.photo_back!} alt={`${item.name} back`} className="h-full w-full object-contain bg-background/50" />
                 </div>
                 <p className="text-center text-[11px] font-medium text-muted-foreground">Back</p>
               </div>
