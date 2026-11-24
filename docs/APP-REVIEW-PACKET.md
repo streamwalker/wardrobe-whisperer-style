@@ -63,6 +63,15 @@ Source inventory: private wardrobe organization, clothing/inspiration images, op
 | Native/device | Duo fold/keyboard/camera, iPad multitasking, physical Siri/HomePod/HomeView; capture final native store screenshots. |
 | Signing/store | Signed archive and privacy report, Apple validation, processed build, localized subscription review screenshots, tested review account, privacy/age/content/territory fields. |
 
+## Source evidence
+
+- Account signup: `src/pages/Auth.tsx:45`; consent user agent: `src/pages/Auth.tsx:24`.
+- Profile persistence: `src/pages/Profile.tsx:86`; display-name edit: `src/pages/Profile.tsx:208`.
+- Shopping photo upload and public URL: `src/pages/Shop.tsx:100`; `src/pages/Shop.tsx:106`.
+- Known account identifier sent to RevenueCat: `src/lib/native-purchases.ts:9`.
+- Style interactions persisted: `src/lib/style-signals.ts:69`; dismissed outfits: `src/lib/style-signals.ts:101`.
+- AI consent gateway: `src/lib/invoke-ai.ts:4`.
+
 ## Sources checked 24 November 2026
 
 - [Apple privacy data definitions](https://developer.apple.com/app-store/app-privacy-details/)
